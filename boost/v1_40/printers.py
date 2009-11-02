@@ -89,7 +89,7 @@ class BoostIteratorRange:
 @register_pretty_printer
 class BoostOptional:
     "Pretty Printer for boost::optional (Boost.Optional)"
-    regex = re.compile('^boost::optional<.*>$')
+    regex = re.compile('^boost::optional<(.*)>$')
 
     @static
     def supports(typename):
@@ -113,16 +113,16 @@ class BoostOptional:
             self.done = True
             return ('value', self.member.dereference())
 
-    # def children(self):
-    #     initialized = self.value['m_initialized']
-    #     if(not initialized):
-    #         return self._iterator('', True)
-    #     else:
-    #         match = BoostOptional.regex.search(self.typename)
-    #         if match:
-    #             membertype = gdb.lookup_type(match.group(0)).pointer()
-    #             member = self.value['m_storage']['dummy_']['data'].address.cast(membertype)
-    #             return self._iterator(member, False)
+    def children(self):
+        initialized = self.value['m_initialized']
+        if(not initialized):
+            return self._iterator('', True)
+        else:
+            match = BoostOptional.regex.search(self.typename)
+            if match:
+                membertype = gdb.lookup_type(match.group(1)).pointer()
+                member = self.value['m_storage']['dummy_']['data'].address.cast(membertype)
+                return self._iterator(member, False)
 
     def to_string(self):
         initialized = self.value['m_initialized']
