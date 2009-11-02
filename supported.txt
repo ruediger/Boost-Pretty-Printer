@@ -10,3 +10,4 @@ A list of supported Boost classes. (Since the project is pretty new there are on
 - boost::shared_array (Boost.SmartPtr)
 - boost::weak_ptr (Boost.SmartPtr)
 - boost::intrusive_ptr (Boost.SmartPtr)
+- boost::array (Boost.Array)
