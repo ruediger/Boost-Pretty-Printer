@@ -134,6 +134,23 @@ class BoostOptional:
         else:
             return "%s is initialized" % self.typename
 
+@register_pretty_printer
+class BoostReferenceWrapper:
+    "Pretty Printer for boost::reference_wrapper (Boost.Ref)"
+    regex = re.compile('^boost::reference_wrapper<(.*)>$')
+
+    @static
+    def supports(typename):
+        return BoostReferenceWrapper.regex.search(typename)
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def to_string(self):
+        return '%s = %s' % (self.typename, self.value['t_'].dereference())
+    
+
 def find_pretty_printer(value):
     "Find a pretty printer suitable for value"
     type = value.type
