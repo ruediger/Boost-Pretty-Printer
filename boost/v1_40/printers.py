@@ -120,9 +120,12 @@ class BoostOptional:
         else:
             match = BoostOptional.regex.search(self.typename)
             if match:
-                membertype = gdb.lookup_type(match.group(1)).pointer()
-                member = self.value['m_storage']['dummy_']['data'].address.cast(membertype)
-                return self._iterator(member, False)
+                try:
+                    membertype = gdb.lookup_type(match.group(1)).pointer()
+                    member = self.value['m_storage']['dummy_']['data'].address.cast(membertype)
+                    return self._iterator(member, False)
+                except:
+                    return self._iterator('', True)
 
     def to_string(self):
         initialized = self.value['m_initialized']
