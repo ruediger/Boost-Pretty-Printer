@@ -245,10 +245,17 @@ class BoostVariant:
         m = BoostVariant.regex.search(self.typename)
         # TODO this breaks with boost::variant< foo<a,b>, bar >!
         types = map(lambda s: s.strip(), m.group(1).split(','))
-        which = self.value['which_']
-        return '(boost::variant<...>) which (%d) = %s value = ...' % (self.typename,
-                                                                      which,
-                                                                      types[long(which)])
+        which = long(self.value['which_'])
+        type = types[which]
+        data = ''
+        try:
+            ptrtype = gdb.lookup_type(type).pointer()
+            data = self.value['storage_']['data_']['buf'].address.cast(ptrtype)
+        except:
+            data = self.value['storage_']['data_']['buf']
+        return '(boost::variant<...>) which (%d) = %s value = %s' % (which,
+                                                                     type,
+                                                                     data.dereference())
 
 def find_pretty_printer(value):
     "Find a pretty printer suitable for value"
