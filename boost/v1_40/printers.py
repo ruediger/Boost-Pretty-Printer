@@ -174,9 +174,9 @@ class BoostTribool:
 
 @register_pretty_printer
 class BoostScopedPtr:
-    "Pretty Printer for boost::scoped_ptr/array (Boost.SmartPtr)"
+    "Pretty Printer for boost::scoped/intrusive_ptr/array (Boost.SmartPtr)"
 
-    regex = re.compile('^boost::scoped_(ptr|array)<(.*)>$')
+    regex = re.compile('^boost::(intrusive|scoped)_(ptr|array)<(.*)>$')
     @static
     def supports(typename):
         return BoostScopedPtr.regex.search(typename)  
