@@ -172,6 +172,22 @@ class BoostTribool:
             s = 'true'
         return '(%s) %s' % (self.typename, s)
 
+@register_pretty_printer
+class BoostScopedPtr:
+    "Pretty Printer for boost::scoped_ptr/array (Boost.SmartPtr)"
+
+    regex = re.compile('^boost::scoped_(ptr|array)<(.*)>$')
+    @static
+    def supports(typename):
+        return BoostScopedPtr.regex.search(typename)  
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def to_string(self):
+        return '(%s) %s' % (self.typename, self.value['px'])
+
 def find_pretty_printer(value):
     "Find a pretty printer suitable for value"
     type = value.type
