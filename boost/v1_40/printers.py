@@ -188,6 +188,29 @@ class BoostScopedPtr:
     def to_string(self):
         return '(%s) %s' % (self.typename, self.value['px'])
 
+@register_pretty_printer
+class BoostSharedPtr:
+    "Pretty Printer for boost::shared_ptr/array (Boost.SmartPtr)"
+
+    regex = re.compile('^boost::shared_(ptr|array)<(.*)>$')
+    @static
+    def supports(typename):
+        return BoostSharedPtr.regex.search(typename)  
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def to_string(self):
+        if self.value['px'] == 0x0:
+            return '(%s) %s' % (self.typename, self.value['px'])
+        countobj = self.value['pn']['pi_'].dereference()
+        refcount = countobj['use_count_']
+        weakcount = countobj['weak_count_']
+        return '(%s) (count %d, weak count %d) %s' % (self.typename,
+                                                      refcount, weakcount,
+                                                      self.value['px'])
+
 def find_pretty_printer(value):
     "Find a pretty printer suitable for value"
     type = value.type
