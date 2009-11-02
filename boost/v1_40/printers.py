@@ -148,8 +148,29 @@ class BoostReferenceWrapper:
         self.value = value
 
     def to_string(self):
-        return '%s = %s' % (self.typename, self.value['t_'].dereference())
-    
+        return '(%s) %s' % (self.typename, self.value['t_'].dereference())
+
+@register_pretty_printer
+class BoostTribool:
+    "Pretty Printer for boost::logic::tribool (Boost.Tribool)"
+    regex = re.compile('^boost::logic::tribool$')
+
+    @static
+    def supports(typename):
+        return BoostTribool.regex.search(typename)
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def to_string(self):
+        state = self.value['value']
+        s = 'indeterminate'
+        if(state == 0):
+            s = 'false'
+        elif(state == 1):
+            s = 'true'
+        return '(%s) %s' % (self.typename, s)
 
 def find_pretty_printer(value):
     "Find a pretty printer suitable for value"
