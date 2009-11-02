@@ -229,6 +229,27 @@ class BoostArray:
     def display_hint(self):
         return 'array'
 
+@register_pretty_printer
+class BoostVariant:
+    "Pretty Printer for boost::variant (Boost.Variant)"
+    regex = re.compile('^boost::variant<(.*)>$');
+    @static
+    def supports(typename):
+        return BoostVariant.regex.search(typename)
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def to_string(self):
+        m = BoostVariant.regex.search(self.typename)
+        # TODO this breaks with boost::variant< foo<a,b>, bar >!
+        types = map(lambda s: s.strip(), m.group(1).split(','))
+        which = self.value['which_']
+        return '(boost::variant<...>) which (%d) = %s value = ...' % (self.typename,
+                                                                      which,
+                                                                      types[long(which)])
+
 def find_pretty_printer(value):
     "Find a pretty printer suitable for value"
     type = value.type
