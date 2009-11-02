@@ -190,9 +190,9 @@ class BoostScopedPtr:
 
 @register_pretty_printer
 class BoostSharedPtr:
-    "Pretty Printer for boost::shared_ptr/array (Boost.SmartPtr)"
+    "Pretty Printer for boost::shared/weak_ptr/array (Boost.SmartPtr)"
 
-    regex = re.compile('^boost::shared_(ptr|array)<(.*)>$')
+    regex = re.compile('^boost::(weak|shared)_(ptr|array)<(.*)>$')
     @static
     def supports(typename):
         return BoostSharedPtr.regex.search(typename)  
