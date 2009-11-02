@@ -4,6 +4,8 @@ Since version 7.0 GDB has Python scripting support. This can be used to provide 
 
 (Help is appreciated!)
 
+See supported.txt for supported classes.
+
 * Installation:
 
 GDB version 7 or better is required!

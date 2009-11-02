@@ -1,0 +1,6 @@
+A list of supported Boost classes. (Since the project is pretty new there are only a few. But patches are welcome! :-))
+
+- boost::iterator_range (Boost.Range)
+- boost::logic::tribool (Boost.Tribool)
+- boost::reference_wrapper (Boost.Ref)
+- boost::optional (Boost.Optional)
