@@ -86,6 +86,51 @@ class BoostIteratorRange:
     def display_hint(self):
         return 'array'
 
+@register_pretty_printer
+class BoostOptional:
+    "Pretty Printer for boost::optional (Boost.Optional)"
+    regex = re.compile('^boost::optional<.*>$')
+
+    @static
+    def supports(typename):
+        return BoostOptional.regex.search(typename)
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    class _iterator:
+        def __init__(self, member, empty):
+            self.member = member
+            self.done = empty
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            if(self.done):
+                raise StopIteration
+            self.done = True
+            return ('value', self.member.dereference())
+
+    # def children(self):
+    #     initialized = self.value['m_initialized']
+    #     if(not initialized):
+    #         return self._iterator('', True)
+    #     else:
+    #         match = BoostOptional.regex.search(self.typename)
+    #         if match:
+    #             membertype = gdb.lookup_type(match.group(0)).pointer()
+    #             member = self.value['m_storage']['dummy_']['data'].address.cast(membertype)
+    #             return self._iterator(member, False)
+
+    def to_string(self):
+        initialized = self.value['m_initialized']
+        if(not initialized):
+            return "%s is not initialized" % self.typename
+        else:
+            return "%s is initialized" % self.typename
+
 def find_pretty_printer(value):
     "Find a pretty printer suitable for value"
     type = value.type
