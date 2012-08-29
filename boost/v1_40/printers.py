@@ -179,7 +179,7 @@ class BoostScopedPtr:
     regex = re.compile('^boost::(intrusive|scoped)_(ptr|array)<(.*)>$')
     @static
     def supports(typename):
-        return BoostScopedPtr.regex.search(typename)  
+        return BoostScopedPtr.regex.search(typename)
 
     def __init__(self, typename, value):
         self.typename = typename
@@ -195,7 +195,7 @@ class BoostSharedPtr:
     regex = re.compile('^boost::(weak|shared)_(ptr|array)<(.*)>$')
     @static
     def supports(typename):
-        return BoostSharedPtr.regex.search(typename)  
+        return BoostSharedPtr.regex.search(typename)
 
     def __init__(self, typename, value):
         self.typename = typename
@@ -256,6 +256,24 @@ class BoostVariant:
         return '(boost::variant<...>) which (%d) = %s value = %s' % (which,
                                                                      type,
                                                                      data.dereference())
+
+@register_pretty_printer
+class BoostUuid:
+    "Pretty Printer for boost::uuids::uuid (Boost.Uuid)"
+    regex = re.compile('^boost::uuids::uuid$')
+
+    @static
+    def supports(typename):
+        return BoostUuid.regex.search(typename)
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def to_string(self):
+        u = (self.value['data'][i] for i in xrange(16))
+        s = 'xxxx-xx-xx-xx-xxxxxx'.replace('x', '%02x') % tuple(u)
+        return '(%s) %s' % (self.typename, s)
 
 def find_pretty_printer(value):
     "Find a pretty printer suitable for value"
