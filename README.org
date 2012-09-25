@@ -1,4 +1,5 @@
-GDB (the GNU Debugger http://sourceware.org/gdb/) Pretty Printers for Boost
+# -*- mode:org; mode:visual-line; coding:utf-8; -*-
+GDB (the [[http://sourceware.org/gdb/][GNU Debugger]]) Pretty Printers for [[http://boost.org][Boost]]
 
 Since version 7.0 GDB has Python scripting support. This can be used to provide "Pretty Printers" to make the output of GDB more usable. The libstdc++ project currently provides a set of pretty printers for their implementation of the C++ standard library. This projects goal is to provide a similar set of pretty printers for the Boost library.
 
@@ -7,26 +8,30 @@ Since version 7.0 GDB has Python scripting support. This can be used to provide 
 See supported.txt for supported classes.
 
 * Installation:
-
 GDB version 7 or better is required!
 
 Check out the git repository
+#+BEGIN_EXAMPLE
   git clone git://github.com/ruediger/Boost-Pretty-Printer.git
+#+END_EXAMPLE
 
-and add the following lines to your ~/.gdbinit
+and add the following lines to your =~/.gdbinit=
 
+#+BEGIN_EXAMPLE
 python
 import sys
 sys.path.insert(0, 'PATH-TO-THE-REPO/Boost-Pretty-Printer')
 from boost.v1_40.printers import register_boost_printers
 register_boost_printers(None)
 end
+#+END_EXAMPLE
 
-and of course replace PATH-TO-THE-REPO with the absolute path to the Boost Pretty Printer repository. If you have no ~/.gdbinit file just create it.
+and of course replace =PATH-TO-THE-REPO= with the absolute path to the Boost Pretty Printer repository. If you have no =~/.gdbinit= file just create it.
 
 Now you can simply use GDB's print (short p) statement to pretty print the supported boost objects.
 
 * Example
+#+BEGIN_EXAMPLE
   $ cat > foo.c++
   #include <boost/range/iterator_range.hpp>
   using namespace boost;
@@ -50,3 +55,4 @@ Now you can simply use GDB's print (short p) statement to pretty print the suppo
   8         return range[0];
   (gdb) p range
   $1 = boost::iterator_range<char const*> of length 12 = {72 'H', 101 'e', 108 'l', 108 'l', 111 'o', 32 ' ', 87 'W', 111 'o', 114 'r', 108 'l', 100 'd', 0 '\000'}
+#+END_EXAMPLE
