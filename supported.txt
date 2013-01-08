@@ -13,3 +13,5 @@ A list of supported Boost classes. (Since the project is pretty new there are on
 - boost::array (Boost.Array)
 - boost::variant (Boost.Variant)
 - boost::uuids::uuid (Boost.Uuid)
+- boost::intrusive::set (Boost.Intrusive)
+- boost::intrusive::list (Boost.Intrusive)
