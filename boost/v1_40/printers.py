@@ -576,6 +576,37 @@ def find_pretty_printer(value):
 
     return None
 
+@register_pretty_printer
+class BoostGregorianDate:
+    "Pretty Printer for boost::gregorian::date"
+    regex = re.compile('^boost::gregorian::date$')
+
+    @static
+    def supports(typename):
+        return BoostGregorianDate.regex.search(typename)
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def to_string(self):
+        n = int(self.value['days_'])
+        # Check for uninitialized case
+        if n==2**32-2:
+            return '(%s) uninitialized' % self.typename
+        # Convert date number to year-month-day
+        a = n + 32044
+        b = (4*a + 3) / 146097
+        c = a - (146097*b)/4
+        d = (4*c + 3)/1461
+        e = c - (1461*d)/4
+        m = (5*e + 2)/153
+        day = e + 1 - (153*m + 2)/5
+        month = m + 3 - 12*(m/10)
+        year = 100*b + d - 4800 + (m/10)
+        return '(%s) %4d-%02d-%02d' % (self.typename, year,month,day)
+
+
 def register_boost_printers(obj):
     "Register Boost Pretty Printers."
     if obj == None:
