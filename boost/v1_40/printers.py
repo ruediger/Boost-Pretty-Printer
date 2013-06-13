@@ -606,6 +606,26 @@ class BoostGregorianDate:
         year = 100*b + d - 4800 + (m/10)
         return '(%s) %4d-%02d-%02d' % (self.typename, year,month,day)
 
+@register_pretty_printer
+class BoostPosixTimePTime:
+    "Pretty Printer for boost::posix_time::ptime"
+    regex = re.compile('^boost::posix_time::ptime$')
+
+    @static
+    def supports(typename):
+        return BoostPosixTimePTime.regex.search(typename)
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def to_string(self):
+        n = int(self.value['time_']['time_count_']['value_'])
+        # Check for uninitialized case
+        if n==2**63-2:
+            return '(%s) uninitialized' % self.typename
+        # Represent time in a raw fashion
+        return '(%s) %d' % (self.typename, n)
 
 def register_boost_printers(obj):
     "Register Boost Pretty Printers."
