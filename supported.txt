@@ -1,4 +1,4 @@
-A list of supported Boost classes. (Since the project is pretty new there are only a few. But patches are welcome! :-))
+A list of supported Boost classes:
 
 - boost::iterator_range (Boost.Range)
 - boost::logic::tribool (Boost.Tribool)
@@ -12,6 +12,9 @@ A list of supported Boost classes. (Since the project is pretty new there are on
 - boost::intrusive_ptr (Boost.SmartPtr)
 - boost::array (Boost.Array)
 - boost::variant (Boost.Variant)
-- boost::uuids::uuid (Boost.Uuid)
-- boost::intrusive::set (Boost.Intrusive)
-- boost::intrusive::list (Boost.Intrusive)
+- boost::uuids::uuid (Boost.Uuid) Thanks to Ivan Tarasov (ivant)
+- boost::intrusive::set (Boost.Intrusive) Thanks to Johan Sternerup (johanst)
+- boost::intrusive::list (Boost.Intrusive) "
+- boost::gregorian::data (Boost.Date_Time) Thanks to Brian O'Kennedy (brokenn)
+
+Patches/Pull Requests are welcome!

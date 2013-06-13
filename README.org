@@ -3,9 +3,9 @@ GDB (the [[http://sourceware.org/gdb/][GNU Debugger]]) Pretty Printers for [[htt
 
 Since version 7.0 GDB has Python scripting support. This can be used to provide "Pretty Printers" to make the output of GDB more usable. The libstdc++ project currently provides a set of pretty printers for their implementation of the C++ standard library. This projects goal is to provide a similar set of pretty printers for the Boost library.
 
-(Help is appreciated!)
+Help is appreciated!
 
-See supported.txt for supported classes.
+See supported.txt for supported classes and names of contributors.
 
 * Installation:
 GDB version 7 or better is required!
