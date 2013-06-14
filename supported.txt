@@ -15,6 +15,7 @@ A list of supported Boost classes:
 - boost::uuids::uuid (Boost.Uuid) Thanks to Ivan Tarasov (ivant)
 - boost::intrusive::set (Boost.Intrusive) Thanks to Johan Sternerup (johanst)
 - boost::intrusive::list (Boost.Intrusive) "
-- boost::gregorian::data (Boost.Date_Time) Thanks to Brian O'Kennedy (brokenn)
+- boost::gregorian::date (Boost.Date_Time) Thanks to Brian O'Kennedy (brokenn)
+- boost::posix_time::ptime (Boost.Date_Time) "
 
 Patches/Pull Requests are welcome!
