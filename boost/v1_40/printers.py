@@ -212,6 +212,67 @@ class BoostSharedPtr:
                                                       self.value['px'])
 
 @register_pretty_printer
+class BoostCircular:
+    "Pretty Printer for boost::circular_buffer (Boost.Circular)"
+    regex = re.compile('^boost::circular_buffer<(.*)>$');
+    @static
+    def supports(typename):
+        return BoostCircular.regex.search(typename)
+
+    class _iterator:
+        def __init__(self, first, last, buff, end, size):
+            self.item = first # virtual beginning of the circular buffer
+            self.last = last  # virtual end of the circular buffer (one behind the last element).
+            self.buff = buff  # internal buffer used for storing elements in the circular buffer
+            self.end = end    # internal buffer's end (end of the storage space).
+            self.size = size
+            self.capa = int(end-buff)
+            self.count = 0
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            if self.count == self.size:
+                raise StopIteration
+            count = self.count
+            crt=self.buff + (count + self.item - self.buff) % self.capa
+            elem = crt.dereference()
+            self.count = self.count + 1
+            return ('[%d]' % count, elem)
+
+
+
+
+            if self.item == self.last:
+                raise StopIteration
+            count = self.count
+            self.count = self.count + 1
+            elem = self.item.dereference()
+            self.item = self.item + 1
+            if self.item == self.end:
+                self.item == self.buff
+            return ('[%d]' % count, elem)
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def children(self):
+        return self._iterator(self.value['m_first'], self.value['m_last'], self.value['m_buff'], self.value['m_end'], self.value['m_size'])
+
+    def to_string(self):
+        first = self.value['m_first']
+        last = self.value['m_last']
+        buff = self.value['m_buff']
+        end = self.value['m_end']
+        size = self.value['m_size']
+        return '%s of length %d/%d' % (self.typename, int(size), int(end-buff))
+
+    def display_hint(self):
+        return 'array'
+
+@register_pretty_printer
 class BoostArray:
     "Pretty Printer for boost::array (Boost.Array)"
     regex = re.compile('^boost::array<(.*)>$');
