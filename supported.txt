@@ -17,5 +17,6 @@ A list of supported Boost classes:
 - boost::intrusive::list (Boost.Intrusive) "
 - boost::gregorian::date (Boost.Date_Time) Thanks to Brian O'Kennedy (brokenn)
 - boost::posix_time::ptime (Boost.Date_Time) "
+- boost::circular_buffer (Boost.Circular_Buffer) Thanks to Luc Hermitte
 
 Patches/Pull Requests are welcome!
