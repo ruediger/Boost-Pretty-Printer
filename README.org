@@ -7,6 +7,8 @@ Help is appreciated!
 
 See supported.txt for supported classes and names of contributors.
 
+The pretty printers are licensed under the terms of the [[http://www.boost.org/users/license.html][Boost Software License, version 1.0]].
+
 * Installation:
 GDB version 7 or better is required!
 
