@@ -732,43 +732,47 @@ class BoostPosixTimePTime:
         # Represent time in a raw fashion
         return '(%s) %d' % (self.typename, n)
 
-@register_printer
+@_conditionally_register_printer(_have_parse_and_eval)
 class Boost_Ordered_Multi_Index:
     "Printer for boost::multi_index_container with ordered index"
     printer_name = 'boost::multi_index::ordered'
-    type_name_re = '^boost::multi_index::multi_index_container.*boost::multi_index::ordered_(non)?unique'
+    type_name_re = '^boost::multi_index::multi_index_container.*boost::multi_index::ordered_(non_)?unique'
+
+    # disabled (regex matching used):
+    # despite the claims, gdb can't extract template argument types
+    @classmethod
+    def supports_FORGET_IT(self_type, type):
+        return (type.tag.startswith('boost::multi_index::multi_index_container<')
+                and (type.template_argument(1).template_argument(0).tag.startswith('boost::multi_index::ordered_unique<')
+                     or type.template_argument(1).template_argument(0).tag.startswith('boost::multi_index::ordered_non_unique<')))
 
     @staticmethod
     def get_parent_ptr(node_ptr):
-        return int(str(gdb.parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1)
+        return int(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1)
 
     @staticmethod
     def get_left_ptr(node_ptr):
-        return int(str(gdb.parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
+        return int(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
 
     @staticmethod
     def get_right_ptr(node_ptr):
-        return int(str(gdb.parse_and_eval('*((void**)' + str(node_ptr) + ' + 2)')), 16)
+        return int(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 2)')), 16)
 
     @staticmethod
     def get_val_ptr(node_ptr, elem_ptr_size):
-        return gdb.parse_and_eval('((void**)' + str(node_ptr) + ' - ' + str(elem_ptr_size) + ')')
+        return parse_and_eval('((void**)' + str(node_ptr) + ' - ' + str(elem_ptr_size) + ')')
 
     def __init__(self, type_name, value):
         self.type_name = type_name
         #print >> sys.stderr, 'type_name: ' + type_name
-        self.elem_type = gdb.types.get_basic_type(value.type).template_argument(0)
+        self.elem_type = get_basic_type(value.type).template_argument(0)
         #print >> sys.stderr, 'elem_type: ' + str(self.elem_type)
         elem_size = self.elem_type.sizeof
         #print >> sys.stderr, 'elem_size: ' + str(elem_size)
         self.elem_ptr_size = (elem_size - 1) / 8 + 1
         #print >> sys.stderr, 'elem_ptr_size: ' + str(self.elem_ptr_size)
-        self.head_node_ptr = int(str(gdb.parse_and_eval('*((void**)' + str(value.address) + ' + 1) + 8')), 16)
-        #print >> sys.stderr, 'head_node_ptr: ' + str(self.head_node_ptr)
-        #print >> sys.stderr, value.iteritems()
-        #print >> sys.stderr, 'value: ' + str(value)
-        #self.typename = typename
-        #self.value = value
+        self.head_node_ptr = int(str(parse_and_eval('*((void**)' + str(value.address) + ' + 1) + 8 * ' + str(self.elem_ptr_size))), 16)
+        #print >> sys.stderr, 'head_node_ptr: ' + hex(self.head_node_ptr)
 
     def empty_cont(self):
         return (self.get_parent_ptr(self.head_node_ptr) == 0)
@@ -810,13 +814,13 @@ class Boost_Ordered_Multi_Index:
                 #print >> sys.stderr, 'next: ' + hex(self.crt)
             count = self.count
             self.count = self.count + 1
-            return ('[%d]' % count, str(gdb.parse_and_eval('*(' + str(self.elem_type) + '*)' + str(Boost_Ordered_Multi_Index.get_val_ptr(crt, self.elem_ptr_size)))))
+            return ('[%d]' % count, str(parse_and_eval('*(' + str(self.elem_type) + '*)' + str(Boost_Ordered_Multi_Index.get_val_ptr(crt, self.elem_ptr_size)))))
 
     def children(self):
         if not self.empty_cont():
             return self._iterator(self.elem_type, self.elem_ptr_size, self.get_left_ptr(self.head_node_ptr), self.get_right_ptr(self.head_node_ptr), False)
         else:
-            return self._iterator(self.elem_type, self.elem_ptr_size, self.head_node_ptr, self.head_node_ptr, True)
+            return self._iterator(self.elem_type, self.elem_ptr_size, 0, 0, True)
 
     def to_string(self):
         if self.empty_cont():
