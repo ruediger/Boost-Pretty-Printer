@@ -33,10 +33,34 @@
 #
 
 import gdb
-import gdb.printing
-import gdb.types
 import re
 import sys
+
+_have_gdb_printing = True
+try:
+    import gdb.printing
+except ImportError:
+    _have_gdb_printing = False
+
+try:
+    from gdb.types import get_basic_type
+except ImportError:
+    # from libstdcxx printers
+    def get_basic_type(type):
+        # If it points to a reference, get the reference.
+        if type.code == gdb.TYPE_CODE_REF:
+            type = type.target()
+
+        # Get the unqualified type, stripped of typedefs.
+        type = type.unqualified().strip_typedefs()
+
+        return type
+
+_have_parse_and_eval = True
+try:
+    from gdb import parse_and_eval
+except ImportError:
+    _have_parse_and_eval = False
 
 
 printer_name = 'boost-printer-v1.41'
@@ -45,18 +69,26 @@ printer_name = 'boost-printer-v1.41'
 class Printer_Gen(object):
 
     class SubPrinter_Gen(object):
+        def match_re(self, type):
+            return self.re.search(type.tag) != None
+
         def __init__(self, Printer):
             self.name = Printer.printer_name
             self.enabled = True
-            self.re = re.compile(Printer.type_name_re)
+            if hasattr(Printer, 'supports'):
+                self.re = None
+                self.supports = Printer.supports
+            else:
+                self.re = re.compile(Printer.type_name_re)
+                self.supports = self.match_re
             self.Printer = Printer
 
-        def __call__(self, type_name, value):
+        def __call__(self, basic_type, value):
             if not self.enabled:
                 return None
-            if not self.re.search(type_name):
+            if not self.supports(basic_type):
                 return None
-            return self.Printer(type_name, value)
+            return self.Printer(basic_type.tag, value)
 
     def __init__(self, name):
         self.name = name
@@ -67,36 +99,62 @@ class Printer_Gen(object):
         self.subprinters.append(Printer_Gen.SubPrinter_Gen(Printer))
 
     def __call__(self, value):
-        type_name = gdb.types.get_basic_type(value.type).tag
-        if not type_name:
+        basic_type = get_basic_type(value.type)
+        if not basic_type.tag:
             return
         printer = None
         for subprinter_gen in self.subprinters:
-            printer = subprinter_gen(type_name, value)
+            printer = subprinter_gen(basic_type, value)
             if printer != None:
                 return printer
 
 printer_gen = Printer_Gen(printer_name)
 
+# This function registers the top-level Printer generator with gdb.
+# This should be called from .gdbinit.
 def register_printer_gen(obj):
     "Register printer generator with objfile obj."
 
     global printer_gen
 
-    gdb.printing.register_pretty_printer(obj, printer_gen)
+    if _have_gdb_printing:
+        gdb.printing.register_pretty_printer(obj, printer_gen)
+    else:
+        if obj is None:
+            obj = gdb
+        obj.pretty_printers.append(printer_gen)
 
-def register_printer(Printer):
+# Register individual Printer with the top-level Printer generator.
+def _register_printer(Printer):
     "Registers a Printer"
-
     printer_gen.add(Printer)
-
     return Printer
 
+def _cant_register_printer(Printer):
+    print >> sys.stderr, 'Printer [%s] not supported by this gdb version' % Printer.printer_name
 
-### Individual printers follow below ###
+def _conditionally_register_printer(condition):
+    if condition:
+        return _register_printer
+    else:
+        return _cant_register_printer
 
+###
+### Individual Printers follow.
+###
+### Relevant fields:
+###
+### - 'printer_name' : Subprinter name used by gdb. (Required.) If it contains
+###     regex operators, they must be escaped when refering to it from gdb.
+###
+### - 'supports(basic_type)' classmethod : If it exists, it is used to determine
+###     if the Printer supports the given type.
+###
+### - 'type_name_re' : If 'supports(basic_type)' doesn't exist, a default version
+###     is used which simply tests whether the type name matches this re.
+###
 
-@register_printer
+@_register_printer
 class BoostIteratorRange:
     "Pretty Printer for boost::iterator_range (Boost.Range)"
     printer_name = 'boost::iterator_range'
@@ -135,7 +193,7 @@ class BoostIteratorRange:
     def display_hint(self):
         return 'array'
 
-@register_printer
+@_register_printer
 class BoostOptional:
     "Pretty Printer for boost::optional (Boost.Optional)"
     printer_name = 'boost::optional'
@@ -180,7 +238,7 @@ class BoostOptional:
         else:
             return "%s is initialized" % self.typename
 
-@register_printer
+@_register_printer
 class BoostReferenceWrapper:
     "Pretty Printer for boost::reference_wrapper (Boost.Ref)"
     printer_name = 'boost::reference_wrapper'
@@ -193,7 +251,7 @@ class BoostReferenceWrapper:
     def to_string(self):
         return '(%s) %s' % (self.typename, self.value['t_'].dereference())
 
-@register_printer
+@_register_printer
 class BoostTribool:
     "Pretty Printer for boost::logic::tribool (Boost.Tribool)"
     printer_name = 'boost::logic::tribool'
@@ -212,7 +270,7 @@ class BoostTribool:
             s = 'true'
         return '(%s) %s' % (self.typename, s)
 
-@register_printer
+@_register_printer
 class BoostScopedPtr:
     "Pretty Printer for boost::scoped/intrusive_ptr/array (Boost.SmartPtr)"
     printer_name = 'boost::scoped/intrusive_ptr/array'
@@ -225,7 +283,7 @@ class BoostScopedPtr:
     def to_string(self):
         return '(%s) %s' % (self.typename, self.value['px'])
 
-@register_printer
+@_register_printer
 class BoostSharedPtr:
     "Pretty Printer for boost::shared/weak_ptr/array (Boost.SmartPtr)"
     printer_name = 'boost::shared/weak_ptr/array'
@@ -245,7 +303,7 @@ class BoostSharedPtr:
                                                       refcount, weakcount,
                                                       self.value['px'])
 
-@register_printer
+@_register_printer
 class BoostCircular:
     "Pretty Printer for boost::circular_buffer (Boost.Circular)"
     printer_name = 'boost::circular_buffer'
@@ -304,7 +362,7 @@ class BoostCircular:
     def display_hint(self):
         return 'array'
 
-@register_printer
+@_register_printer
 class BoostArray:
     "Pretty Printer for boost::array (Boost.Array)"
     printer_name = 'boost::array'
@@ -320,7 +378,7 @@ class BoostArray:
     def display_hint(self):
         return 'array'
 
-@register_printer
+@_register_printer
 class BoostVariant:
     "Pretty Printer for boost::variant (Boost.Variant)"
     printer_name = 'boost::variant'
@@ -346,7 +404,7 @@ class BoostVariant:
                                                                      type,
                                                                      data.dereference())
 
-@register_printer
+@_register_printer
 class BoostUuid:
     "Pretty Printer for boost::uuids::uuid (Boost.Uuid)"
     printer_name = 'boost::uuids::uuid'
@@ -447,7 +505,7 @@ class BoostIntrusiveRbtreeIterator:
             self.node = 0
         return result
 
-@register_printer
+@_register_printer
 class BoostIntrusiveSet:
     "Pretty Printer for boost::intrusive::set (Boost.Intrusive)"
     printer_name = 'boost::intrusive::set'
@@ -504,7 +562,7 @@ class BoostIntrusiveSet:
             return self._iter (BoostIntrusiveRbtreeIterator(self.getHeader(), elementPointerType))
 
 
-@register_printer
+@_register_printer
 class BoostIntrusiveTreeIterator:
     "Pretty Printer for boost::intrusive::set<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::tree_iterator'
@@ -559,7 +617,7 @@ class BoostIntrusiveListIterator:
             self.node = 0
         return result
 
-@register_printer
+@_register_printer
 class BoostIntrusiveList:
     "Pretty Printer for boost::intrusive::list (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list'
@@ -616,7 +674,7 @@ class BoostIntrusiveList:
         else:
             return self._iter (BoostIntrusiveListIterator(self.getHeader(), elementPointerType))
 
-@register_printer
+@_register_printer
 class BoostIntrusiveListIterator:
     "Pretty Printer for boost::intrusive::list<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list_iterator'
@@ -629,7 +687,7 @@ class BoostIntrusiveListIterator:
     def to_string(self):
         return intrusive_iterator_to_string(self.val)
 
-@register_printer
+@_register_printer
 class BoostGregorianDate:
     "Pretty Printer for boost::gregorian::date"
     printer_name = 'boost::gregorian::date'
@@ -656,7 +714,7 @@ class BoostGregorianDate:
         year = 100*b + d - 4800 + (m/10)
         return '(%s) %4d-%02d-%02d' % (self.typename, year,month,day)
 
-@register_printer
+@_register_printer
 class BoostPosixTimePTime:
     "Pretty Printer for boost::posix_time::ptime"
     printer_name = 'boost::posix_time::ptime'
