@@ -32,7 +32,6 @@
 # Inspired _but not copied_ from libstdc++'s pretty printers
 #
 
-
 import gdb
 import gdb.printing
 import gdb.types
@@ -655,3 +654,21 @@ class BoostGregorianDate:
         month = m + 3 - 12*(m/10)
         year = 100*b + d - 4800 + (m/10)
         return '(%s) %4d-%02d-%02d' % (self.typename, year,month,day)
+
+@register_printer
+class BoostPosixTimePTime:
+    "Pretty Printer for boost::posix_time::ptime"
+    printer_name = 'boost::posix_time::ptime'
+    type_name_re = '^boost::posix_time::ptime$'
+
+    def __init__(self, typename, value):
+        self.typename = typename
+        self.value = value
+
+    def to_string(self):
+        n = int(self.value['time_']['time_count_']['value_'])
+        # Check for uninitialized case
+        if n==2**63-2:
+            return '(%s) uninitialized' % self.typename
+        # Represent time in a raw fashion
+        return '(%s) %d' % (self.typename, n)
