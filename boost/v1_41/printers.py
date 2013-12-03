@@ -36,6 +36,7 @@ import gdb
 import gdb.printing
 import gdb.types
 import re
+import sys
 
 
 printer_name = 'boost-printer-v1.41'
@@ -672,3 +673,94 @@ class BoostPosixTimePTime:
             return '(%s) uninitialized' % self.typename
         # Represent time in a raw fashion
         return '(%s) %d' % (self.typename, n)
+
+@register_printer
+class Boost_Ordered_Multi_Index:
+    "Printer for boost::multi_index_container with ordered index"
+    printer_name = 'boost::multi_index::ordered'
+    type_name_re = '^boost::multi_index::multi_index_container.*boost::multi_index::ordered_(non)?unique'
+
+    @staticmethod
+    def get_parent_ptr(node_ptr):
+        return int(str(gdb.parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1)
+
+    @staticmethod
+    def get_left_ptr(node_ptr):
+        return int(str(gdb.parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
+
+    @staticmethod
+    def get_right_ptr(node_ptr):
+        return int(str(gdb.parse_and_eval('*((void**)' + str(node_ptr) + ' + 2)')), 16)
+
+    @staticmethod
+    def get_val_ptr(node_ptr, elem_ptr_size):
+        return gdb.parse_and_eval('((void**)' + str(node_ptr) + ' - ' + str(elem_ptr_size) + ')')
+
+    def __init__(self, type_name, value):
+        self.type_name = type_name
+        #print >> sys.stderr, 'type_name: ' + type_name
+        self.elem_type = gdb.types.get_basic_type(value.type).template_argument(0)
+        #print >> sys.stderr, 'elem_type: ' + str(self.elem_type)
+        elem_size = self.elem_type.sizeof
+        #print >> sys.stderr, 'elem_size: ' + str(elem_size)
+        self.elem_ptr_size = (elem_size - 1) / 8 + 1
+        #print >> sys.stderr, 'elem_ptr_size: ' + str(self.elem_ptr_size)
+        self.head_node_ptr = int(str(gdb.parse_and_eval('*((void**)' + str(value.address) + ' + 1) + 8')), 16)
+        #print >> sys.stderr, 'head_node_ptr: ' + str(self.head_node_ptr)
+        #print >> sys.stderr, value.iteritems()
+        #print >> sys.stderr, 'value: ' + str(value)
+        #self.typename = typename
+        #self.value = value
+
+    def empty_cont(self):
+        return (self.get_parent_ptr(self.head_node_ptr) == 0)
+
+    class _iterator:
+        def __init__(self, elem_type, elem_ptr_size, first, last, empty_cont_flag):
+            self.elem_type = elem_type
+            self.elem_ptr_size = elem_ptr_size
+            self.crt = first
+            self.last = last
+            self.saw_last = empty_cont_flag
+            self.count = 0
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            if self.crt == self.last and self.saw_last:
+                raise StopIteration
+            crt = self.crt
+            #print >> sys.stderr, 'crt: ' + hex(crt)
+            if self.crt == self.last:
+                self.saw_last = True
+            else:
+                if Boost_Ordered_Multi_Index.get_right_ptr(self.crt) != 0:
+                    # next is leftmost node in right subtree
+                    #print >> sys.stderr, 'next is in right subtree'
+                    self.crt = Boost_Ordered_Multi_Index.get_right_ptr(self.crt)
+                    while Boost_Ordered_Multi_Index.get_left_ptr(self.crt) != 0:
+                        self.crt = Boost_Ordered_Multi_Index.get_left_ptr(self.crt)
+                else:
+                    # next is first ancestor from which crt is in left subtree
+                    #print >> sys.stderr, 'next is an ancestor'
+                    while True:
+                        old_crt = self.crt
+                        self.crt = Boost_Ordered_Multi_Index.get_parent_ptr(self.crt)
+                        if Boost_Ordered_Multi_Index.get_left_ptr(self.crt) == old_crt:
+                            break
+                #print >> sys.stderr, 'next: ' + hex(self.crt)
+            count = self.count
+            self.count = self.count + 1
+            return ('[%d]' % count, str(gdb.parse_and_eval('*(' + str(self.elem_type) + '*)' + str(Boost_Ordered_Multi_Index.get_val_ptr(crt, self.elem_ptr_size)))))
+
+    def children(self):
+        if not self.empty_cont():
+            return self._iterator(self.elem_type, self.elem_ptr_size, self.get_left_ptr(self.head_node_ptr), self.get_right_ptr(self.head_node_ptr), False)
+        else:
+            return self._iterator(self.elem_type, self.elem_ptr_size, self.head_node_ptr, self.head_node_ptr, True)
+
+    def to_string(self):
+        if self.empty_cont():
+            return 'empty %s' % self.type_name
+        return '%s' % self.type_name
