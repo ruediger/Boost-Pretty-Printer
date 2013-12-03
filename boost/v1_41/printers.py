@@ -732,6 +732,42 @@ class BoostPosixTimePTime:
         # Represent time in a raw fashion
         return '(%s) %d' % (self.typename, n)
 
+#
+# The following is an experimental printer for boost::multi_index_container
+# using ordered unique/nonunique index. This might not always work for various
+# reasons:
+#
+# 1. I did not fully decode the templated construction of these containers. I
+# didn't even check it works when using multiple indexes. For further hacks,
+# here are the assumptions made by the current code:
+# - Given the address x of a boost::multi_index_container object, one can find
+#   the address of the head node at x+8 (i.e., past one pointer). This seems to
+#   be due to an empty super class being forced to occupy the initial 8 bytes.
+# - Each node is stored in memory as (Element,parent_ptr,left_ptr,right_ptr).
+# - The size of an Element is rounded up to the next multiple of 8 so parent_ptr
+#   is properly aligned.
+# - The 3 node pointers actually point to the address of parent_ptr of the
+#   destination node, not to the Element address. (Don't know why.) The header
+#   pointer, however, contains the Element address in the header node.
+# - The last bit of parent_ptr is used to store the node color in the tree, so
+#   it must be AND-ed to 0 before following the ptr.
+# - Inside the head node, the pointers specify:
+#   parent_ptr: root node
+#   left_ptr: node with smallest element
+#   right_ptr: node with largest element
+# - The elements are stored in a sorted binary tree (probably balanced, but we
+#   don't care about that for printing). So, given a node x, all nodes in the
+#   left subtree of x appear before x when ordered, and all nodes in the right
+#   subtree appear after x.
+#
+# 2. The python framework in gdb is limited. For instance, I don't know how to
+# cast a boost::multi_index_container to one of its super classes. For this
+# reason, the code relies heavily on gdb.parse_and_eval() which wraps gdb
+# commands, mainly (static) casts, that I don't know how to do with gdb's python
+# API alone. So none of this will work if parse_and_eval is not available, as is
+# the case with gdb 7.0.
+#
+
 @_conditionally_register_printer(_have_parse_and_eval)
 class Boost_Ordered_Multi_Index:
     "Printer for boost::multi_index_container with ordered index"
