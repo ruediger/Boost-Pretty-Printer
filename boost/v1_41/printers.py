@@ -56,21 +56,43 @@ except ImportError:
 
         return type
 
+from gdb import execute
+_have_execute_to_string = True
+try:
+    s = execute('help', True, True)
+except TypeError:
+    _have_execute_to_string = False
+
 _have_parse_and_eval = True
 try:
     from gdb import parse_and_eval
 except ImportError:
-    _have_parse_and_eval = False
+    # from http://stackoverflow.com/a/2290941/717706
+    def parse_and_eval(exp):
+        if gdb.VERSION.startswith("6.8.50.2009"):
+            return gdb.parse_and_eval(exp)
+        # Work around non-existing gdb.parse_and_eval as in released 7.0
+        gdb.execute("set logging redirect on")
+        gdb.execute("set logging on")
+        gdb.execute("print %s" % exp)
+        gdb.execute("set logging off")
+        return gdb.history(0)
 
 
 printer_name = 'boost-printer-v1.41'
+multi_index_opts = {}
 
+class GDB_Value_Wrapper(gdb.Value):
+    "Wrapper class for gdb.Value that allows setting extra properties."
+    def __init__(self, value):
+        super(gdb.Value, self).__init__(value)
+        self.__dict__ = {}
 
 class Printer_Gen(object):
 
     class SubPrinter_Gen(object):
-        def match_re(self, type):
-            return self.re.search(type.tag) != None
+        def match_re(self, v):
+            return self.re.search(str(v.basic_type)) != None
 
         def __init__(self, Printer):
             self.name = Printer.printer_name
@@ -83,12 +105,13 @@ class Printer_Gen(object):
                 self.supports = self.match_re
             self.Printer = Printer
 
-        def __call__(self, basic_type, value):
+        def __call__(self, v):
             if not self.enabled:
                 return None
-            if not self.supports(basic_type):
-                return None
-            return self.Printer(basic_type.tag, value)
+            if self.supports(v):
+                v.type_name = str(v.basic_type)
+                return self.Printer(v)
+            return None
 
     def __init__(self, name):
         self.name = name
@@ -99,14 +122,22 @@ class Printer_Gen(object):
         self.subprinters.append(Printer_Gen.SubPrinter_Gen(Printer))
 
     def __call__(self, value):
-        basic_type = get_basic_type(value.type)
-        if not basic_type.tag:
-            return
-        printer = None
+        v = GDB_Value_Wrapper(value)
+        global multi_index_opts
+        v.basic_type = get_basic_type(v.type)
+        if not v.basic_type:
+            return None
+        if _is_boost_multi_index(v):
+            if long(v.address) in multi_index_opts:
+                v.idx = multi_index_opts[long(v.address)]
+            else:
+                v.idx = 0
         for subprinter_gen in self.subprinters:
-            printer = subprinter_gen(basic_type, value)
+            printer = subprinter_gen(v)
             if printer != None:
                 return printer
+        return None
+
 
 printer_gen = Printer_Gen(printer_name)
 
@@ -178,8 +209,8 @@ class BoostIteratorRange:
             self.item = self.item + 1
             return ('[%d]' % count, elem)
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def children(self):
@@ -199,8 +230,8 @@ class BoostOptional:
     printer_name = 'boost::optional'
     type_name_re = '^boost::optional<(.*)>$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     class _iterator:
@@ -244,8 +275,8 @@ class BoostReferenceWrapper:
     printer_name = 'boost::reference_wrapper'
     type_name_re = '^boost::reference_wrapper<(.*)>$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
@@ -257,8 +288,8 @@ class BoostTribool:
     printer_name = 'boost::logic::tribool'
     type_name_re = '^boost::logic::tribool$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
@@ -276,8 +307,8 @@ class BoostScopedPtr:
     printer_name = 'boost::scoped/intrusive_ptr/array'
     type_name_re = '^boost::(intrusive|scoped)_(ptr|array)<(.*)>$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
@@ -289,8 +320,8 @@ class BoostSharedPtr:
     printer_name = 'boost::shared/weak_ptr/array'
     type_name_re = '^boost::(weak|shared)_(ptr|array)<(.*)>$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
@@ -344,8 +375,8 @@ class BoostCircular:
                 self.item == self.buff
             return ('[%d]' % count, elem)
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def children(self):
@@ -368,8 +399,8 @@ class BoostArray:
     printer_name = 'boost::array'
     type_name_re = '^boost::array<(.*)>$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
@@ -384,8 +415,8 @@ class BoostVariant:
     printer_name = 'boost::variant'
     type_name_re = '^boost::variant<(.*)>$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
@@ -410,8 +441,8 @@ class BoostUuid:
     printer_name = 'boost::uuids::uuid'
     type_name_re = '^boost::uuids::uuid$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
@@ -525,8 +556,8 @@ class BoostIntrusiveSet:
             self.count = self.count + 1
             return result
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.val = value
         self.elementType = self.val.type.strip_typedefs().template_argument(0)
 
@@ -570,7 +601,7 @@ class BoostIntrusiveTreeIterator:
 
     def __init__(self, typename, val):
         self.val = val
-        self.typename = typename
+        self.typename = value.type_name
 
     def to_string(self):
         return intrusive_iterator_to_string(self.val)
@@ -637,8 +668,8 @@ class BoostIntrusiveList:
             self.count = self.count + 1
             return result
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.val = value
         self.elementType = self.val.type.strip_typedefs().template_argument(0)
 
@@ -682,7 +713,7 @@ class BoostIntrusiveListIterator:
 
     def __init__(self, typename, val):
         self.val = val
-        self.typename = typename
+        self.typename = value.type_name
 
     def to_string(self):
         return intrusive_iterator_to_string(self.val)
@@ -693,8 +724,8 @@ class BoostGregorianDate:
     printer_name = 'boost::gregorian::date'
     type_name_re = '^boost::gregorian::date$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
@@ -720,8 +751,8 @@ class BoostPosixTimePTime:
     printer_name = 'boost::posix_time::ptime'
     type_name_re = '^boost::posix_time::ptime$'
 
-    def __init__(self, typename, value):
-        self.typename = typename
+    def __init__(self, value):
+        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
@@ -731,6 +762,113 @@ class BoostPosixTimePTime:
             return '(%s) uninitialized' % self.typename
         # Represent time in a raw fashion
         return '(%s) %d' % (self.typename, n)
+
+def _paren_split(s, target_paren = '<'):
+    open_parens = '([{<'
+    close_parens = ')]}>'
+    end_paren = {}
+    end_paren['('] = ')'
+    end_paren['['] = ']'
+    end_paren['{'] = '}'
+    end_paren['<'] = '>'
+    if target_paren not in open_parens:
+        print >> sys.stderr, 'error: _paren_split: target_paren [' + target_paren + '] must be one of [' + open_parens + ']'
+        return None
+    paren_stack = []
+    res = []
+    st = 0
+    for i in xrange(len(s)):
+        if s[i] in open_parens:
+            if len(paren_stack) == 0 and s[i] == target_paren:
+                st = i + 1
+            paren_stack.append(s[i])
+        elif s[i] in close_parens:
+            if len(paren_stack) == 0 or s[i] != end_paren[paren_stack[-1]]:
+                # mismatched parens
+                return None
+            if len(paren_stack) == 1 and paren_stack[0] == target_paren:
+                res += [[st, i]]
+                st = i + 1
+            del paren_stack[-1]
+        elif s[i] == ',':
+            if len(paren_stack) == 0:
+                # comma among primary identifiers
+                return None
+            if len(paren_stack) == 1 and paren_stack[0] == target_paren:
+                res += [[st, i]]
+                st = i + 1
+    return res
+
+def _strip_inheritance_qual(s):
+    if s.startswith('public '):
+        return s[7:]
+    if s.startswith('private '):
+        return s[8:]
+    if s.startswith('protected '):
+        return s[10:]
+    return s
+
+def _get_subtype(basic_type, idx):
+    s = execute('ptype/mtr ' + str(basic_type), True, True)
+    if not s.startswith('type = '):
+        print >> sys.stderr, 'error: _get_subtype(' + str(basic_type) + '): s = ' + s
+        return None
+    s = s[7:]
+    s = s.split('\n')[0]
+    if not s[-1] == '{':
+        print >> sys.stderr, 'error: _get_subtype(' + str(basic_type) + '): not a class?'
+        return None
+    s = s[:-1]
+    if len(s.split(' : ')) != 2:
+        print >> sys.stderr, 'error: _get_subtype(' + str(basic_type) + '): no subtypes?'
+        return None
+    s = 'void< ' + s.split(' : ')[1] + ' >'
+    r = _paren_split(s)
+    if len(r) == 0:
+        print >> sys.stderr, 'error: _get_subtype(' + str(basic_type) + '): s = ' + s + '; r = ' + str(r)
+        return None
+    if type(idx) == list:
+        idx_list = idx
+    else:
+        idx_list = [idx]
+    res = []
+    for i in idx_list:
+        if i >= len(r):
+            res.append(None)
+        else:
+            t_s = _strip_inheritance_qual(s[r[i][0]:r[i][1]].strip())
+            t = gdb.lookup_type(t_s)
+            res.append(t)
+    if type(idx) == list:
+        return res
+    else:
+        return res[0]
+
+def _is_boost_multi_index(v):
+    return str(v.basic_type).startswith('boost::multi_index::multi_index_container')
+
+def _boost_multi_index_get_indexes(v):
+    v.main_args = _paren_split(str(v.basic_type))
+    if len(v.main_args) != 3:
+        print >> sys.stderr, 'error parsing: ' + str(v.basic_type)
+        return False
+    arg2_str = str(v.basic_type)[v.main_args[1][0]:v.main_args[1][1]] # the 2nd template arg
+    arg2_args = _paren_split(arg2_str)
+    if len(arg2_args) == 0:
+        print >> sys.stderr, 'error parsing arg2 of: ' + str(v.basic_type)
+        return False
+    v.indexes = []
+    for r in arg2_args:
+        v.indexes.append(arg2_str[r[0]:r[1]].split('<')[0].strip())
+
+
+_boost_multi_index_index_size = {}
+_boost_multi_index_index_size['boost::multi_index::ordered_unique'] = 3
+_boost_multi_index_index_size['boost::multi_index::ordered_non_unique'] = 3
+_boost_multi_index_index_size['boost::multi_index::hashed_unique'] = 1
+_boost_multi_index_index_size['boost::multi_index::hashed_non_unique'] = 1
+_boost_multi_index_index_size['boost::multi_index::sequenced'] = 2
+_boost_multi_index_index_size['boost::multi_index::random_access'] = 1
 
 #
 # The following is an experimental printer for boost::multi_index_container
@@ -768,55 +906,126 @@ class BoostPosixTimePTime:
 # the case with gdb 7.0.
 #
 
-@_conditionally_register_printer(_have_parse_and_eval)
+@_conditionally_register_printer(_have_parse_and_eval and _have_execute_to_string)
 class Boost_Ordered_Multi_Index:
     "Printer for boost::multi_index_container with ordered index"
     printer_name = 'boost::multi_index::ordered'
-    type_name_re = '^boost::multi_index::multi_index_container.*boost::multi_index::ordered_(non_)?unique'
+    #type_name_re = '^boost::multi_index::multi_index_container.*boost::multi_index::ordered_(non_)?unique'
 
-    # disabled (regex matching used):
-    # despite the claims, gdb can't extract template argument types
     @classmethod
-    def supports_FORGET_IT(self_type, type):
-        return (type.tag.startswith('boost::multi_index::multi_index_container<')
-                and (type.template_argument(1).template_argument(0).tag.startswith('boost::multi_index::ordered_unique<')
-                     or type.template_argument(1).template_argument(0).tag.startswith('boost::multi_index::ordered_non_unique<')))
+    def supports(self_type, v):
+        if not _is_boost_multi_index(v):
+            return False
+        _boost_multi_index_get_indexes(v)
+        if v.idx >= len(v.indexes):
+            return False
+        return True
 
     @staticmethod
     def get_parent_ptr(node_ptr):
-        return int(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1)
+        return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1L)
 
     @staticmethod
     def get_left_ptr(node_ptr):
-        return int(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
+        return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
 
     @staticmethod
     def get_right_ptr(node_ptr):
-        return int(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 2)')), 16)
+        return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 2)')), 16)
 
     @staticmethod
-    def get_val_ptr(node_ptr, elem_ptr_size):
-        return parse_and_eval('((void**)' + str(node_ptr) + ' - ' + str(elem_ptr_size) + ')')
+    def get_val_ptr(node_ptr, parent_ptr_offset):
+        return node_ptr - parent_ptr_offset
 
-    def __init__(self, type_name, value):
-        self.type_name = type_name
-        #print >> sys.stderr, 'type_name: ' + type_name
-        self.elem_type = get_basic_type(value.type).template_argument(0)
+    def __init__(self, v):
+        # clear up the type_name:
+        # pick template name
+        self.type_name = v.type_name[0:v.main_args[0][0]].strip()[:-1]
+        # add 2 args only (omit allocator)
+        self.type_name += ('<'
+                           + v.type_name[v.main_args[0][0]:v.main_args[0][1]].strip()
+                           + ', '
+                           + v.type_name[v.main_args[1][0]:v.main_args[1][1]].strip()
+                           + '>')
+        # remove bulk
+        self.type_name = ''.join(self.type_name.split('boost::multi_index::detail::'))
+        self.type_name = ''.join(self.type_name.split('boost::multi_index::'))
+        self.type_name = ''.join(self.type_name.split('boost::detail::'))
+        self.type_name = ''.join(self.type_name.split(', mpl_::na'))
+        self.type_name = ''.join(self.type_name.split('mpl_::na'))
+        self.type_name = ''.join(self.type_name.split('tag<>'))
+        self.type_name = '<>'.join(self.type_name.split('< >'))
+        self.type_name = 'boost::' + self.type_name
+        # add index specifier
+        self.type_name += '[idx=' + str(v.idx) + ']'
+        #print >> sys.stderr, 'type_name: ' + self.type_name
+
+        # index type
+        self.index_type = v.indexes[v.idx]
+
+        # node count
+        self.node_count = long(v['node_count'])
+
+        # first, we need the element type
+        self.elem_type = v.basic_type.template_argument(0)
         #print >> sys.stderr, 'elem_type: ' + str(self.elem_type)
-        elem_size = self.elem_type.sizeof
-        #print >> sys.stderr, 'elem_size: ' + str(elem_size)
-        self.elem_ptr_size = (elem_size - 1) / 8 + 1
-        #print >> sys.stderr, 'elem_ptr_size: ' + str(self.elem_ptr_size)
-        self.head_node_ptr = int(str(parse_and_eval('*((void**)' + str(value.address) + ' + 1) + 8 * ' + str(self.elem_ptr_size))), 16)
+
+        # next, we compute the element size and round it up to the pointer size
+        ptr_size = gdb.lookup_type('void').pointer().sizeof
+        self.elem_size = ((self.elem_type.sizeof - 1) / ptr_size + 1) * ptr_size
+        #print >> sys.stderr, 'elem_size: ' + str(self.elem_size)
+
+        # next, we cast the object into its 2nd subtype which should be header_holder
+        # and retrieve the head node
+        header_holder_subtype = _get_subtype(v.basic_type, 1)
+        if header_holder_subtype == None:
+            print >> sys.stderr, 'error computing 2nd subtype of ' + str(v.basic_type)
+            return None
+        if not str(header_holder_subtype).strip().startswith('boost::multi_index::detail::header_holder'):
+            print >> sys.stderr, '2nd subtype of multi_index_container is not header_holder'
+            return None
+        head_node = v.cast(header_holder_subtype)['member'].dereference()
+        #print >> sys.stderr, 'head_node.type.sizeof: ' + str(head_node.type.sizeof)
+
+        # finally, we compute the offset from the element address
+        # to the parent_ptr address, as well as the address of the parent_ptr
+        # inside the head node
+        # to do that, we compute the size of all indexes prior to the current one
+        self.parent_ptr_offset = head_node.type.sizeof
+        for i in xrange(v.idx + 1):
+            self.parent_ptr_offset -= _boost_multi_index_index_size[v.indexes[i]] * ptr_size
+        #print >> sys.stderr, 'parent_ptr_offset: ' +  str(self.parent_ptr_offset)
+
+        self.head_node_ptr = long(head_node.address) + self.parent_ptr_offset
         #print >> sys.stderr, 'head_node_ptr: ' + hex(self.head_node_ptr)
 
     def empty_cont(self):
-        return (self.get_parent_ptr(self.head_node_ptr) == 0)
+        return self.node_count == 0
 
-    class _iterator:
-        def __init__(self, elem_type, elem_ptr_size, first, last, empty_cont_flag):
+    class empty_iterator:
+        def __init__(self):
+            pass
+        def __iter__(self):
+            return self
+        def next(self):
+            raise StopIteration
+
+    class na_iterator:
+        def __init__(self, index_type):
+            self.saw_msg = False
+            self.index_type = index_type
+        def __iter__(self):
+            return self
+        def next(self):
+            if not self.saw_msg:
+                self.saw_msg = True
+                return (self.index_type, 'printer not implemented')
+            raise StopIteration
+
+    class ordered_iterator:
+        def __init__(self, elem_type, parent_ptr_offset, first, last, empty_cont_flag):
             self.elem_type = elem_type
-            self.elem_ptr_size = elem_ptr_size
+            self.parent_ptr_offset = parent_ptr_offset
             self.crt = first
             self.last = last
             self.saw_last = empty_cont_flag
@@ -850,13 +1059,20 @@ class Boost_Ordered_Multi_Index:
                 #print >> sys.stderr, 'next: ' + hex(self.crt)
             count = self.count
             self.count = self.count + 1
-            return ('[%d]' % count, str(parse_and_eval('*(' + str(self.elem_type) + '*)' + str(Boost_Ordered_Multi_Index.get_val_ptr(crt, self.elem_ptr_size)))))
+            val_ptr = Boost_Ordered_Multi_Index.get_val_ptr(crt, self.parent_ptr_offset)
+            return ('[%s]' % hex(int(val_ptr)),
+                    str(parse_and_eval('*(' + str(self.elem_type) + '*)'
+                                       + str(val_ptr))))
 
     def children(self):
-        if not self.empty_cont():
-            return self._iterator(self.elem_type, self.elem_ptr_size, self.get_left_ptr(self.head_node_ptr), self.get_right_ptr(self.head_node_ptr), False)
-        else:
-            return self._iterator(self.elem_type, self.elem_ptr_size, 0, 0, True)
+        if self.empty_cont():
+            return self.empty_iterator()
+        if (self.index_type == 'boost::multi_index::ordered_unique'
+            or self.index_type == 'boost::multi_index::ordered_non_unique'):
+            return self.ordered_iterator(self.elem_type, self.parent_ptr_offset,
+                                         self.get_left_ptr(self.head_node_ptr),
+                                         self.get_right_ptr(self.head_node_ptr), False)
+        return self.na_iterator(self.index_type)
 
     def to_string(self):
         if self.empty_cont():
