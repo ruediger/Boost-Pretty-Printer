@@ -951,7 +951,7 @@ _boost_multi_index_index_size['boost::multi_index::random_access'] = 1
 class Boost_Multi_Index:
     "Printer for boost::multi_index_container"
     printer_name = 'boost::multi_index_container'
-    version = '1.46'
+    version = '1.42'
 
     #
     # To specify which index to use for printing for a specific container
