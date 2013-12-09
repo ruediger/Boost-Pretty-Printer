@@ -60,10 +60,15 @@ from gdb import execute
 _have_execute_to_string = True
 try:
     s = execute('help', True, True)
+    # detect how to invoke ptype
+    ptype_cmd = 'ptype/mtr'
+    try:
+        gdb.execute(ptype_cmd + ' void', True, True)
+    except RuntimeError:
+        ptype_cmd = 'ptype'
 except TypeError:
     _have_execute_to_string = False
 
-_have_parse_and_eval = True
 try:
     from gdb import parse_and_eval
 except ImportError:
@@ -78,19 +83,21 @@ except ImportError:
         gdb.execute("set logging off")
         return gdb.history(0)
 
-# detect how to invoke ptype
-ptype_cmd = 'ptype/mtr'
 try:
-    gdb.execute(ptype_cmd + ' void')
-except RuntimeError:
-    ptype_cmd = 'ptype'
+    class GDB_Value_Wrapper(gdb.Value):
+        "Wrapper class for gdb.Value that allows setting extra properties."
+        def __init__(self, value):
+            super(gdb.Value, self).__init__(value)
+            self.__dict__ = {}
+except TypeError:
+    class GDB_Value_Wrapper():
+        "Wrapper class for gdb.Value that allows setting extra properties."
+        def __init__(self, value):
+            self.gdb_value = value
+            self.__dict__ = {}
+            self.__dict__['type'] = value.type
+            self.__dict__['address'] = value.address
 
-
-class GDB_Value_Wrapper(gdb.Value):
-    "Wrapper class for gdb.Value that allows setting extra properties."
-    def __init__(self, value):
-        super(gdb.Value, self).__init__(value)
-        self.__dict__ = {}
 
 class Printer_Gen(object):
 
@@ -166,6 +173,7 @@ def _register_printer(Printer):
 
 def _cant_register_printer(Printer):
     print >> sys.stderr, 'Printer [%s] not supported by this gdb version' % Printer.printer_name
+    return Printer
 
 def _conditionally_register_printer(condition):
     if condition:
@@ -180,12 +188,13 @@ def _conditionally_register_printer(condition):
 ###
 ### - 'printer_name' : Subprinter name used by gdb. (Required.) If it contains
 ###     regex operators, they must be escaped when refering to it from gdb.
-###
-### - 'supports(basic_type)' classmethod : If it exists, it is used to determine
-###     if the Printer supports the given type.
-###
-### - 'type_name_re' : If 'supports(basic_type)' doesn't exist, a default version
-###     is used which simply tests whether the type name matches this re.
+### - 'version' : Appended to the subprinter name. (Required.)
+### - 'supports(GDB_Value_Wrapper)' classmethod : If it exists, it is used to
+###     determine if the Printer supports the given object.
+### - 'type_name_re' : If 'supports(basic_type)' doesn't exist, a default
+###     version is used which simply tests whether the type name matches this
+###     re. (Either supports() or type_name_re is required.)
+### - '__init__' : Its only argument is a GDB_Value_Wrapper.
 ###
 
 @_register_printer
@@ -782,7 +791,12 @@ class BoostPosixTimePTime:
         # Represent time in a raw fashion
         return '(%s) %d' % (self.typename, n)
 
+#
+# Some utility methods.
+#
+
 def _paren_split(s, target_paren = '<'):
+    "Split the given string at commas (,) at the first paranthesis sublevel of target_paren, ignoring commas within other paranthesized blocks. This can be used to extract template arguments."
     open_parens = '([{<'
     close_parens = ')]}>'
     end_paren = {}
@@ -828,6 +842,7 @@ def _strip_inheritance_qual(s):
     return s
 
 def _get_subtype(basic_type, idx):
+    "Return the subtype of a given type. idx can be an integer indicating the index of the subtype to be returned, or a list of such indexes, in which case a list of types is returned."
     s = execute(ptype_cmd + ' ' + str(basic_type), True, True)
     if not s.startswith('type = '):
         print >> sys.stderr, 'error: _get_subtype(' + str(basic_type) + '): s = ' + s
@@ -867,6 +882,7 @@ def _is_boost_multi_index(v):
     return str(v.basic_type).startswith('boost::multi_index::multi_index_container')
 
 def _boost_multi_index_get_indexes(v):
+    "Save the index types of a multi_index_container in v.indexes."
     v.main_args = _paren_split(str(v.basic_type))
     if len(v.main_args) != 3:
         print >> sys.stderr, 'error parsing: ' + str(v.basic_type)
@@ -880,7 +896,7 @@ def _boost_multi_index_get_indexes(v):
     for r in arg2_args:
         v.indexes.append(arg2_str[r[0]:r[1]].split('<')[0].strip())
 
-
+# The size in pointers of the index fields for all index types.
 _boost_multi_index_index_size = {}
 _boost_multi_index_index_size['boost::multi_index::ordered_unique'] = 3
 _boost_multi_index_index_size['boost::multi_index::ordered_non_unique'] = 3
@@ -931,7 +947,7 @@ _boost_multi_index_index_size['boost::multi_index::random_access'] = 1
 # parse_and_eval() that can be broken by as little as output formatting changes.
 #
 
-@_conditionally_register_printer(_have_parse_and_eval and _have_execute_to_string)
+@_conditionally_register_printer(_have_execute_to_string)
 class Boost_Multi_Index:
     "Printer for boost::multi_index_container"
     printer_name = 'boost::multi_index_container'
@@ -944,8 +960,8 @@ class Boost_Multi_Index:
     #
     # (gdb) p &s_5
     # $2 = (Int_Set_5 *) 0x7fffffffd770
-    # (gdb) python import boost.v1_41.printers
-    # (gdb) python boost.v1_41.printers.Boost_Multi_Index.idx[0x7fffffffd770] = 1
+    # (gdb) python import boost.printers
+    # (gdb) python boost.printers.Boost_Multi_Index.idx[0x7fffffffd770] = 1
     # (gdb) p s_5
     #
     idx = {}
