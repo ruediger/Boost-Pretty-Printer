@@ -40,6 +40,7 @@ Int_Set s;
 
 int main(int argc, char* argv[])
 {
+    (void)argv;
     s.insert(s.end(), argc);
     s.insert(s.end(), 5);
     s.insert(s.end(), 17);
