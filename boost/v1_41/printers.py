@@ -78,9 +78,13 @@ except ImportError:
         gdb.execute("set logging off")
         return gdb.history(0)
 
+# detect how to invoke ptype
+ptype_cmd = 'ptype/mtr'
+try:
+    gdb.execute(ptype_cmd + ' void')
+except RuntimeError:
+    ptype_cmd = 'ptype'
 
-printer_name = 'boost-printer-v1.41'
-multi_index_opts = {}
 
 class GDB_Value_Wrapper(gdb.Value):
     "Wrapper class for gdb.Value that allows setting extra properties."
@@ -95,7 +99,7 @@ class Printer_Gen(object):
             return self.re.search(str(v.basic_type)) != None
 
         def __init__(self, Printer):
-            self.name = Printer.printer_name
+            self.name = Printer.printer_name + '-' + Printer.version
             self.enabled = True
             if hasattr(Printer, 'supports'):
                 self.re = None
@@ -123,13 +127,12 @@ class Printer_Gen(object):
 
     def __call__(self, value):
         v = GDB_Value_Wrapper(value)
-        global multi_index_opts
         v.basic_type = get_basic_type(v.type)
         if not v.basic_type:
             return None
         if _is_boost_multi_index(v):
-            if long(v.address) in multi_index_opts:
-                v.idx = multi_index_opts[long(v.address)]
+            if long(v.address) in Boost_Multi_Index.idx:
+                v.idx = Boost_Multi_Index.idx[long(v.address)]
             else:
                 v.idx = 0
         for subprinter_gen in self.subprinters:
@@ -139,7 +142,7 @@ class Printer_Gen(object):
         return None
 
 
-printer_gen = Printer_Gen(printer_name)
+printer_gen = Printer_Gen('boost')
 
 # This function registers the top-level Printer generator with gdb.
 # This should be called from .gdbinit.
@@ -189,6 +192,7 @@ def _conditionally_register_printer(condition):
 class BoostIteratorRange:
     "Pretty Printer for boost::iterator_range (Boost.Range)"
     printer_name = 'boost::iterator_range'
+    version = '1.40'
     type_name_re = '^boost::iterator_range<.*>$'
 
     class _iterator:
@@ -228,6 +232,7 @@ class BoostIteratorRange:
 class BoostOptional:
     "Pretty Printer for boost::optional (Boost.Optional)"
     printer_name = 'boost::optional'
+    version = '1.40'
     type_name_re = '^boost::optional<(.*)>$'
 
     def __init__(self, value):
@@ -273,6 +278,7 @@ class BoostOptional:
 class BoostReferenceWrapper:
     "Pretty Printer for boost::reference_wrapper (Boost.Ref)"
     printer_name = 'boost::reference_wrapper'
+    version = '1.40'
     type_name_re = '^boost::reference_wrapper<(.*)>$'
 
     def __init__(self, value):
@@ -286,6 +292,7 @@ class BoostReferenceWrapper:
 class BoostTribool:
     "Pretty Printer for boost::logic::tribool (Boost.Tribool)"
     printer_name = 'boost::logic::tribool'
+    version = '1.40'
     type_name_re = '^boost::logic::tribool$'
 
     def __init__(self, value):
@@ -305,6 +312,7 @@ class BoostTribool:
 class BoostScopedPtr:
     "Pretty Printer for boost::scoped/intrusive_ptr/array (Boost.SmartPtr)"
     printer_name = 'boost::scoped/intrusive_ptr/array'
+    version = '1.40'
     type_name_re = '^boost::(intrusive|scoped)_(ptr|array)<(.*)>$'
 
     def __init__(self, value):
@@ -318,6 +326,7 @@ class BoostScopedPtr:
 class BoostSharedPtr:
     "Pretty Printer for boost::shared/weak_ptr/array (Boost.SmartPtr)"
     printer_name = 'boost::shared/weak_ptr/array'
+    version = '1.40'
     type_name_re = '^boost::(weak|shared)_(ptr|array)<(.*)>$'
 
     def __init__(self, value):
@@ -338,6 +347,7 @@ class BoostSharedPtr:
 class BoostCircular:
     "Pretty Printer for boost::circular_buffer (Boost.Circular)"
     printer_name = 'boost::circular_buffer'
+    version = '1.40'
     type_name_re = '^boost::circular_buffer<(.*)>$'
 
     class _iterator:
@@ -397,6 +407,7 @@ class BoostCircular:
 class BoostArray:
     "Pretty Printer for boost::array (Boost.Array)"
     printer_name = 'boost::array'
+    version = '1.40'
     type_name_re = '^boost::array<(.*)>$'
 
     def __init__(self, value):
@@ -413,6 +424,7 @@ class BoostArray:
 class BoostVariant:
     "Pretty Printer for boost::variant (Boost.Variant)"
     printer_name = 'boost::variant'
+    version = '1.40'
     type_name_re = '^boost::variant<(.*)>$'
 
     def __init__(self, value):
@@ -439,6 +451,7 @@ class BoostVariant:
 class BoostUuid:
     "Pretty Printer for boost::uuids::uuid (Boost.Uuid)"
     printer_name = 'boost::uuids::uuid'
+    version = '1.40'
     type_name_re = '^boost::uuids::uuid$'
 
     def __init__(self, value):
@@ -540,6 +553,7 @@ class BoostIntrusiveRbtreeIterator:
 class BoostIntrusiveSet:
     "Pretty Printer for boost::intrusive::set (Boost.Intrusive)"
     printer_name = 'boost::intrusive::set'
+    version = '1.40'
     type_name_re = '^boost::intrusive::set<.*>$'
 
     class _iter:
@@ -597,6 +611,7 @@ class BoostIntrusiveSet:
 class BoostIntrusiveTreeIterator:
     "Pretty Printer for boost::intrusive::set<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::tree_iterator'
+    version = '1.40'
     type_name_re = '^boost::intrusive::tree_iterator<.*>$'
 
     def __init__(self, typename, val):
@@ -652,6 +667,7 @@ class BoostIntrusiveListIterator:
 class BoostIntrusiveList:
     "Pretty Printer for boost::intrusive::list (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list'
+    version = '1.40'
     type_name_re = '^boost::intrusive::list<.*>$'
 
     class _iter:
@@ -709,6 +725,7 @@ class BoostIntrusiveList:
 class BoostIntrusiveListIterator:
     "Pretty Printer for boost::intrusive::list<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list_iterator'
+    version = '1.40'
     type_name_re = '^boost::intrusive::list_iterator<.*>$'
 
     def __init__(self, typename, val):
@@ -722,6 +739,7 @@ class BoostIntrusiveListIterator:
 class BoostGregorianDate:
     "Pretty Printer for boost::gregorian::date"
     printer_name = 'boost::gregorian::date'
+    version = '1.40'
     type_name_re = '^boost::gregorian::date$'
 
     def __init__(self, value):
@@ -749,6 +767,7 @@ class BoostGregorianDate:
 class BoostPosixTimePTime:
     "Pretty Printer for boost::posix_time::ptime"
     printer_name = 'boost::posix_time::ptime'
+    version = '1.40'
     type_name_re = '^boost::posix_time::ptime$'
 
     def __init__(self, value):
@@ -809,7 +828,7 @@ def _strip_inheritance_qual(s):
     return s
 
 def _get_subtype(basic_type, idx):
-    s = execute('ptype/mtr ' + str(basic_type), True, True)
+    s = execute(ptype_cmd + ' ' + str(basic_type), True, True)
     if not s.startswith('type = '):
         print >> sys.stderr, 'error: _get_subtype(' + str(basic_type) + '): s = ' + s
         return None
@@ -872,45 +891,72 @@ _boost_multi_index_index_size['boost::multi_index::random_access'] = 1
 
 #
 # The following is an experimental printer for boost::multi_index_container
-# using ordered unique/nonunique index. This might not always work for various
-# reasons:
+# using ordered unique/nonunique or sequenced index. This might not always
+# work for various reasons.
 #
-# 1. I did not fully decode the templated construction of these containers. I
-# didn't even check it works when using multiple indexes. For further hacks,
-# here are the assumptions made by the current code:
+# 1. I did not fully decode the templated construction of these containers.
+# For further hacks, here are the assumptions made by the current code:
 # - Given the address x of a boost::multi_index_container object, one can find
-#   the address of the head node at x+8 (i.e., past one pointer). This seems to
-#   be due to an empty super class being forced to occupy the initial 8 bytes.
-# - Each node is stored in memory as (Element,parent_ptr,left_ptr,right_ptr).
-# - The size of an Element is rounded up to the next multiple of 8 so parent_ptr
-#   is properly aligned.
-# - The 3 node pointers actually point to the address of parent_ptr of the
-#   destination node, not to the Element address. (Don't know why.) The header
-#   pointer, however, contains the Element address in the header node.
-# - The last bit of parent_ptr is used to store the node color in the tree, so
-#   it must be AND-ed to 0 before following the ptr.
-# - Inside the head node, the pointers specify:
-#   parent_ptr: root node
-#   left_ptr: node with smallest element
-#   right_ptr: node with largest element
-# - The elements are stored in a sorted binary tree (probably balanced, but we
-#   don't care about that for printing). So, given a node x, all nodes in the
-#   left subtree of x appear before x when ordered, and all nodes in the right
-#   subtree appear after x.
+#   the address of the head node by casting the container into its second
+#   subclass, and following the 'member' pointer.
+# - Each node is stored in memory as:
+#   (Element, index_n-1_fields, ..., index_0_fields)
+# - The size of an Element is rounded up to the next multiple of 8.
+# - The size of the index fields for various indexes are in
+#   _boost_multi_index_index_size (in number of pointers).
+# - For ordered & sequenced indexes:
+# - The i-th index field pointers (3 for ordered, 2 for sequenced) point to the
+#   address of the destination node's i-th index fields pointers (not to the
+#   address of the destination node's Element).
+# - The head node pointer of the multiindex container points to the head node's
+#   Element address.
+# - For ordered indexes:
+#   - The last bit of parent_ptr is used to store the node color in the tree, so
+#     it must be AND-ed to 0 before following the ptr.
+#   - Inside the head node, the pointers specify:
+#     parent_ptr: root node
+#     left_ptr: node with smallest element
+#     right_ptr: node with largest element
+#   - The elements are stored in a sorted binary tree (probably balanced, but we
+#     don't care about that for printing). So, given a node x, all nodes in the
+#     left subtree of x appear before x when ordered, and all nodes in the right
+#     subtree appear after x.
+# - For sequenced indexes:
+#   - The index field contains: previous@0 and next@1.
+#   - To traverse the container, keep following next pointers until returning
+#     back to the head node.
 #
-# 2. The python framework in gdb is limited. For instance, I don't know how to
-# cast a boost::multi_index_container to one of its super classes. For this
-# reason, the code relies heavily on gdb.parse_and_eval() which wraps gdb
-# commands, mainly (static) casts, that I don't know how to do with gdb's python
-# API alone. So none of this will work if parse_and_eval is not available, as is
-# the case with gdb 7.0.
+# 2. The python framework in gdb is limited. To cast a
+# boost::multi_index_container to one of its super classes, I use an awkward
+# parse_and_eval() that can be broken by as little as output formatting changes.
 #
 
 @_conditionally_register_printer(_have_parse_and_eval and _have_execute_to_string)
-class Boost_Ordered_Multi_Index:
-    "Printer for boost::multi_index_container with ordered index"
-    printer_name = 'boost::multi_index::ordered'
-    #type_name_re = '^boost::multi_index::multi_index_container.*boost::multi_index::ordered_(non_)?unique'
+class Boost_Multi_Index:
+    "Printer for boost::multi_index_container"
+    printer_name = 'boost::multi_index_container'
+    version = '1.46'
+
+    #
+    # To specify which index to use for printing for a specific container
+    # (dynamically, inside gdb), add its address here as key, and the desired
+    # index as value. E.g.:
+    #
+    # (gdb) p &s_5
+    # $2 = (Int_Set_5 *) 0x7fffffffd770
+    # (gdb) python import boost.v1_41.printers
+    # (gdb) python boost.v1_41.printers.Boost_Multi_Index.idx[0x7fffffffd770] = 1
+    # (gdb) p s_5
+    #
+    idx = {}
+
+    #
+    # Not supported indexes (hashes and random-access) are captured and printed
+    # by this subprinter. To disable this, set this to False. This can be set in
+    # the source code, in .gdbinit where the printers are loaded, or dynamically
+    # from inside gdb.
+    #
+    print_not_supported = True
 
     @classmethod
     def supports(self_type, v):
@@ -919,23 +965,14 @@ class Boost_Ordered_Multi_Index:
         _boost_multi_index_get_indexes(v)
         if v.idx >= len(v.indexes):
             return False
-        return True
+        return (self_type.print_not_supported
+                or v.indexes[v.idx] == 'boost::multi_index::ordered_unique'
+                or v.indexes[v.idx] == 'boost::multi_index::ordered_non_unique'
+                or v.indexes[v.idx] == 'boost::multi_index::sequenced')
 
     @staticmethod
-    def get_parent_ptr(node_ptr):
-        return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1L)
-
-    @staticmethod
-    def get_left_ptr(node_ptr):
-        return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
-
-    @staticmethod
-    def get_right_ptr(node_ptr):
-        return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 2)')), 16)
-
-    @staticmethod
-    def get_val_ptr(node_ptr, parent_ptr_offset):
-        return node_ptr - parent_ptr_offset
+    def get_val_ptr(node_ptr, index_offset):
+        return node_ptr - index_offset
 
     def __init__(self, v):
         # clear up the type_name:
@@ -988,16 +1025,16 @@ class Boost_Ordered_Multi_Index:
         #print >> sys.stderr, 'head_node.type.sizeof: ' + str(head_node.type.sizeof)
 
         # finally, we compute the offset from the element address
-        # to the parent_ptr address, as well as the address of the parent_ptr
+        # to the index field address, as well as the address of the parent_ptr
         # inside the head node
         # to do that, we compute the size of all indexes prior to the current one
-        self.parent_ptr_offset = head_node.type.sizeof
+        self.index_offset = head_node.type.sizeof
         for i in xrange(v.idx + 1):
-            self.parent_ptr_offset -= _boost_multi_index_index_size[v.indexes[i]] * ptr_size
-        #print >> sys.stderr, 'parent_ptr_offset: ' +  str(self.parent_ptr_offset)
+            self.index_offset -= _boost_multi_index_index_size[v.indexes[i]] * ptr_size
+        #print >> sys.stderr, 'index_offset: ' +  str(self.index_offset)
 
-        self.head_node_ptr = long(head_node.address) + self.parent_ptr_offset
-        #print >> sys.stderr, 'head_node_ptr: ' + hex(self.head_node_ptr)
+        self.head_index_ptr = long(head_node.address) + self.index_offset
+        #print >> sys.stderr, 'head_index_ptr: ' + hex(self.head_index_ptr)
 
     def empty_cont(self):
         return self.node_count == 0
@@ -1023,12 +1060,24 @@ class Boost_Ordered_Multi_Index:
             raise StopIteration
 
     class ordered_iterator:
-        def __init__(self, elem_type, parent_ptr_offset, first, last, empty_cont_flag):
+        @staticmethod
+        def get_parent_ptr(node_ptr):
+            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1L)
+
+        @staticmethod
+        def get_left_ptr(node_ptr):
+            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
+
+        @staticmethod
+        def get_right_ptr(node_ptr):
+            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 2)')), 16)
+
+        def __init__(self, elem_type, index_offset, first, last):
             self.elem_type = elem_type
-            self.parent_ptr_offset = parent_ptr_offset
+            self.index_offset = index_offset
             self.crt = first
             self.last = last
-            self.saw_last = empty_cont_flag
+            self.saw_last = False
             self.count = 0
 
         def __iter__(self):
@@ -1042,24 +1091,55 @@ class Boost_Ordered_Multi_Index:
             if self.crt == self.last:
                 self.saw_last = True
             else:
-                if Boost_Ordered_Multi_Index.get_right_ptr(self.crt) != 0:
+                if self.get_right_ptr(self.crt) != 0:
                     # next is leftmost node in right subtree
                     #print >> sys.stderr, 'next is in right subtree'
-                    self.crt = Boost_Ordered_Multi_Index.get_right_ptr(self.crt)
-                    while Boost_Ordered_Multi_Index.get_left_ptr(self.crt) != 0:
-                        self.crt = Boost_Ordered_Multi_Index.get_left_ptr(self.crt)
+                    self.crt = self.get_right_ptr(self.crt)
+                    while self.get_left_ptr(self.crt) != 0:
+                        self.crt = self.get_left_ptr(self.crt)
                 else:
                     # next is first ancestor from which crt is in left subtree
                     #print >> sys.stderr, 'next is an ancestor'
                     while True:
                         old_crt = self.crt
-                        self.crt = Boost_Ordered_Multi_Index.get_parent_ptr(self.crt)
-                        if Boost_Ordered_Multi_Index.get_left_ptr(self.crt) == old_crt:
+                        self.crt = self.get_parent_ptr(self.crt)
+                        if self.get_left_ptr(self.crt) == old_crt:
                             break
                 #print >> sys.stderr, 'next: ' + hex(self.crt)
             count = self.count
             self.count = self.count + 1
-            val_ptr = Boost_Ordered_Multi_Index.get_val_ptr(crt, self.parent_ptr_offset)
+            val_ptr = Boost_Multi_Index.get_val_ptr(crt, self.index_offset)
+            return ('[%s]' % hex(int(val_ptr)),
+                    str(parse_and_eval('*(' + str(self.elem_type) + '*)'
+                                       + str(val_ptr))))
+
+    class sequenced_iterator:
+        @staticmethod
+        def get_prev_ptr(node_ptr):
+            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16)
+
+        @staticmethod
+        def get_next_ptr(node_ptr):
+            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
+
+        def __init__(self, elem_type, index_offset, begin, end):
+            self.elem_type = elem_type
+            self.index_offset = index_offset
+            self.crt = begin
+            self.end = end
+            self.count = 0
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            if self.crt == self.end:
+                raise StopIteration
+            crt = self.crt
+            self.crt = self.get_next_ptr(self.crt)
+            count = self.count
+            self.count = self.count + 1
+            val_ptr = Boost_Multi_Index.get_val_ptr(crt, self.index_offset)
             return ('[%s]' % hex(int(val_ptr)),
                     str(parse_and_eval('*(' + str(self.elem_type) + '*)'
                                        + str(val_ptr))))
@@ -1069,9 +1149,17 @@ class Boost_Ordered_Multi_Index:
             return self.empty_iterator()
         if (self.index_type == 'boost::multi_index::ordered_unique'
             or self.index_type == 'boost::multi_index::ordered_non_unique'):
-            return self.ordered_iterator(self.elem_type, self.parent_ptr_offset,
-                                         self.get_left_ptr(self.head_node_ptr),
-                                         self.get_right_ptr(self.head_node_ptr), False)
+            return self.ordered_iterator(
+                self.elem_type,
+                self.index_offset,
+                self.ordered_iterator.get_left_ptr(self.head_index_ptr),
+                self.ordered_iterator.get_right_ptr(self.head_index_ptr))
+        elif self.index_type == 'boost::multi_index::sequenced':
+            return self.sequenced_iterator(
+                self.elem_type,
+                self.index_offset,
+                self.sequenced_iterator.get_next_ptr(self.head_index_ptr),
+                self.head_index_ptr)
         return self.na_iterator(self.index_type)
 
     def to_string(self):
