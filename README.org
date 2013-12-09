@@ -23,8 +23,8 @@ and add the following lines to your =~/.gdbinit=
 python
 import sys
 sys.path.insert(0, 'PATH-TO-THE-REPO/Boost-Pretty-Printer')
-from boost.v1_40.printers import register_boost_printers
-register_boost_printers(None)
+from boost.printers import register_printer_gen
+register_printer_gen(None)
 end
 #+END_EXAMPLE
 
@@ -58,3 +58,17 @@ Now you can simply use GDB's print (short p) statement to pretty print the suppo
   (gdb) p range
   $1 = boost::iterator_range<char const*> of length 12 = {72 'H', 101 'e', 108 'l', 108 'l', 111 'o', 32 ' ', 87 'W', 111 'o', 114 'r', 108 'l', 100 'd', 0 '\000'}
 #+END_EXAMPLE
+
+* GDB Subprinters and Version Numbers
+Recent versions of gdb allow the user to list, enable, and disable individual printers and subprinters.
+For more information, see the [[https://sourceware.org/gdb/onlinedocs/gdb/Pretty-Printing.html][GDB documentation]].
+This python module installs a single top-level printer called =boost=, and individual subprinters for the various supported types.
+Each individual subprinter comes with a version number corresponding to the boost version number that it was designed for.
+As boost evolves, older printers might stop working.
+
+* Multi_Index_Container
+The printer included here can only print Ordered (Unique or Non-Unique) and Sequenced indexes.
+Hashed and Random-Access indexes are not currently supported, though with the default settings, the printer
+will capture them and display an appropriate message.
+It is possible to specify which index to use for printing a specific container dynamically, from inside GDB.
+See the =examples= folder.

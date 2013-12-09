@@ -18,5 +18,6 @@ A list of supported Boost classes:
 - boost::gregorian::date (Boost.Date_Time) Thanks to Brian O'Kennedy (brokenn)
 - boost::posix_time::ptime (Boost.Date_Time) "
 - boost::circular_buffer (Boost.Circular_Buffer) Thanks to Luc Hermitte
+- boost::multi_index_container (only Ordered and Sequenced indexes) Thanks to Matei David
 
 Patches/Pull Requests are welcome!
