@@ -87,7 +87,7 @@ try:
     class GDB_Value_Wrapper(gdb.Value):
         "Wrapper class for gdb.Value that allows setting extra properties."
         def __init__(self, value):
-            super(gdb.Value, self).__init__(value)
+            super(GDB_Value_Wrapper, self).__init__(value)
             self.__dict__ = {}
 except TypeError:
     class GDB_Value_Wrapper():
@@ -97,6 +97,7 @@ except TypeError:
             self.__dict__ = {}
             self.__dict__['type'] = value.type
             self.__dict__['address'] = value.address
+            self.__getitem__ = value.__getitem__
 
 
 class Printer_Gen(object):
