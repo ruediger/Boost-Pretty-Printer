@@ -87,7 +87,7 @@ try:
     class GDB_Value_Wrapper(gdb.Value):
         "Wrapper class for gdb.Value that allows setting extra properties."
         def __init__(self, value):
-            super(gdb.Value, self).__init__(value)
+            super(GDB_Value_Wrapper, self).__init__(value)
             self.__dict__ = {}
 except TypeError:
     class GDB_Value_Wrapper():
@@ -97,6 +97,7 @@ except TypeError:
             self.__dict__ = {}
             self.__dict__['type'] = value.type
             self.__dict__['address'] = value.address
+            self.__getitem__ = value.__getitem__
 
 
 class Printer_Gen(object):
@@ -243,6 +244,7 @@ class BoostOptional:
     printer_name = 'boost::optional'
     version = '1.40'
     type_name_re = '^boost::optional<(.*)>$'
+    regex = re.compile(type_name_re)
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -435,6 +437,7 @@ class BoostVariant:
     printer_name = 'boost::variant'
     version = '1.40'
     type_name_re = '^boost::variant<(.*)>$'
+    regex = re.compile(type_name_re)
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -623,8 +626,8 @@ class BoostIntrusiveTreeIterator:
     version = '1.40'
     type_name_re = '^boost::intrusive::tree_iterator<.*>$'
 
-    def __init__(self, typename, val):
-        self.val = val
+    def __init__(self, value):
+        self.val = value
         self.typename = value.type_name
 
     def to_string(self):
@@ -737,9 +740,8 @@ class BoostIntrusiveListIterator:
     version = '1.40'
     type_name_re = '^boost::intrusive::list_iterator<.*>$'
 
-    def __init__(self, typename, val):
-        self.val = val
-        self.typename = value.type_name
+    def __init__(self, value):
+        self.val = value
 
     def to_string(self):
         return intrusive_iterator_to_string(self.val)
