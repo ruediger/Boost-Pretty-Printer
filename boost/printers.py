@@ -160,7 +160,7 @@ def register_printer_gen(obj):
     global printer_gen
 
     if _have_gdb_printing:
-        gdb.printing.register_pretty_printer(obj, printer_gen)
+        gdb.printing.register_pretty_printer(obj, printer_gen, replace=True)
     else:
         if obj is None:
             obj = gdb
