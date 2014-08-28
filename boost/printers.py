@@ -476,6 +476,153 @@ class BoostUuid:
         return '(%s) %s' % (self.typename, s)
 
 ##################################################
+# boost::container::flat_set                     #
+##################################################
+
+@_register_printer
+class BoostContainerFlatSet:
+    "Pretty Printer for boost::container::flat_set (Boost.Container)"
+    printer_name = 'boost::container::flat_set'
+    version = '1.52'
+    type_name_re = '^boost::container::flat_set<.*>$'
+
+    class Iterator:
+        def __init__(self, pointer, size):
+            self.pointer = pointer
+            self.size = size
+            self.count = 0
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            if self.count == self.size:
+                raise StopIteration
+
+            count = self.count
+            elt = self.pointer.dereference()
+            self.pointer = self.pointer + 1
+            self.count = self.count + 1
+            return ('[%d]' % count, elt)
+
+    def __init__(self, value):
+        self.val = value
+        self.element_type = self.val.type.strip_typedefs().template_argument(0)
+
+    def get_pointer(self):
+        return self.val["m_flat_tree"]["m_data"]["m_vect"]["members_"]["m_start"]
+
+    def get_size(self):
+        return self.val["m_flat_tree"]["m_data"]["m_vect"]["members_"]["m_size"]
+
+    def get_capacity(self):
+        return self.val["m_flat_tree"]["m_data"]["m_vect"]["members_"]["m_capacity"]
+
+    def has_elements(self):
+        if self.get_pointer():
+            return True
+        else:
+            return False
+
+    def to_string (self):
+        if (self.has_elements()):
+            return "boost::container::flat_set<%s> with %d elements, capacity %d" % (
+                self.element_type, self.get_size(), self.get_capacity())
+        else:
+            return "empty boost::container::flat_set<%s>" % (self.element_type)
+
+    def children (self):
+        return self.Iterator(self.get_pointer(), self.get_size())
+
+    def display_hint(self):
+        return 'array'
+
+##################################################
+# boost::container::flat_map                     #
+##################################################
+
+@_register_printer
+class BoostContainerFlatMap:
+    "Pretty Printer for boost::container::flat_map (Boost.Container)"
+    printer_name = 'boost::container::flat_map'
+    version = '1.52'
+    type_name_re = '^boost::container::flat_map<.*>$'
+
+    class Iterator:
+        def __init__(self, pointer, size):
+            self.pointer = pointer
+            self.size = size
+            self.count = 0
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            if self.count == self.size * 2:
+                raise StopIteration
+
+            if self.count % 2 == 0:
+                item = self.pointer.dereference()["first"]
+            else:
+                item = self.pointer.dereference()["second"]
+                self.pointer = self.pointer + 1
+
+            count = self.count
+            self.count = self.count + 1
+            return ('[%d]' % count, item)
+
+    def __init__(self, value):
+        self.val = value
+        self.key_type = self.val.type.strip_typedefs().template_argument(0)
+        self.value_type = self.val.type.strip_typedefs().template_argument(1)
+
+    def get_pointer(self):
+        return self.val["m_flat_tree"]["m_data"]["m_vect"]["members_"]["m_start"]
+
+    def get_size(self):
+        return self.val["m_flat_tree"]["m_data"]["m_vect"]["members_"]["m_size"]
+
+    def get_capacity(self):
+        return self.val["m_flat_tree"]["m_data"]["m_vect"]["members_"]["m_capacity"]
+
+    def has_elements(self):
+        if self.get_pointer():
+            return True
+        else:
+            return False
+
+    def to_string (self):
+        if (self.has_elements()):
+            return "boost::container::flat_map<%s, %s> with %d elements, capacity %d" % (
+                self.key_type, self.value_type, self.get_size(), self.get_capacity())
+        else:
+            return "empty boost::container::flat_map<%s, %s>" % (
+                self.key_type, self.value_type)
+
+    def children (self):
+        return self.Iterator(self.get_pointer(), self.get_size())
+
+    def display_hint(self):
+        return 'map'
+
+# Iterator used for flat_set/flat_map
+@_register_printer
+class BoostContainerVectorIterator:
+    "Pretty Printer for boost::container::container_detail::vector_iterator (Boost.Container)"
+    printer_name = 'boost::container::container_detail::vector_iterator'
+    version = '1.52'
+    type_name_re = '^boost::container::container_detail::vector.*_iterator<.*>$'
+
+    def __init__(self, value):
+        self.val = value
+
+    def to_string(self):
+        if self.val["m_ptr"]:
+            return self.val["m_ptr"].dereference()
+        else:
+            return "uninitialized %s" % (self.val.type)
+
+##################################################
 # boost::intrusive::set                          #
 ##################################################
 
