@@ -922,8 +922,16 @@ class BoostPosixTimePTime:
         # Check for uninitialized case
         if n==2**63-2:
             return '(%s) uninitialized' % self.typename
-        # Represent time in a raw fashion
-        return '(%s) %d' % (self.typename, n)
+        # Check for boost::posix_time::pos_infin case
+        if n==2**63-1:
+            return '(%s) positive infinity' % self.typename
+        # Check for boost::posix_time::neg_infin case
+        if n==-2**63:
+            return '(%s) negative infinity' % self.typename
+        # Subtract the unix epoch from the timestamp and convert the resulting timestamp into something human readable
+        unix_epoch_time = (n-210866803200000000)/1000000.0
+        time_string = datetime.datetime.fromtimestamp(unix_epoch_time).strftime('%Y-%b-%d %H:%M:%S.%f')
+        return '(%s) %s' % (self.typename, time_string)
 
 #
 # Some utility methods.
