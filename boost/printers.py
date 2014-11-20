@@ -32,6 +32,7 @@
 # Inspired _but not copied_ from libstdc++'s pretty printers
 #
 
+import datetime
 import gdb
 import re
 import sys
