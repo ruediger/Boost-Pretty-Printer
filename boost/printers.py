@@ -446,8 +446,7 @@ class BoostVariant:
 
     def to_string(self):
         m = BoostVariant.regex.search(self.typename)
-        # TODO this breaks with boost::variant< foo<a,b>, bar >!
-        types = map(lambda s: s.strip(), m.group(1).split(','))
+        types = map(lambda s: s.strip(), re.split(r', (?=(?:<[^>]*?(?: [^>]*)*))|, (?=[^>,]+(?:,|$))', m.group(1)))
         which = long(self.value['which_'])
         type = types[which]
         data = ''
