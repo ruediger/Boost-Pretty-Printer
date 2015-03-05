@@ -12,13 +12,12 @@ The pretty printers are licensed under the terms of the [[http://www.boost.org/u
 * Installation:
 GDB version 7 or better is required. Currently, most printers work with either Python 2 or Python 3.
 
-Check out the git repository
+Check out the git repository:
 #+BEGIN_EXAMPLE
 git clone git://github.com/ruediger/Boost-Pretty-Printer.git
 #+END_EXAMPLE
 
-and add the following lines to your =~/.gdbinit=
-
+and add the following lines to your =~/.gdbinit=:
 #+BEGIN_EXAMPLE
 python
 import sys
@@ -30,7 +29,7 @@ end
 
 and of course replace =PATH-TO-THE-REPO= with the absolute path to the Boost Pretty Printer repository. If you have no =~/.gdbinit= file just create it.
 
-Now you can simply use GDB's print (short p) statement to pretty print the supported boost objects.
+Now you can simply use GDB's =print= (short =p=) statement to pretty print the supported boost objects.
 
 * Example
 #+BEGIN_EXAMPLE
@@ -60,7 +59,7 @@ Now you can simply use GDB's print (short p) statement to pretty print the suppo
 #+END_EXAMPLE
 
 * Volatililty Of Printers
-Due to the limited nature of the debugging interface, individual printers included in this package can stop working with every Boost update. Specifically, a printer for =boost::intrusive::list= designed for Boost version 1.55 might or might not work with Boost 1.57. The reasons for this are explained in [[git::HACKING]]. Keeping the printers up to date is a daunting task, and contributions are welcome in that sense. If you need to debug some data structures and you find that there is no printer for them, or that the included printer stopped working, consider investing some time in fixing them and creating a pull request. The starting point is [[git::HACKING]].
+Due to the limited nature of the debugging interface, individual printers included in this package can stop working with every Boost update. Specifically, a printer for =boost::intrusive::list= designed for Boost version 1.55 might or might not work with Boost 1.57. The reasons for this are explained in [[HACKING]]. Keeping the printers up to date is a daunting task, and contributions are welcome in that sense. If you need to debug some data structures and you find that there is no printer for them, or that the included printer stopped working, consider investing some time in fixing them and creating a pull request. The starting point is [[HACKING]].
 
 * Managing Printers From Inside GDB
 This python module installs a single top-level printer called =boost=, and individual subprinters for the various supported types. Each individual subprinter comes with a version number corresponding to the boost version number that it was designed for. As boost evolves, older printers might stop working.
@@ -85,4 +84,4 @@ For more information, see the [[https://sourceware.org/gdb/onlinedocs/gdb/Pretty
 
 * Specific Printer Notes
 ** Multi-Index-Container
-The printer included here can only print Ordered (Unique or Non-Unique) and Sequenced indexes. Hashed and Random-Access indexes are not currently supported, though with the default settings, the printer will capture them and display an appropriate message. It is possible to specify which index to use for printing a specific container dynamically, from inside GDB (see the [[git::examples]] folder).
+The printer included here can only print Ordered (Unique or Non-Unique) and Sequenced indexes. Hashed and Random-Access indexes are not currently supported, though with the default settings, the printer will capture them and display an appropriate message. It is possible to specify which index to use for printing a specific container dynamically, from inside GDB (see the [[examples]] folder).
