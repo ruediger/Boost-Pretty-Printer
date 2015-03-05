@@ -8,18 +8,18 @@ PYTHON_VERSION=3.4.0
 +p s
 $1 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=0] = {[0x60c2f0] = 1, [0x60c360] = 5, [0x60c3d0] = 17, [0x60c440] = 4, [0x60c4b0] = 14, [0x60c520] = 3, [0x60c590] = 9}
 +python if sys.version_info[0] == 3: long = int
-+python import boost.printers
-+python v = boost.printers.parse_and_eval('s')
-+python boost.printers.multi_index_selector[long(v.address)] = 1
++python import boost
++python v = gdb.parse_and_eval('s')
++python boost.common.multi_index_selector[long(v.address)] = 1
 +p s
 $2 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=1] = {[0x60c2f0] = 1, [0x60c520] = 3, [0x60c440] = 4, [0x60c360] = 5, [0x60c590] = 9, [0x60c4b0] = 14, [0x60c3d0] = 17}
-+python boost.printers.multi_index_selector[long(v.address)] = 2
++python boost.common.multi_index_selector[long(v.address)] = 2
 +p s
 $3 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=2] = {boost::multi_index::random_access = printer not implemented}
-+python boost.printers.multi_index_selector[long(v.address)] = 3
++python boost.common.multi_index_selector[long(v.address)] = 3
 +p s
 $4 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=3] = {[0x60c3d0] = 17, [0x60c4b0] = 14, [0x60c590] = 9, [0x60c360] = 5, [0x60c440] = 4, [0x60c520] = 3, [0x60c2f0] = 1}
-+python boost.printers.multi_index_selector[long(v.address)] = 4
++python boost.common.multi_index_selector[long(v.address)] = 4
 +p s
 $5 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=4] = {boost::multi_index::hashed_non_unique = printer not implemented}
 +q
