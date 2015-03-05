@@ -1,5 +1,5 @@
 # -*- mode:org; mode:visual-line; coding:utf-8; -*-
-* GDB ([[http://sourceware.org/gdb/][GNU Debugger]]) Pretty Printers for [[http://boost.org][Boost]]
+** [[http://sourceware.org/gdb/][GNU Debugger]] Pretty Printers for [[http://boost.org][Boost]]
 Since version 7.0, GDB has Python scripting support. This can be used to provide "pretty printers" to make the output of GDB more usable. The libstdc++ project currently provides a set of pretty printers for their implementation of the C++ standard library. This projects goal is to provide a similar set of pretty printers for the Boost library.
 
 Help is appreciated!
