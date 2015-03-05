@@ -1,0 +1,72 @@
+GDB_VERSION=7.7.1-0ubuntu5~14.04.2)
+PYTHON_VERSION=3.4.0
++py sys.path.insert(0, "..")
++py import boost
++py boost.register_printers()
++b break_here
++r
++fin
++p blist
+$1 = boost::intrusive::list<IntListElement> with 0 elements
++c
++fin
++p blist
+$2 = boost::intrusive::list<IntListElement> with 3 elements
++c
++fin
++p mlist
+$3 = boost::intrusive::list<IntListElement> with 0 elements
++c
++fin
++p mlist
+$4 = boost::intrusive::list<IntListElement> with 2 elements
++c
++fin
++p blist
+$5 = 
++c
++fin
++p blist
+$6 = 
++c
++fin
++p mlist
+$7 = 
++c
++fin
++p mlist
+$8 = 
++c
++fin
++p bset
+$9 = 
++c
++fin
++p bset
+$10 = 
++c
++fin
++p mset
+$11 = 
++c
++fin
++p mset
+$12 = 
++c
++fin
++p bset
+$13 = 
++c
++fin
++p bset
+$14 = 
++c
++fin
++p mset
+$15 = 
++c
++fin
++p mset
+$16 = 
++c
++q

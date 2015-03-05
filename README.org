@@ -23,8 +23,8 @@ and add the following lines to your =~/.gdbinit=
 python
 import sys
 sys.path.insert(0, 'PATH-TO-THE-REPO/Boost-Pretty-Printer')
-from boost.printers import register_printer_gen
-register_printer_gen(None)
+import boost
+boost.register_printers()
 end
 #+END_EXAMPLE
 
