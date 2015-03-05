@@ -14,11 +14,13 @@ have_python_2 = (sys.version_info[0] == 2)
 have_python_3 = (sys.version_info[0] == 3)
 
 #
-# Workaround: if python3, typedef long as int
+# Workarounds
 #
 if have_python_3:
-    long = int
     xrange = range
+    intptr = int
+elif have_python_2:
+    intptr = long
 
 #
 # Replacement for switch statement.
@@ -147,7 +149,7 @@ def to_eval(val, var_name=None):
     """
     assert isinstance(val, gdb.Value)
     if val.address:
-        return '(*(' + str(val.type) + ' *)(' + hex(int(val.address)) + '))'
+        return '(*(' + str(val.type) + ' *)(' + hex(intptr(val.address)) + '))'
     else:
         assert isinstance(var_name, str)
         save_value_as_variable(val, var_name)
@@ -350,7 +352,7 @@ def print_ptr(p):
     If `p` is a pointer, print it in hex. Otherwise, invoke pretty printer.
     """
     if p.type.strip_typedefs().code == gdb.TYPE_CODE_PTR:
-        return hex(int(p))
+        return hex(intptr(p))
     else:
         return str(p)
 
@@ -377,7 +379,7 @@ def is_null(p):
     assert isinstance(p, gdb.Value)
 
     if p.type.strip_typedefs().code == gdb.TYPE_CODE_PTR:
-        return int(p) == 0
+        return intptr(p) == 0
 
     f = None
     if str(p.type.strip_typedefs()) in null_dict:
@@ -396,14 +398,16 @@ def is_null(p):
             + '\t  py boost_print.null_dict["' + str(p.type.strip_typedefs()) + '"] = <f>')
     raise gdb.error
 
-def _add_to_dict(d, *keys):
-    """Decorator that adds its argument object to  dict `d` under every key in `*keys`."""
+def add_to_dict(d, *keys):
+    """
+    Decorator that adds its argument object to  dict `d` under every key in `*keys`.
+    """
     assert isinstance(d, dict)
-    def _aux_decorator(obj):
+    def inner_decorator(obj):
         for k in keys:
             d[k] = obj
         return None
-    return _aux_decorator
+    return inner_decorator
 
 #
 # Convenience function for printing specific elements in containers.

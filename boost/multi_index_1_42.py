@@ -136,9 +136,9 @@ class Boost_Multi_Index:
         if not v.template_name == 'boost::multi_index::multi_index_container':
             return False
         _boost_multi_index_get_indexes(v)
-        #message('address=' + str(long(v.address)) + ' multi_index_selector=' + str(multi_index_selector))
-        if long(v.address) in multi_index_selector:
-            v.idx = multi_index_selector[long(v.address)]
+        #message('address=' + str(intptr(v.address)) + ' multi_index_selector=' + str(multi_index_selector))
+        if intptr(v.address) in multi_index_selector:
+            v.idx = multi_index_selector[intptr(v.address)]
             #message('address found')
         else:
             v.idx = 0
@@ -181,7 +181,7 @@ class Boost_Multi_Index:
         self.index_type = v.indexes[v.idx]
 
         # node count
-        self.node_count = long(v['node_count'])
+        self.node_count = int(v['node_count'])
 
         # first, we need the element type
         self.elem_type = v.basic_type.template_argument(0)
@@ -214,7 +214,7 @@ class Boost_Multi_Index:
             self.index_offset -= _boost_multi_index_index_size[v.indexes[i]] * ptr_size
         #message('index_offset: ' +  str(self.index_offset))
 
-        self.head_index_ptr = long(head_node.address) + self.index_offset
+        self.head_index_ptr = intptr(head_node.address) + self.index_offset
         #message('head_index_ptr: ' + hex(self.head_index_ptr))
 
     def empty_cont(self):
@@ -247,15 +247,15 @@ class Boost_Multi_Index:
     class ordered_iterator:
         @staticmethod
         def get_parent_ptr(node_ptr):
-            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1)
+            return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1)
 
         @staticmethod
         def get_left_ptr(node_ptr):
-            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
+            return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
 
         @staticmethod
         def get_right_ptr(node_ptr):
-            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 2)')), 16)
+            return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 2)')), 16)
 
         def __init__(self, elem_type, index_offset, first, last):
             self.elem_type = elem_type
@@ -304,11 +304,11 @@ class Boost_Multi_Index:
     class sequenced_iterator:
         @staticmethod
         def get_prev_ptr(node_ptr):
-            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16)
+            return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16)
 
         @staticmethod
         def get_next_ptr(node_ptr):
-            return long(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
+            return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
 
         def __init__(self, elem_type, index_offset, begin, end):
             self.elem_type = elem_type

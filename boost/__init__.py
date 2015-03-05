@@ -54,6 +54,7 @@ non_printer_files
 #
 latest_printer_files = [
     'printers.py',
+    'intrusive_1_55.py',
     'multi_index_1_42.py',
     None ][:-1]
 
