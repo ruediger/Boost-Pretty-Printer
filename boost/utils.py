@@ -1,9 +1,11 @@
 from __future__ import print_function
 
-import sys
-import re
 import gdb
 import gdb.types
+import re
+import sys
+
+from boost import *
 
 #
 # Indicators for python2 and python3
@@ -46,9 +48,15 @@ class switch(object):
             return False
 
 #
-# execute(): imported from gdb
+# Rudimentary logging facility.
 #
-from gdb import execute
+def message(s):
+    print('*** ' + pkg_name + ': ' + s, file=sys.stderr)
+
+#
+# execute(), lookup_type(): imported from gdb
+#
+from gdb import execute, lookup_type
 
 #
 # get_basic_type(): imported from gdb.types, or workaround from libstdcxx
@@ -76,10 +84,10 @@ except ImportError:
         if gdb.VERSION.startswith("6.8.50.2009"):
             return gdb.parse_and_eval(exp)
         # Work around non-existing gdb.parse_and_eval as in released 7.0
-        gdb.execute("set logging redirect on")
-        gdb.execute("set logging on")
-        gdb.execute("print %s" % exp)
-        gdb.execute("set logging off")
+        execute("set logging redirect on")
+        execute("set logging on")
+        execute("print %s" % exp)
+        execute("set logging off")
         return gdb.history(0)
 
 def get_type_qualifiers(t):
@@ -119,13 +127,15 @@ class _aux_save_value_as_variable(gdb.Function):
         return self.value
 
 def save_value_as_variable(v, s):
-    """Save gdb.Value `v` as gdb variable `s`."""
-    assert isinstance(v, gdb.Value), 'arg 1 not a gdb.Value'
-    assert isinstance(s, str), 'arg 2 not a string'
+    """
+    Save gdb.Value `v` as gdb variable `s`.
+    """
+    assert isinstance(v, gdb.Value)
+    assert isinstance(s, str)
     _aux_save_value_as_variable(v)
     execute('set var ' + s + ' = $_aux_save_value_as_variable()')
 
-def to_eval(val, var_name = None):
+def to_eval(val, var_name=None):
     """
     Return string that, when evaluated, returns the given gdb.Value.
 
@@ -144,7 +154,9 @@ def to_eval(val, var_name = None):
         return var_name
 
 def call_object_method(v, f, *args):
-    """Apply method to given object."""
+    """
+    Apply method `f` to object `v`, with arguments `args`.
+    """
     assert isinstance(v, gdb.Value)
     assert isinstance(f, str)
     i = 0
@@ -155,7 +167,7 @@ def call_object_method(v, f, *args):
     return parse_and_eval(to_eval(v, '$_call_object_method_arg_0') + '.' + f
                           + '(' + ', '.join(args_to_eval) + ')')
 
-
+#
 # Bypass static method calls
 #
 # key: (str, str)
@@ -187,8 +199,8 @@ def call_static_method(t, f, *args):
     Raises:
       gdb.error, if call fails.
     """
-    assert isinstance(t, gdb.Type), '"t" not a gdb.Type'
-    assert isinstance(f, str), '"f" not a string'
+    assert isinstance(t, gdb.Type)
+    assert isinstance(f, str)
 
     # first, try the type name bypass
     if (str(t.strip_typedefs()), f) in static_method:
@@ -213,15 +225,14 @@ def call_static_method(t, f, *args):
     try:
         return parse_and_eval(cmd)
     except:
-        print('call_static_method:\n' +
-              '\tcall failed: ' + cmd + '\n' +
-              '\tto bypass call with a python function <f>, use:\n' +
-              '\t  py boost_print.static_method[("' + str(t.strip_typedefs())
-              + '", "' + f + '")] = <f>',
-              file=sys.stderr)
+        message('call_static_method:\n' +
+                '\tcall failed: ' + cmd + '\n' +
+                '\tto bypass call with a python function <f>, use:\n' +
+                '\t  py boost_print.static_method[("' + str(t.strip_typedefs())
+                + '", "' + f + '")] = <f>')
         raise gdb.error
 
-
+#
 # Bypass inner type deduction
 #
 # key: (str, str, str)
@@ -253,8 +264,8 @@ def get_inner_type(t, s):
     Raises:
       gdb.error, if inner type is not found.
     """
-    assert isinstance(t, gdb.Type), 'arg not a gdb.Type'
-    assert isinstance(s, str), 's not a str'
+    assert isinstance(t, gdb.Type)
+    assert isinstance(s, str)
 
     v = None
     # first, try the type name bypass
@@ -267,24 +278,23 @@ def get_inner_type(t, s):
     if isinstance(v, gdb.Type):
         return v
     elif isinstance(v, str):
-        return gdb.lookup_type(v)
+        return lookup_type(v)
     elif callable(v):
         return v(t)
 
     # finally, try plain inner type access
     inner_type_name = str(t.strip_typedefs()) + '::' + s
     try:
-        return gdb.lookup_type(inner_type_name)
+        return lookup_type(inner_type_name)
     except gdb.error:
-        print('get_inner_type:\n' +
-              '\tfailed to find type: ' + inner_type_name + '\n' +
-              '\tto bypass this failure, add the result manually with:\n' +
-              '\t  py boost_print.inner_type[("' +
-              str(t.strip_typedefs()) + '", "' + s + '")] = <type>',
-              file=sys.stderr)
+        message('get_inner_type:\n' +
+                '\tfailed to find type: ' + inner_type_name + '\n' +
+                '\tto bypass this failure, add the result manually with:\n' +
+                '\t  py boost_print.inner_type[("' +
+                str(t.strip_typedefs()) + '", "' + s + '")] = <type>')
         raise gdb.error
 
-
+#
 # Raw pointer transformation
 #
 # key: str
@@ -306,7 +316,7 @@ def get_raw_ptr(p):
     If no corresponding entry is found in `raw_ptr`,
     an attempt is made to call `p.operator->()`.
     """
-    assert isinstance(p, gdb.Value), '"p" not a gdb.Value'
+    assert isinstance(p, gdb.Value)
 
     if p.type.strip_typedefs().code == gdb.TYPE_CODE_PTR:
         return p
@@ -314,10 +324,10 @@ def get_raw_ptr(p):
     f = None
     if str(p.type.strip_typedefs()) in raw_ptr:
         f = raw_ptr[str(p.type.strip_typedefs())]
-        assert callable(f), '"f" not callable'
+        assert callable(f)
     elif template_name(p.type) in raw_ptr:
         f = raw_ptr[template_name(p.type)]
-        assert callable(f), '"f" not callable'
+        assert callable(f)
 
     if f:
         return f(p)
@@ -327,13 +337,12 @@ def get_raw_ptr(p):
     try:
         return parse_and_eval(p_str +'.operator->()')
     except gdb.error:
-        print('get_raw_ptr:\n'
-              + '\tcall to operator->() failed on type: '
-              + str(p.type.strip_typedefs()) + '\n'
-              + '\tto bypass this with python function <f>, add:\n'
-              + '\t  py boost_print.raw_ptr["' +
-              str(p.type.strip_typedefs()) + '"] = <f>',
-              file=sys.stderr)
+        message('get_raw_ptr:\n'
+                + '\tcall to operator->() failed on type: '
+                + str(p.type.strip_typedefs()) + '\n'
+                + '\tto bypass this with python function <f>, add:\n'
+                + '\t  py boost_print.raw_ptr["' +
+                str(p.type.strip_typedefs()) + '"] = <f>')
         raise gdb.error
 
 def print_ptr(p):
@@ -345,6 +354,7 @@ def print_ptr(p):
     else:
         return str(p)
 
+#
 # Null value checker
 #
 # key: str
@@ -352,6 +362,7 @@ def print_ptr(p):
 # value: function
 #   Call function with argument a value of pointer-like type to determine if
 #   value represents null.
+#
 null_dict = dict()
 
 def is_null(p):
@@ -363,7 +374,7 @@ def is_null(p):
     If the type or template name of `p` appear in `null_dict`, call the corresponding
     value with argument `p`.
     """
-    assert isinstance(p, gdb.Value), '"p" not a gdb.Value'
+    assert isinstance(p, gdb.Value)
 
     if p.type.strip_typedefs().code == gdb.TYPE_CODE_PTR:
         return int(p) == 0
@@ -371,37 +382,37 @@ def is_null(p):
     f = None
     if str(p.type.strip_typedefs()) in null_dict:
         f = null_dict[str(p.type.strip_typedefs())]
-        assert callable(f), '"f" not callable'
+        assert callable(f)
     elif template_name(p.type) in null_dict:
         f = null_dict[template_name(p.type)]
-        assert callable(f), '"f" not callable'
+        assert callable(f)
 
     if f:
         return f(p)
 
-    print('is_null:\n'
-          + '\tcannot run is_null() on type: ' + str(p.type.strip_typedefs()) + '\n'
-          + '\tto bypass this with python function <f>, add:\n'
-          + '\t  py boost_print.null_dict["' + str(p.type.strip_typedefs()) + '"] = <f>',
-          file=sys.stderr)
+    message('is_null:\n'
+            + '\tcannot run is_null() on type: ' + str(p.type.strip_typedefs()) + '\n'
+            + '\tto bypass this with python function <f>, add:\n'
+            + '\t  py boost_print.null_dict["' + str(p.type.strip_typedefs()) + '"] = <f>')
     raise gdb.error
 
 def _add_to_dict(d, *keys):
     """Decorator that adds its argument object to  dict `d` under every key in `*keys`."""
-    assert isinstance(d, dict), '"d" not a dict'
+    assert isinstance(d, dict)
     def _aux_decorator(obj):
         for k in keys:
             d[k] = obj
         return None
     return _aux_decorator
 
-# convenience function for printing specific elements in containers
+#
+# Convenience function for printing specific elements in containers.
 #
 class at_func(gdb.Function):
     def __init__(self):
         super(at_func, self).__init__('at')
     def invoke(self, cont, idx=0):
-        assert isinstance(cont, gdb.Value), '"cont" not a gdb.Value'
+        assert isinstance(cont, gdb.Value)
         p = gdb.default_visualizer(cont)
         assert p, 'no printer for type [' + str(cont.type) + ']'
         assert hasattr(p, 'children'), 'printer for type [' + str(cont.type) + '] has no children() function'
@@ -420,17 +431,21 @@ _at = at_func()
 #
 # Its sole purpose is to provide a __dict__, which allows setting custom attributes.
 #
-if sys.version_info[0] > 2:
-    # for python3, simply deriving from gdb.Value will generate a __dict__ attribute
+if have_python_3:
+    # simply deriving from gdb.Value will generate a __dict__ attribute
     class GDB_Value_Wrapper(gdb.Value):
         """
         Wrapper class for gdb.Value.
         Its sole purpose is to provide a __dict__, which allows setting custom attributes.
         """
         pass
-else:
-    # for python2, we add a __dict__ attribute explicitly
+elif have_python_2:
+    # we add a __dict__ attribute explicitly
     class GDB_Value_Wrapper(gdb.Value):
+        """
+        Wrapper class for gdb.Value.
+        Its sole purpose is to provide a __dict__, which allows setting custom attributes.
+        """
         def __init__(self, value):
             super(GDB_Value_Wrapper, self).__init__(value)
             self.__dict__ = {}
@@ -528,49 +543,64 @@ type_printer_list = list()
 #
 def register_printers(obj=None):
     """
-    Register printers with objfile obj.
+    Register top-level printers 'boost' and 'trivial' with objfile `obj`.
     """
+    message('registering top-level printers:' +
+            ' (name="' + boost_printer_gen.name + '" id=' + str(id(boost_printer_gen)) + ')' +
+            ' (name="' + trivial_printer_gen.name + '" id=' + str(id(trivial_printer_gen)) + ')' +
+            ' with objfile=' + str(obj))
     gdb.printing.register_pretty_printer(obj, boost_printer_gen, replace=True)
     gdb.printing.register_pretty_printer(obj, trivial_printer_gen, replace=True)
     for tp in type_printer_list:
         gdb.types.register_type_printer(obj, tp)
 
-# Register value printer with the top-level printer generator.
-def _register_printer(Printer):
-    "Add a value printer"
-    boost_printer_gen.add(Printer)
-    return Printer
+def add_printer(p):
+    """
+    Decorator that adds the given printer `p` to the top-level 'boost' printer.
+    """
+    boost_printer_gen.add(p)
+    return p
 
-def _cant_register_printer(Printer):
-    print('*** pretty-printer [%s] not supported by this gdb version'
-          % Printer.printer_name, file=sys.stderr)
-    return Printer
+class _cant_add_printer:
+    def __init__(self, msg):
+        self.msg = msg
+    def __call__(self, p):
+        message('printer [' + p.printer_name + '] not supported: ' + self.msg)
+        return p
 
-def _cond_register_printer(cond=True):
-    "Conditionally add a value printer"
+def cond_add_printer(cond, msg):
+    """
+    Decorator-generator that conditionally adds a printer to the top-level 'boost' printer.
+    """
     if cond:
-        return _register_printer
+        return add_printer
     else:
-        return _cant_register_printer
+        return _cant_add_printer(msg)
 
-def add_type_recognizer(Type_Recognizer):
-    "Add a type recognizer"
-    type_printer_list.append(Type_Printer_Gen(Type_Recognizer))
-    return Type_Recognizer
+def add_type_recognizer(r):
+    """
+    Add a type recognizer.
+    """
+    type_printer_list.append(Type_Printer_Gen(r))
+    return r
 
-def _cant_add_type_recognizer(Type_Recognizer):
-    print('*** type recognizer [%s] not supported by this gdb version'
-          % Type_Recognizer.name, file=sys.stderr)
-    return Type_Recognizer
+class _cant_add_type_recognizer:
+    def __init__(self, msg):
+        self.msg = msg
+    def __call__(self, p):
+        message('type recognizer [' + p.printer_name + '] not supported: ' + self.msg)
+        return p
 
-# Register type recognizer with the top-level type printer list.
-def cond_add_type_recognizer(cond=True):
-    "Conditionally add a type recognizer"
+def cond_add_type_recognizer(cond, msg):
+    """
+    Conditionally add a type recognizer.
+    """
     if cond:
         return add_type_recognizer
     else:
-        return _cant_add_type_recognizer
+        return _cant_add_type_recognizer(msg)
 
+#
 # Add trivial printers, even from inside gdb. E.g.:
 #
 #   py boost_print.add_trivial_printer("List_Obj", lambda v: v['_val'])
@@ -591,3 +621,16 @@ def add_trivial_printer(type_name, fcn):
         def to_string(self):
             return str(Printer.f(self.v))
     trivial_printer_gen.add(Printer)
+
+#
+# To specify which index to use for printing for a specific container
+# (dynamically, inside gdb), add its address here as key, and the desired
+# index as value. E.g.:
+#
+# (gdb) p &s_5
+# $2 = (Int_Set_5 *) 0x7fffffffd770
+# (gdb) python import boost.printers
+# (gdb) python boost.multi_index_selector[0x7fffffffd770] = 1
+# (gdb) p s_5
+#
+multi_index_selector = dict()

@@ -33,14 +33,12 @@
 # Inspired _but not copied_ from libstdc++'s pretty printers
 #
 
-from __future__ import print_function
-
 import datetime
 import gdb
 import re
 import sys
-from .utils import *
-from .utils import _register_printer, _cond_register_printer
+
+from boost import *
 
 
 ###
@@ -59,7 +57,7 @@ from .utils import _register_printer, _cond_register_printer
 ### - '__init__' : Its only argument is a GDB_Value_Wrapper.
 ###
 
-@_register_printer
+@add_printer
 class BoostIteratorRange:
     "Pretty Printer for boost::iterator_range (Boost.Range)"
     printer_name = 'boost::iterator_range'
@@ -102,7 +100,7 @@ class BoostIteratorRange:
     def display_hint(self):
         return 'array'
 
-@_register_printer
+@add_printer
 class BoostOptional:
     "Pretty Printer for boost::optional (Boost.Optional)"
     printer_name = 'boost::optional'
@@ -139,7 +137,7 @@ class BoostOptional:
             match = BoostOptional.regex.search(self.typename)
             if match:
                 try:
-                    membertype = gdb.lookup_type(match.group(1)).pointer()
+                    membertype = lookup_type(match.group(1)).pointer()
                     member = self.value['m_storage']['dummy_']['data'].address.cast(membertype)
                     return self._iterator(member, False)
                 except:
@@ -152,7 +150,7 @@ class BoostOptional:
         else:
             return "%s is initialized" % self.typename
 
-@_register_printer
+@add_printer
 class BoostReferenceWrapper:
     "Pretty Printer for boost::reference_wrapper (Boost.Ref)"
     printer_name = 'boost::reference_wrapper'
@@ -166,7 +164,7 @@ class BoostReferenceWrapper:
     def to_string(self):
         return '(%s) %s' % (self.typename, self.value['t_'].dereference())
 
-@_register_printer
+@add_printer
 class BoostTribool:
     "Pretty Printer for boost::logic::tribool (Boost.Tribool)"
     printer_name = 'boost::logic::tribool'
@@ -186,7 +184,7 @@ class BoostTribool:
             s = 'true'
         return '(%s) %s' % (self.typename, s)
 
-@_register_printer
+@add_printer
 class BoostScopedPtr:
     "Pretty Printer for boost::scoped/intrusive_ptr/array (Boost.SmartPtr)"
     printer_name = 'boost::scoped/intrusive_ptr/array'
@@ -200,7 +198,7 @@ class BoostScopedPtr:
     def to_string(self):
         return '(%s) %s' % (self.typename, self.value['px'])
 
-@_register_printer
+@add_printer
 class BoostSharedPtr:
     "Pretty Printer for boost::shared/weak_ptr/array (Boost.SmartPtr)"
     printer_name = 'boost::shared/weak_ptr/array'
@@ -221,7 +219,7 @@ class BoostSharedPtr:
                                                       refcount, weakcount,
                                                       self.value['px'])
 
-@_register_printer
+@add_printer
 class BoostCircular:
     "Pretty Printer for boost::circular_buffer (Boost.Circular)"
     printer_name = 'boost::circular_buffer'
@@ -283,7 +281,7 @@ class BoostCircular:
     def display_hint(self):
         return 'array'
 
-@_register_printer
+@add_printer
 class BoostArray:
     "Pretty Printer for boost::array (Boost.Array)"
     printer_name = 'boost::array'
@@ -300,7 +298,7 @@ class BoostArray:
     def display_hint(self):
         return 'array'
 
-@_cond_register_printer(have_python_2)
+@cond_add_printer(have_python_2, 'needs python 2')
 class BoostVariant:
     "Pretty Printer for boost::variant (Boost.Variant)"
     printer_name = 'boost::variant'
@@ -320,7 +318,7 @@ class BoostVariant:
         type = types[which]
         data = ''
         try:
-            ptrtype = gdb.lookup_type(type).pointer()
+            ptrtype = lookup_type(type).pointer()
             data = self.value['storage_']['data_']['buf'].address.cast(ptrtype)
         except:
             data = self.value['storage_']['data_']['buf']
@@ -328,7 +326,7 @@ class BoostVariant:
                                                                      type,
                                                                      data.dereference())
 
-@_register_printer
+@add_printer
 class BoostUuid:
     "Pretty Printer for boost::uuids::uuid (Boost.Uuid)"
     printer_name = 'boost::uuids::uuid'
@@ -348,7 +346,7 @@ class BoostUuid:
 # boost::container::flat_set                     #
 ##################################################
 
-@_register_printer
+@add_printer
 class BoostContainerFlatSet:
     "Pretty Printer for boost::container::flat_set (Boost.Container)"
     printer_name = 'boost::container::flat_set'
@@ -412,7 +410,7 @@ class BoostContainerFlatSet:
 # boost::container::flat_map                     #
 ##################################################
 
-@_register_printer
+@add_printer
 class BoostContainerFlatMap:
     "Pretty Printer for boost::container::flat_map (Boost.Container)"
     printer_name = 'boost::container::flat_map'
@@ -480,7 +478,7 @@ class BoostContainerFlatMap:
         return 'map'
 
 # Iterator used for flat_set/flat_map
-@_register_printer
+@add_printer
 class BoostContainerVectorIterator:
     "Pretty Printer for boost::container::container_detail::vector_iterator (Boost.Container)"
     printer_name = 'boost::container::container_detail::vector_iterator'
@@ -530,13 +528,13 @@ def intrusive_iterator_to_string(iterator_value):
     member_hook_traits = get_named_template_argument(opttype, "boost::intrusive::detail::member_hook_traits")
     if member_hook_traits:
         value_type = member_hook_traits.template_argument(0)
-        member_offset = member_hook_traits.template_argument(2).cast(gdb.lookup_type("size_t"))
-        current_element_address = iterator_value["members_"]["nodeptr_"].cast(gdb.lookup_type("size_t")) - member_offset
+        member_offset = member_hook_traits.template_argument(2).cast(lookup_type("size_t"))
+        current_element_address = iterator_value["members_"]["nodeptr_"].cast(lookup_type("size_t")) - member_offset
         return current_element_address.cast(value_type.pointer()).dereference()
 
     return iterator_value["members_"]["nodeptr_"]
 
-@_register_printer
+@add_printer
 class BoostIntrusiveSet:
     "Pretty Printer for boost::intrusive::set (Boost.Intrusive)"
     printer_name = 'boost::intrusive::set'
@@ -550,7 +548,7 @@ class BoostIntrusiveSet:
             if member_offset == 0:
                 self.node_type = element_pointer_type
             else:
-                self.node_type = gdb.lookup_type("boost::intrusive::rbtree_node<void*>").pointer();
+                self.node_type = lookup_type("boost::intrusive::rbtree_node<void*>").pointer();
                 self.element_pointer_type = element_pointer_type
 
             if rb_tree_header['parent_']:
@@ -567,7 +565,7 @@ class BoostIntrusiveSet:
             if self.member_offset == 0:
                 return self.node
             else:
-                current_element_address = self.node.cast(gdb.lookup_type("size_t")) - self.member_offset
+                current_element_address = self.node.cast(lookup_type("size_t")) - self.member_offset
                 return current_element_address.cast(self.element_pointer_type)
 
         def __next__(self):
@@ -630,13 +628,13 @@ class BoostIntrusiveSet:
         element_pointer_type = self.element_type.pointer()
         member_hook = get_named_template_argument(self.val.type, "boost::intrusive::member_hook")
         if member_hook:
-            member_offset = member_hook.template_argument(2).cast(gdb.lookup_type("size_t"))
+            member_offset = member_hook.template_argument(2).cast(lookup_type("size_t"))
             return self.Iterator(self.get_header(), element_pointer_type, member_offset)
         else:
             return self.Iterator(self.get_header(), element_pointer_type)
 
 
-@_register_printer
+@add_printer
 class BoostIntrusiveTreeIterator:
     "Pretty Printer for boost::intrusive::set<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::tree_iterator'
@@ -655,7 +653,7 @@ class BoostIntrusiveTreeIterator:
 # boost::intrusive::list                         #
 ##################################################
 
-@_register_printer
+@add_printer
 class BoostIntrusiveList:
     "Pretty Printer for boost::intrusive::list (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list'
@@ -670,7 +668,7 @@ class BoostIntrusiveList:
             if member_offset == 0:
                 self.node_type = element_pointer_type
             else:
-                self.node_type = gdb.lookup_type("boost::intrusive::list_node<void*>").pointer();
+                self.node_type = lookup_type("boost::intrusive::list_node<void*>").pointer();
                 self.element_pointer_type = element_pointer_type
 
             next_node = list_header['next_']
@@ -688,7 +686,7 @@ class BoostIntrusiveList:
             if self.member_offset == 0:
                 return self.node
             else:
-                current_element_address = self.node.cast(gdb.lookup_type("size_t")) - self.member_offset
+                current_element_address = self.node.cast(lookup_type("size_t")) - self.member_offset
                 return current_element_address.cast(self.element_pointer_type)
 
         def __next__(self):
@@ -740,12 +738,12 @@ class BoostIntrusiveList:
         element_pointer_type = self.element_type.pointer()
         member_hook = get_named_template_argument(self.val.type, "boost::intrusive::member_hook")
         if member_hook:
-            member_offset = member_hook.template_argument(2).cast(gdb.lookup_type("size_t"))
+            member_offset = member_hook.template_argument(2).cast(lookup_type("size_t"))
             return self.Iterator(self.get_header(), element_pointer_type, member_offset)
         else:
             return self.Iterator(self.get_header(), element_pointer_type)
 
-@_register_printer
+@add_printer
 class BoostIntrusiveListIterator:
     "Pretty Printer for boost::intrusive::list<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list_iterator'
@@ -758,7 +756,7 @@ class BoostIntrusiveListIterator:
     def to_string(self):
         return intrusive_iterator_to_string(self.val)
 
-@_register_printer
+@add_printer
 class BoostGregorianDate:
     "Pretty Printer for boost::gregorian::date"
     printer_name = 'boost::gregorian::date'
@@ -786,7 +784,7 @@ class BoostGregorianDate:
         year = 100*b + d - 4800 + (m/10)
         return '(%s) %4d-%02d-%02d' % (self.typename, year,month,day)
 
-@_register_printer
+@add_printer
 class BoostPosixTimePTime:
     "Pretty Printer for boost::posix_time::ptime"
     printer_name = 'boost::posix_time::ptime'

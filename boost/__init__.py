@@ -33,14 +33,31 @@
 # Inspired _but not copied_ from libstdc++'s pretty printers
 #
 
-import sys
-import os
-import glob
-import importlib
+#
+# Package name.
+#
+pkg_name = __name__
 
-from .utils import register_printers
+#
+# Files that do not contain printers.
+#
+non_printer_files = [
+    '__init__.py',
+    'utils.py',
+    'all.py',
+    'latest.py',
+    None ][:-1]
+non_printer_files
 
-_files = [os.path.basename(_m) for _m in glob.glob(os.path.dirname(__file__) + "/*.py")]
-_modules = [_f[:-3] for _f in _files if not _f.startswith('__init__')]
-for _m in _modules:
-    importlib.import_module('.' + _m, __name__)
+#
+# Files that contain the latest printers.
+#
+latest_printer_files = [
+    'printers.py',
+    'multi_index_1_42.py',
+    None ][:-1]
+
+#
+# Import everything from the utils module into the top-level package namespace.
+#
+from .utils import *
