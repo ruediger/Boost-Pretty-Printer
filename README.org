@@ -1,5 +1,5 @@
 # -*- mode:org; mode:visual-line; coding:utf-8; -*-
-** [[http://sourceware.org/gdb/][GNU Debugger]] Pretty Printers for [[http://boost.org][Boost]]
+** GDB ([[http://sourceware.org/gdb/][GNU Debugger]]) Pretty Printers for [[http://boost.org][Boost]]
 Since version 7.0, GDB has Python scripting support. This can be used to provide "pretty printers" to make the output of GDB more usable. The libstdc++ project currently provides a set of pretty printers for their implementation of the C++ standard library. This projects goal is to provide a similar set of pretty printers for the Boost library.
 
 Help is appreciated!
@@ -63,7 +63,7 @@ Due to the limited nature of the debugging interface, individual printers includ
 *** Managing Printers From Inside GDB
 This python module installs a single top-level printer called =boost=, and individual subprinters for the various supported types. Each individual subprinter comes with a version number corresponding to the boost version number that it was designed for. As boost evolves, older printers might stop working.
 
-The default loading commands given in the [[#Installation]] section will only load the latest printer for each available type. If you are debugging a program compiled with an older Boost version, you might want to load all available printers. You can do this by replacing =import boost.latest= with =import boost.all=.
+The default loading commands given in the [[#installation][Installation]] section will only load the latest printer for each available type. If you are debugging a program compiled with an older Boost version, you might want to load all available printers. You can do this by replacing =import boost.latest= with =import boost.all=.
 
 Here are some useful commands to manage printers from inside gdb:
 #+BEGIN_EXAMPLE
