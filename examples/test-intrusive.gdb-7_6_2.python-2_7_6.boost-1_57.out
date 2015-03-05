@@ -8,66 +8,66 @@ BOOST_VERSION=1_57
 +r
 +fin
 +p blist
-$1 = boost::intrusive::list<IntListElement> with 0 elements
+$1 = bi::list<IntListElement>
 +c
 +fin
 +p blist
-$2 = boost::intrusive::list<IntListElement> with 3 elements
+$2 = bi::list<IntListElement> = {[0 @0x7fffffffd2d0L] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd300, prev_ = 0x7fffffffd3a8}, int_ = 1, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [1 @0x7fffffffd300L] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd330, prev_ = 0x7fffffffd2d0}, int_ = 2, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [2 @0x7fffffffd330L] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd3a8, prev_ = 0x7fffffffd300}, int_ = 3, member_hook_ = {next_ = 0x0, prev_ = 0x0}}}
 +c
 +fin
 +p mlist
-$3 = boost::intrusive::list<IntListElement> with 0 elements
+$3 = bi::list<IntListElement>
 +c
 +fin
 +p mlist
-$4 = boost::intrusive::list<IntListElement> with 2 elements
+$4 = bi::list<IntListElement>
 +c
 +fin
 +p blist
-$5 = 
+$5 = bi::list<IntListElement>
 +c
 +fin
 +p blist
-$6 = 
+$6 = bi::list<IntListElement> = {[0 @0x7fffffffd2d0L] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd300, prev_ = 0x7fffffffd370}, int_ = 1, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [1 @0x7fffffffd300L] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd330, prev_ = 0x7fffffffd2d0}, int_ = 2, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [2 @0x7fffffffd330L] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd370, prev_ = 0x7fffffffd300}, int_ = 3, member_hook_ = {next_ = 0x0, prev_ = 0x0}}}
 +c
 +fin
 +p mlist
-$7 = 
+$7 = bi::list<IntListElement>
 +c
 +fin
 +p mlist
-$8 = 
+$8 = bi::list<IntListElement>
 +c
 +fin
 +p bset
-$9 = 
+$9 = bi::set<IntSetElement>
 +c
 +fin
 +p bset
-$10 = 
+$10 = bi::set<IntSetElement> = {[0 @0x7fffffffd2d0L] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 1, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = (unknown: 2)}}, [1 @0x7fffffffd320L] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd278, left_ = 0x7fffffffd2d0, right_ = 0x7fffffffd370, color_ = boost::intrusive::rbtree_node<void*>::black_t}, int_ = 2, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}, [2 @0x7fffffffd370L] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 3, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}}
 +c
 +fin
 +p mset
-$11 = 
+$11 = bi::set<IntSetElement>
 +c
 +fin
 +p mset
-$12 = 
+$12 = bi::set<IntSetElement>
 +c
 +fin
 +p bset
-$13 = 
+$13 = bi::set<IntSetElement>
 +c
 +fin
 +p bset
-$14 = 
+$14 = bi::set<IntSetElement> = {[0 @0x7fffffffd2d0L] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 1, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = (unknown: 2)}}, [1 @0x7fffffffd320L] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd270, left_ = 0x7fffffffd2d0, right_ = 0x7fffffffd370, color_ = boost::intrusive::rbtree_node<void*>::black_t}, int_ = 2, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::black_t}}, [2 @0x7fffffffd370L] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 3, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}}
 +c
 +fin
 +p mset
-$15 = 
+$15 = bi::set<IntSetElement>
 +c
 +fin
 +p mset
-$16 = 
+$16 = bi::set<IntSetElement>
 +c
 +q

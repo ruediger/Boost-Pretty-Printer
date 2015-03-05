@@ -34,7 +34,7 @@ output_name = ${1}.${TAG}.out
 EXECUTABLES := $(foreach f,${TESTS},$(call executable_name,${f}))
 OUTPUTS := $(foreach f,${TESTS},$(call output_name,${f}))
 
-.PHONY: all version list clean
+.PHONY: all version list clean cleanall
 .SECONDARY:
 .DELETE_ON_ERROR:
 
@@ -51,7 +51,10 @@ list:
 	@echo OUTPUTS=${OUTPUTS}
 
 clean:
-	rm -rf ${EXECUTABLES} ${OUTPUTS}
+	rm -rf ${OUTPUTS}
+
+cleanall: clean
+	rm -rf ${EXECUTABLES}
 
 #
 # Generator of gdb run rules.

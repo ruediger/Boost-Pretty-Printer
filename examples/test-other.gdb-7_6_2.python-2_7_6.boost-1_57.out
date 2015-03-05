@@ -45,13 +45,13 @@ $18 = (boost::uuids::uuid) 00000000-0000-0000-0000-000000000000
 +p v_uuid_2
 $19 = (boost::uuids::uuid) 01234567-89ab-cdef-0123-456789abcdef
 +p v_intrusive_set_1
-$20 = 
+$20 = bi::set<MyClass>
 +p v_intrusive_set_2
-$21 = 
+$21 = bi::set<MyClass><error reading variable: Cannot access memory at address 0x9000007fffffffdb>
 +p v_intrusive_list_1
-$22 = boost::intrusive::list<MyClass_list> with 0 elements
+$22 = bi::list<MyClass_list>
 +p v_intrusive_list_2
-$23 = boost::intrusive::list<MyClass_list> with 1 elements
+$23 = bi::list<MyClass_list> = {[0 @0x7fffffffd360L] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x616888 <v_intrusive_list_2+8>, prev_ = 0x616888 <v_intrusive_list_2+8>}, int_ = 42, member_hook_ = {next_ = 0x0, prev_ = 0x0}}}
 +p v_gregorian_date_1
 $24 = (boost::gregorian::date) uninitialized
 +p v_gregorian_date_2

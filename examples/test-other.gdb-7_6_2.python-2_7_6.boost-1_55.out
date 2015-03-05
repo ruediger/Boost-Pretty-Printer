@@ -45,13 +45,13 @@ $18 = (boost::uuids::uuid) 00000000-0000-0000-0000-000000000000
 +p v_uuid_2
 $19 = (boost::uuids::uuid) 01234567-89ab-cdef-0123-456789abcdef
 +p v_intrusive_set_1
-$20 = 
+$20 = bi::set<MyClass>
 +p v_intrusive_set_2
-$21 = 
+$21 = bi::set<MyClass><error reading variable: Cannot access memory at address 0x5000007fffffffdb>
 +p v_intrusive_list_1
-$22 = boost::intrusive::list<MyClass_list> with 0 elements
+$22 = bi::list<MyClass_list>
 +p v_intrusive_list_2
-$23 = boost::intrusive::list<MyClass_list> with 1 elements = {[0] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x616888 <v_intrusive_list_2+8>, prev_ = 0x616888 <v_intrusive_list_2+8>}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 42, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x0, prev_ = 0x0}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}}
+$23 = bi::list<MyClass_list> = {[0 @0x7fffffffd320L] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x616888 <v_intrusive_list_2+8>, prev_ = 0x616888 <v_intrusive_list_2+8>}, int_ = 42, member_hook_ = {next_ = 0x0, prev_ = 0x0}}}
 +p v_gregorian_date_1
 $24 = (boost::gregorian::date) uninitialized
 +p v_gregorian_date_2
