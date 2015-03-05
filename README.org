@@ -5,7 +5,7 @@ Since version 7.0 GDB has Python scripting support. This can be used to provide 
 
 Help is appreciated!
 
-See [[git::supported.txt]] for supported classes and names of contributors.
+See [[supported.txt]] for supported classes and names of contributors.
 
 The pretty printers are licensed under the terms of the [[http://www.boost.org/users/license.html][Boost Software License, version 1.0]].
 
@@ -65,7 +65,7 @@ Due to the limited nature of the debugging interface, individual printers includ
 * Managing Printers From Inside GDB
 This python module installs a single top-level printer called =boost=, and individual subprinters for the various supported types. Each individual subprinter comes with a version number corresponding to the boost version number that it was designed for. As boost evolves, older printers might stop working.
 
-The default loading commands given in the [[Installation]] section will only load the latest printer for each available type. If you are debugging a program compiled with an older Boost version, you might want to load all available printers. You can do this by replacing =import boost.latest= with =import boost.all=.
+The default loading commands given in the [[#installation]] section will only load the latest printer for each available type. If you are debugging a program compiled with an older Boost version, you might want to load all available printers. You can do this by replacing =import boost.latest= with =import boost.all=.
 
 Here are some useful commands to manage printers from inside gdb:
 #+BEGIN_EXAMPLE
