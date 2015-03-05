@@ -1,7 +1,8 @@
-GDB_VERSION=7.7.1-0ubuntu5~14.04.2)
-PYTHON_VERSION=3.4.0
+GDB_VERSION=7_7_1
+PYTHON_VERSION=3_4_0
+BOOST_VERSION=1_57
 +py sys.path.insert(0, "..")
-+py import boost
++py import boost.latest
 +py boost.register_printers()
 +b done
 +r
@@ -58,5 +59,5 @@ $25 = (boost::gregorian::date) 2015-03-00
 +p v_ptime_1
 $26 = (boost::posix_time::ptime) uninitialized
 +p v_ptime_2
-$27 = (boost::posix_time::ptime) 2015-Mar-04 00:00:00.000000
+$27 = (boost::posix_time::ptime) 2015-Mar-05 00:00:00.000000
 +q

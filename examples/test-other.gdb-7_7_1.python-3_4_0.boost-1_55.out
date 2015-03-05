@@ -1,6 +1,6 @@
-GDB_VERSION=7_9
+GDB_VERSION=7_7_1
 PYTHON_VERSION=3_4_0
-BOOST_VERSION=1_57
+BOOST_VERSION=1_55
 +py sys.path.insert(0, "..")
 +py import boost.latest
 +py boost.register_printers()
@@ -51,7 +51,7 @@ $21 =
 +p v_intrusive_list_1
 $22 = boost::intrusive::list<MyClass_list> with 0 elements
 +p v_intrusive_list_2
-$23 = boost::intrusive::list<MyClass_list> with 1 elements
+$23 = boost::intrusive::list<MyClass_list> with 1 elements = {[0] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x616888 <v_intrusive_list_2+8>, prev_ = 0x616888 <v_intrusive_list_2+8>}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 42, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x0, prev_ = 0x0}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}}
 +p v_gregorian_date_1
 $24 = (boost::gregorian::date) uninitialized
 +p v_gregorian_date_2

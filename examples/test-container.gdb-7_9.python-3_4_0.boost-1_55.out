@@ -1,6 +1,6 @@
-GDB_VERSION=7_7_1
+GDB_VERSION=7_9
 PYTHON_VERSION=3_4_0
-BOOST_VERSION=1_57
+BOOST_VERSION=1_55
 +py sys.path.insert(0, "..")
 +py import boost.latest
 +py boost.register_printers()

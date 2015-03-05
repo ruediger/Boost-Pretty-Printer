@@ -1,0 +1,73 @@
+GDB_VERSION=7_7_1
+PYTHON_VERSION=3_4_0
+BOOST_VERSION=1_55
++py sys.path.insert(0, "..")
++py import boost.latest
++py boost.register_printers()
++b break_here
++r
++fin
++p blist
+$1 = boost::intrusive::list<IntListElement> with 0 elements
++c
++fin
++p blist
+$2 = boost::intrusive::list<IntListElement> with 3 elements = {[0] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd2e0, prev_ = 0x7fffffffd388}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 1, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x0, prev_ = 0x0}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}, [1] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd310, prev_ = 0x7fffffffd2b0}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 2, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x0, prev_ = 0x0}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}, [2] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd388, prev_ = 0x7fffffffd2e0}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 3, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x0, prev_ = 0x0}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}}
++c
++fin
++p mlist
+$3 = boost::intrusive::list<IntListElement> with 0 elements
++c
++fin
++p mlist
+$4 = boost::intrusive::list<IntListElement> with 2 elements = {[0] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd310, prev_ = 0x7fffffffd2b0}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 2, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd328, prev_ = 0x7fffffffd368}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}, [1] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd388, prev_ = 0x7fffffffd2e0}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 3, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd368, prev_ = 0x7fffffffd2f8}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}}
++c
++fin
++p blist
+$5 = empty boost::intrusive::list<IntListElement>
++c
++fin
++p blist
+$6 = non-empty boost::intrusive::list<IntListElement> = {[0] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd2e0, prev_ = 0x7fffffffd350}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 1, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x0, prev_ = 0x0}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}, [1] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd310, prev_ = 0x7fffffffd2b0}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 2, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x0, prev_ = 0x0}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}, [2] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd350, prev_ = 0x7fffffffd2e0}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 3, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x0, prev_ = 0x0}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}}
++c
++fin
++p mlist
+$7 = empty boost::intrusive::list<IntListElement>
++c
++fin
++p mlist
+$8 = non-empty boost::intrusive::list<IntListElement> = {[0] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd310, prev_ = 0x7fffffffd2b0}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 2, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd328, prev_ = 0x7fffffffd340}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}, [1] = {<boost::intrusive::list_base_hook<void, void, void>> = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>> = {<boost::intrusive::node_holder<boost::intrusive::list_node<void*>, boost::intrusive::default_tag, 1u>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd350, prev_ = 0x7fffffffd2e0}, <No data fields>}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::default_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)1>, 1u>> = {<No data fields>}, <No data fields>}, <No data fields>}, int_ = 3, member_hook_ = {<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>> = {<boost::intrusive::list_node<void*>> = {next_ = 0x7fffffffd340, prev_ = 0x7fffffffd2f8}, <boost::intrusive::hook_tags_definer<boost::intrusive::generic_hook<boost::intrusive::get_list_node_algo<void*>, boost::intrusive::member_tag, (boost::intrusive::link_mode_type)1, (boost::intrusive::base_hook_type)0>, 0u>> = {<No data fields>}, <No data fields>}, <No data fields>}}}
++c
++fin
++p bset
+$9 = 
++c
++fin
++p bset
+$10 = 
++c
++fin
++p mset
+$11 = 
++c
++fin
++p mset
+$12 = 
++c
++fin
++p bset
+$13 = 
++c
++fin
++p bset
+$14 = 
++c
++fin
++p mset
+$15 = 
++c
++fin
++p mset
+$16 = 
++c
++q
