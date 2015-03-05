@@ -1,7 +1,6 @@
 # -*- mode:org; mode:visual-line; coding:utf-8; -*-
-GDB (the [[http://sourceware.org/gdb/][GNU Debugger]]) Pretty Printers for [[http://boost.org][Boost]]
-
-Since version 7.0 GDB has Python scripting support. This can be used to provide "Pretty Printers" to make the output of GDB more usable. The libstdc++ project currently provides a set of pretty printers for their implementation of the C++ standard library. This projects goal is to provide a similar set of pretty printers for the Boost library.
+* GDB ([[http://sourceware.org/gdb/][GNU Debugger]]) Pretty Printers for [[http://boost.org][Boost]]
+Since version 7.0, GDB has Python scripting support. This can be used to provide "pretty printers" to make the output of GDB more usable. The libstdc++ project currently provides a set of pretty printers for their implementation of the C++ standard library. This projects goal is to provide a similar set of pretty printers for the Boost library.
 
 Help is appreciated!
 
@@ -9,15 +8,15 @@ See [[supported.txt]] for supported classes and names of contributors.
 
 The pretty printers are licensed under the terms of the [[http://www.boost.org/users/license.html][Boost Software License, version 1.0]].
 
-* Installation:
+*** Installation
 GDB version 7 or better is required. Currently, most printers work with either Python 2 or Python 3.
 
-Check out the git repository:
+To install, check out the git repository:
 #+BEGIN_EXAMPLE
 git clone git://github.com/ruediger/Boost-Pretty-Printer.git
 #+END_EXAMPLE
 
-and add the following lines to your =~/.gdbinit=:
+then add the following lines to your =~/.gdbinit=:
 #+BEGIN_EXAMPLE
 python
 import sys
@@ -27,11 +26,11 @@ boost.register_printers()
 end
 #+END_EXAMPLE
 
-and of course replace =PATH-TO-THE-REPO= with the absolute path to the Boost Pretty Printer repository. If you have no =~/.gdbinit= file just create it.
+and of course, replace =PATH-TO-THE-REPO= with the absolute path to the Boost Pretty Printer repository. If you have no =~/.gdbinit= file just create it.
 
 Now you can simply use GDB's =print= (short =p=) statement to pretty print the supported boost objects.
 
-* Example
+*** Example
 #+BEGIN_EXAMPLE
   $ cat > foo.c++
   #include <boost/range/iterator_range.hpp>
@@ -58,13 +57,13 @@ Now you can simply use GDB's =print= (short =p=) statement to pretty print the s
   $1 = boost::iterator_range<char const*> of length 12 = {72 'H', 101 'e', 108 'l', 108 'l', 111 'o', 32 ' ', 87 'W', 111 'o', 114 'r', 108 'l', 100 'd', 0 '\000'}
 #+END_EXAMPLE
 
-* Volatililty Of Printers
+*** Volatililty Of Printers
 Due to the limited nature of the debugging interface, individual printers included in this package can stop working with every Boost update. Specifically, a printer for =boost::intrusive::list= designed for Boost version 1.55 might or might not work with Boost 1.57. The reasons for this are explained in [[HACKING]]. Keeping the printers up to date is a daunting task, and contributions are welcome in that sense. If you need to debug some data structures and you find that there is no printer for them, or that the included printer stopped working, consider investing some time in fixing them and creating a pull request. The starting point is [[HACKING]].
 
-* Managing Printers From Inside GDB
+*** Managing Printers From Inside GDB
 This python module installs a single top-level printer called =boost=, and individual subprinters for the various supported types. Each individual subprinter comes with a version number corresponding to the boost version number that it was designed for. As boost evolves, older printers might stop working.
 
-The default loading commands given in the [[#installation]] section will only load the latest printer for each available type. If you are debugging a program compiled with an older Boost version, you might want to load all available printers. You can do this by replacing =import boost.latest= with =import boost.all=.
+The default loading commands given in the [[#Installation]] section will only load the latest printer for each available type. If you are debugging a program compiled with an older Boost version, you might want to load all available printers. You can do this by replacing =import boost.latest= with =import boost.all=.
 
 Here are some useful commands to manage printers from inside gdb:
 #+BEGIN_EXAMPLE
@@ -82,6 +81,6 @@ enable pretty-printer global boost;.*
 
 For more information, see the [[https://sourceware.org/gdb/onlinedocs/gdb/Pretty-Printing.html][GDB documentation]].
 
-* Specific Printer Notes
-** Multi-Index-Container
+*** Specific Printer Notes
+**** Multi-Index-Container
 The printer included here can only print Ordered (Unique or Non-Unique) and Sequenced indexes. Hashed and Random-Access indexes are not currently supported, though with the default settings, the printer will capture them and display an appropriate message. It is possible to specify which index to use for printing a specific container dynamically, from inside GDB (see the [[examples]] folder).
