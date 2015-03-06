@@ -122,6 +122,7 @@ class Boost_Multi_Index:
     "Printer for boost::multi_index_container"
     printer_name = 'boost::multi_index_container'
     version = '1.42'
+    template_name = 'boost::multi_index::multi_index_container'
 
     #
     # Not supported indexes (hashes and random-access) are captured and printed
@@ -133,8 +134,6 @@ class Boost_Multi_Index:
 
     @classmethod
     def supports(self_type, v):
-        if not v.template_name == 'boost::multi_index::multi_index_container':
-            return False
         _boost_multi_index_get_indexes(v)
         #message('address=' + str(intptr(v.address)) + ' multi_index_selector=' + str(multi_index_selector))
         if intptr(v.address) in multi_index_selector:

@@ -469,10 +469,9 @@ elif have_python_2:
 ### - 'version' : Appended to the subprinter name. (Optional.)
 ### - 'supports(GDB_Value_Wrapper)' classmethod : If it exists, it is used to
 ###     determine if the Printer supports the given object.
-### - 'type_name_re' : If 'supports(basic_type)' doesn't exist, a default
-###     version is used which simply tests whether the type name matches this
-###     re. (Either supports() or type_name_re is required.)
-### - 'enabled' : If this exists and is set to false, disable printer.
+### - 'template_name' : string or list of strings. Only objects with this
+###     template name will attempt to use this printer.
+###     (Either supports() or template_name is required.)
 ### - '__init__' : Its only argument is a GDB_Value_Wrapper.
 ###
 
@@ -481,29 +480,22 @@ class Printer_Gen(object):
     Top-level printer generator.
     """
     class SubPrinter_Gen(object):
-        def match_re(self, v):
-            return self.re.search(str(v.basic_type)) != None
-
         def __init__(self, Printer):
+            self.Printer = Printer
+            # set printer_name
             self.name = Printer.printer_name
             if hasattr(Printer, 'version'):
                 self.name += '-' + Printer.version
+            # set enabled
             if hasattr(Printer, 'enabled'):
                 self.enabled = Printer.enabled
             else:
                 self.enabled = True
-            if hasattr(Printer, 'supports'):
-                self.re = None
-                self.supports = Printer.supports
-            else:
-                self.re = re.compile(Printer.type_name_re)
-                self.supports = self.match_re
-            self.Printer = Printer
 
         def __call__(self, v):
             if not self.enabled:
                 return None
-            if self.supports(v):
+            if hasattr(self.Printer, 'supports') and self.Printer.supports(v):
                 v.type_name = str(v.basic_type)
                 return self.Printer(v)
             return None
@@ -511,10 +503,36 @@ class Printer_Gen(object):
     def __init__(self, name):
         self.name = name
         self.enabled = True
-        self.subprinters = []
+        self.subprinters = list()
+        self.template_name_dict = dict()
+        self.no_template_name_list = list()
 
     def add(self, Printer):
-        self.subprinters.append(Printer_Gen.SubPrinter_Gen(Printer))
+        if not hasattr(self.Printer, 'supports') and not hasattr(Printer, 'template_name'):
+            message('cannot import printer [' + Printer.printer_name + ']: neither supports() nor template_name is defined')
+            return
+        # get list of template names
+        if not hasattr(Printer, 'template_name'):
+            l = list()
+        elif type(Printer.template_name) == str:
+            l = [Printer.template_name]
+        elif type(Printer.template_name) == list:
+            l = Printer.template_name
+        else:
+            message('cannot import printer [' + Printer.printer_name + ']: template_name has type=' + str(type(Printer.template_name)))
+            return
+        # create new printer
+        p = Printer_Gen.SubPrinter_Gen(Printer)
+        # add it to subprinters
+        self.subprinters.append(p)
+        # add it to template_name_dict
+        if len(l) > 0:
+            for n in l:
+                if n not in self.template_name_dict:
+                    self.template_name_dict[n] = list()
+                self.template_name_dict[n].append(p)
+        else:
+            self.no_template_name_list.append(p)
 
     def __call__(self, value):
         qualifiers = get_type_qualifiers(value.type)
@@ -522,7 +540,11 @@ class Printer_Gen(object):
         v.qualifiers = qualifiers
         v.basic_type = v.type
         v.template_name = template_name(v.basic_type)
-        for subprinter_gen in self.subprinters:
+        if v.template_name not in self.template_name_dict:
+            l = self.no_template_name_list
+        else:
+            l = self.template_name_dict[v.template_name]
+        for subprinter_gen in l:
             printer = subprinter_gen(v)
             if printer != None:
                 return printer
@@ -622,7 +644,7 @@ def add_trivial_printer(type_name, f):
     """
     class _Printer:
         printer_name = type_name
-        type_name_re = '^' + type_name + '$'
+        template_name = type_name
         def __init__(self, v):
             self.v = v
             self.f = f

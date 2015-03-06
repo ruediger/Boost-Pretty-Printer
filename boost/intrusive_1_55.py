@@ -38,8 +38,7 @@ class Generic_Hook_Printer:
     "Pretty Printer for boost::intrusive::generic_hook"
     printer_name = 'boost::intrusive::generic_hook'
     version = '1.55'
-    type_name_re = '^boost::intrusive::generic_hook<.*>$'
-    enabled = True
+    template_name = 'boost::intrusive::generic_hook'
 
     def __init__(self, value):
         self.value = value
@@ -71,8 +70,13 @@ class Hook_Printer:
     "Pretty Printer for boost::intrusive::*_(base|member)_hook"
     printer_name = 'boost::intrusive::hook'
     version = '1.55'
-    type_name_re = '^boost::intrusive::(avl_set|bs_set|list|set|slist|splay_set|unordered_set)_(base|member)_hook<.*>$'
-    enabled = True
+    template_name = ['boost::intrusive::avl_set_base_hook', 'boost::intrusive::avl_set_member_hook',
+                     'boost::intrusive::bs_set_base_hook', 'boost::intrusive::bs_set_member_hook',
+                     'boost::intrusive::list_base_hook', 'boost::intrusive::list_member_hook',
+                     'boost::intrusive::slist_base_hook', 'boost::intrusive::slist_member_hook',
+                     'boost::intrusive::set_base_hook', 'boost::intrusive::set_member_hook',
+                     'boost::intrusive::splay_set_base_hook', 'boost::intrusive::splay_set_member_hook',
+                     'boost::intrusive::unordered_set_base_hook', 'boost::intrusive::unordered_set_member_hook']
 
     def __init__(self, value):
         self.val = value
@@ -241,8 +245,9 @@ class Iterator_Printer:
     "Pretty Printer for boost::intrusive::(list|slist|tree)_iterator"
     printer_name = 'boost::intrusive::iterator'
     version = '1.55'
-    type_name_re = '^boost::intrusive::(list|slist|tree)_iterator<.*>$'
-    enabled = True
+    template_name = ['boost::intrusive::list_iterator',
+                     'boost::intrusive::slist_iterator',
+                     'boost::intrusive::tree_iterator']
 
     def __init__(self, value):
         self.val = value
@@ -260,8 +265,7 @@ class List_Printer:
     "Pretty Printer for boost::intrusive list and slist"
     printer_name = 'boost::intrusive::list'
     version = '1.55'
-    type_name_re = '^boost::intrusive::s?list<.*>$'
-    enabled = True
+    template_name = ['boost::intrusive::list', 'boost::intrusive::slist']
 
     class Iterator:
         def __init__(self, l):
@@ -330,7 +334,6 @@ class Tree_Printer:
     "Pretty Printer for boost::intrusive ordered sets"
     printer_name = 'boost::intrusive::set'
     version = '1.55'
-    enabled = True
 
     @staticmethod
     def get_bstree_impl_base(t):

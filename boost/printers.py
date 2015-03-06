@@ -51,9 +51,9 @@ from boost import *
 ### - 'version' : Appended to the subprinter name. (Required.)
 ### - 'supports(GDB_Value_Wrapper)' classmethod : If it exists, it is used to
 ###     determine if the Printer supports the given object.
-### - 'type_name_re' : If 'supports(basic_type)' doesn't exist, a default
-###     version is used which simply tests whether the type name matches this
-###     re. (Either supports() or type_name_re is required.)
+### - 'template_name' : string or list of strings. Only objects with this
+###     template name will attempt to use this printer.
+###     (Either supports() or template_name is required.)
 ### - '__init__' : Its only argument is a GDB_Value_Wrapper.
 ###
 
@@ -62,7 +62,7 @@ class BoostIteratorRange:
     "Pretty Printer for boost::iterator_range (Boost.Range)"
     printer_name = 'boost::iterator_range'
     version = '1.40'
-    type_name_re = '^boost::iterator_range<.*>$'
+    template_name = 'boost::iterator_range'
 
     class _iterator:
         def __init__(self, begin, end):
@@ -105,8 +105,8 @@ class BoostOptional:
     "Pretty Printer for boost::optional (Boost.Optional)"
     printer_name = 'boost::optional'
     version = '1.40'
-    type_name_re = '^boost::optional<(.*)>$'
-    regex = re.compile(type_name_re)
+    template_name = 'boost::optional'
+    regex = re.compile('^boost::optional<(.*)>$')
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -155,7 +155,7 @@ class BoostReferenceWrapper:
     "Pretty Printer for boost::reference_wrapper (Boost.Ref)"
     printer_name = 'boost::reference_wrapper'
     version = '1.40'
-    type_name_re = '^boost::reference_wrapper<(.*)>$'
+    template_name = 'boost::reference_wrapper'
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -169,7 +169,7 @@ class BoostTribool:
     "Pretty Printer for boost::logic::tribool (Boost.Tribool)"
     printer_name = 'boost::logic::tribool'
     version = '1.40'
-    type_name_re = '^boost::logic::tribool$'
+    template_name = 'boost::logic::tribool'
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -189,7 +189,8 @@ class BoostScopedPtr:
     "Pretty Printer for boost::scoped/intrusive_ptr/array (Boost.SmartPtr)"
     printer_name = 'boost::scoped/intrusive_ptr/array'
     version = '1.40'
-    type_name_re = '^boost::(intrusive|scoped)_(ptr|array)<(.*)>$'
+    template_name = ['boost::intrusive_array', 'boost::intrusive_ptr',
+                     'boost::scoped_array', 'boost::scoped_ptr']
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -203,7 +204,8 @@ class BoostSharedPtr:
     "Pretty Printer for boost::shared/weak_ptr/array (Boost.SmartPtr)"
     printer_name = 'boost::shared/weak_ptr/array'
     version = '1.40'
-    type_name_re = '^boost::(weak|shared)_(ptr|array)<(.*)>$'
+    template_name = ['boost::shared_array', 'boost::shared_ptr',
+                     'boost::weak_array', 'boost::weak_ptr']
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -224,7 +226,7 @@ class BoostCircular:
     "Pretty Printer for boost::circular_buffer (Boost.Circular)"
     printer_name = 'boost::circular_buffer'
     version = '1.40'
-    type_name_re = '^boost::circular_buffer<(.*)>$'
+    template_name = 'boost::circular_buffer'
 
     class _iterator:
         def __init__(self, first, last, buff, end, size):
@@ -286,7 +288,7 @@ class BoostArray:
     "Pretty Printer for boost::array (Boost.Array)"
     printer_name = 'boost::array'
     version = '1.40'
-    type_name_re = '^boost::array<(.*)>$'
+    template_name = 'boost::array'
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -303,8 +305,8 @@ class BoostVariant:
     "Pretty Printer for boost::variant (Boost.Variant)"
     printer_name = 'boost::variant'
     version = '1.40'
-    type_name_re = '^boost::variant<(.*)>$'
-    regex = re.compile(type_name_re)
+    template_name = 'boost::variant'
+    regex = re.compile('^boost::variant<(.*)>$')
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -331,7 +333,7 @@ class BoostUuid:
     "Pretty Printer for boost::uuids::uuid (Boost.Uuid)"
     printer_name = 'boost::uuids::uuid'
     version = '1.40'
-    type_name_re = '^boost::uuids::uuid$'
+    template_name = 'boost::uuids::uuid'
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -351,7 +353,7 @@ class BoostContainerFlatSet:
     "Pretty Printer for boost::container::flat_set (Boost.Container)"
     printer_name = 'boost::container::flat_set'
     version = '1.52'
-    type_name_re = '^boost::container::flat_set<.*>$'
+    template_name = 'boost::container::flat_set'
 
     class Iterator:
         def __init__(self, pointer, size):
@@ -415,7 +417,7 @@ class BoostContainerFlatMap:
     "Pretty Printer for boost::container::flat_map (Boost.Container)"
     printer_name = 'boost::container::flat_map'
     version = '1.52'
-    type_name_re = '^boost::container::flat_map<.*>$'
+    template_name = 'boost::container::flat_map'
 
     class Iterator:
         def __init__(self, pointer, size):
@@ -483,7 +485,8 @@ class BoostContainerVectorIterator:
     "Pretty Printer for boost::container::container_detail::vector_iterator (Boost.Container)"
     printer_name = 'boost::container::container_detail::vector_iterator'
     version = '1.52'
-    type_name_re = '^boost::container::container_detail::vector.*_iterator<.*>$'
+    template_name = ['boost::container::container_detail::vector_iterator',
+                     'boost::container::container_detail::vector_const_iterator']
 
     def __init__(self, value):
         self.val = value
@@ -499,7 +502,7 @@ class BoostGregorianDate:
     "Pretty Printer for boost::gregorian::date"
     printer_name = 'boost::gregorian::date'
     version = '1.40'
-    type_name_re = '^boost::gregorian::date$'
+    template_name = 'boost::gregorian::date'
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -527,7 +530,7 @@ class BoostPosixTimePTime:
     "Pretty Printer for boost::posix_time::ptime"
     printer_name = 'boost::posix_time::ptime'
     version = '1.40'
-    type_name_re = '^boost::posix_time::ptime$'
+    template_name = 'boost::posix_time::ptime'
 
     def __init__(self, value):
         self.typename = value.type_name

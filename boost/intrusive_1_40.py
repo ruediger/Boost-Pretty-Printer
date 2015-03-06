@@ -45,7 +45,7 @@ class BoostIntrusiveSet:
     "Pretty Printer for boost::intrusive::set (Boost.Intrusive)"
     printer_name = 'boost::intrusive::set'
     version = '1.40'
-    type_name_re = '^boost::intrusive::set<.*>$'
+    template_name = 'boost::intrusive::set'
 
     class Iterator:
         def __init__(self, rb_tree_header, element_pointer_type, member_offset=0):
@@ -145,7 +145,7 @@ class BoostIntrusiveTreeIterator:
     "Pretty Printer for boost::intrusive::set<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::tree_iterator'
     version = '1.40'
-    type_name_re = '^boost::intrusive::tree_iterator<.*>$'
+    template_name = 'boost::intrusive::tree_iterator'
 
     def __init__(self, value):
         self.val = value
@@ -164,7 +164,7 @@ class BoostIntrusiveList:
     "Pretty Printer for boost::intrusive::list (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list'
     version = '1.40'
-    type_name_re = '^boost::intrusive::list<.*>$'
+    template_name = 'boost::intrusive::list'
 
     class Iterator:
         def __init__(self, list_header, element_pointer_type, member_offset=0):
@@ -254,7 +254,7 @@ class BoostIntrusiveListIterator:
     "Pretty Printer for boost::intrusive::list<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list_iterator'
     version = '1.40'
-    type_name_re = '^boost::intrusive::list_iterator<.*>$'
+    template_name = '^boost::intrusive::list_iterator'
 
     def __init__(self, value):
         self.val = value
