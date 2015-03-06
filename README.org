@@ -4,7 +4,7 @@ Since version 7.0, GDB has Python scripting support. This can be used to provide
 
 Help is appreciated!
 
-See [[SUPPORTED.org]] for supported classes and names of contributors. See [[NOTES.org]] for other notes.
+See [[SUPPORTED.org]] for supported classes and names of contributors. See [[NOTES.org]] for other general notes. See [[HACKING.org]] for more low-level information about printers in general.
 
 The pretty printers are licensed under the terms of the [[http://www.boost.org/users/license.html][Boost Software License, version 1.0]].
 
@@ -58,7 +58,7 @@ Now you can simply use GDB's =print= (short =p=) statement to pretty print the s
 #+END_EXAMPLE
 
 *** Volatililty Of Printers
-Due to the limited nature of the debugging interface, individual printers included in this package can stop working with every Boost update. Specifically, a printer for =boost::intrusive::list= designed for Boost version 1.55 might or might not work with Boost 1.57. The reasons for this are explained in [[HACKING]]. Keeping the printers up to date is a daunting task, and contributions are welcome in that sense. If you need to debug some data structures and you find that there is no printer for them, or that the included printer stopped working, consider investing some time in fixing them and creating a pull request. The starting point is [[HACKING]].
+Due to the limited nature of the debugging interface, individual printers included in this package can stop working with every Boost update. Specifically, a printer for =boost::intrusive::list= designed for Boost version 1.40 might or might not work with Boost 1.46. The reasons for this are explained in [[HACKING.org]]. Keeping the printers up to date is a daunting task, and contributions are welcome in that sense. If you need to debug some data structures and you find that there is no printer for them, or that the included printer stopped working, consider investing some time in fixing them and creating a pull request. Various information about this process is provided in [[HACKING.org]].
 
 *** Managing Printers From Inside GDB
 This python module installs a single top-level printer called =boost=, and individual subprinters for the various supported types. Each individual subprinter comes with a version number corresponding to the boost version number that it was designed for. As boost evolves, older printers might stop working.
