@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import gdb
 import gdb.types
+import gdb.printing
 import re
 import sys
 
