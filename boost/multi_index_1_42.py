@@ -247,7 +247,7 @@ class Boost_Multi_Index:
     class ordered_iterator:
         @staticmethod
         def get_parent_ptr(node_ptr):
-            return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~1)
+            return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16) & (~intptr(1))
 
         @staticmethod
         def get_left_ptr(node_ptr):
