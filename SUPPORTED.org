@@ -25,7 +25,7 @@
 
 ***** Notes
 
-- The list includes only the "main" types that are supported. Some related types might also be supported, (notably, iterators over supported containers).
+- The list includes only the "main" types that are supported. Some related types might also be supported, notably, iterators over supported containers.
 
 - Unfortunately, a version of "1.55" does not automatically mean that the printer will or will not work for other (earlier or later) Boost versions. It only means, or suggests :), the printer worked for that particular Boost version.
 
