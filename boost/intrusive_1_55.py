@@ -294,9 +294,9 @@ class List_Printer:
         self.value_type = self.l.type.template_argument(0)
 
     def to_string (self):
-        res = ''
-        if self.l.qualifiers:
-            res += '(' + self.l.qualifiers + ')'
+        if not self.l.qualifiers:
+            return None
+        res = '(' + self.l.qualifiers + ')'
         res += (short_ns(template_name(self.l.type)) +
                 '<' + str(self.value_type.strip_typedefs()) + '>')
         return res
@@ -405,9 +405,9 @@ class Tree_Printer:
         self.l = l
 
     def to_string (self):
-        res = ''
-        if self.l.qualifiers:
-            res += '(' + self.l.qualifiers + ')'
+        if not self.l.qualifiers:
+            return None
+        res = '(' + self.l.qualifiers + ')'
         if str(self.l.type).startswith('boost::intrusive::'):
             value_type = self.l.type.template_argument(0)
             res += (short_ns(template_name(self.l.type)) +
