@@ -54,6 +54,9 @@ class switch(object):
 # Rudimentary logging facility.
 #
 def message(s):
+    """
+    Print string argument to stderr, prefixed by the package name. Ok for both Py2 & Py3.
+    """
     print('*** ' + pkg_name + ': ' + s, file=sys.stderr)
 
 #
