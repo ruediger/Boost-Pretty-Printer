@@ -8,66 +8,66 @@ BOOST_VERSION=1_57
 +r
 +fin
 +p blist
-$1 = bi::list<IntListElement>
+$1 = 
 +c
 +fin
 +p blist
-$2 = bi::list<IntListElement> = {[0 @0x7fffffffd2d0] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd300, prev_ = 0x7fffffffd3a8}, int_ = 1, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [1 @0x7fffffffd300] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd330, prev_ = 0x7fffffffd2d0}, int_ = 2, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [2 @0x7fffffffd330] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd3a8, prev_ = 0x7fffffffd300}, int_ = 3, member_hook_ = {next_ = 0x0, prev_ = 0x0}}}
+$2 = {[0 @0x7fffffffd2d0] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd300, prev_ = 0x7fffffffd3a8}, int_ = 1, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [1 @0x7fffffffd300] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd330, prev_ = 0x7fffffffd2d0}, int_ = 2, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [2 @0x7fffffffd330] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd3a8, prev_ = 0x7fffffffd300}, int_ = 3, member_hook_ = {next_ = 0x0, prev_ = 0x0}}}
 +c
 +fin
 +p mlist
-$3 = bi::list<IntListElement>
+$3 = 
 +c
 +fin
 +p mlist
-$4 = bi::list<IntListElement>
+$4 = {[0 @0x7fffffffd300] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd330, prev_ = 0x7fffffffd2d0}, int_ = 2, member_hook_ = {next_ = 0x7fffffffd348, prev_ = 0x7fffffffd388}}, [1 @0x7fffffffd330] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd3a8, prev_ = 0x7fffffffd300}, int_ = 3, member_hook_ = {next_ = 0x7fffffffd388, prev_ = 0x7fffffffd318}}}
 +c
 +fin
 +p blist
-$5 = bi::list<IntListElement>
+$5 = 
 +c
 +fin
 +p blist
-$6 = bi::list<IntListElement> = {[0 @0x7fffffffd2d0] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd300, prev_ = 0x7fffffffd370}, int_ = 1, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [1 @0x7fffffffd300] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd330, prev_ = 0x7fffffffd2d0}, int_ = 2, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [2 @0x7fffffffd330] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd370, prev_ = 0x7fffffffd300}, int_ = 3, member_hook_ = {next_ = 0x0, prev_ = 0x0}}}
+$6 = {[0 @0x7fffffffd2d0] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd300, prev_ = 0x7fffffffd370}, int_ = 1, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [1 @0x7fffffffd300] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd330, prev_ = 0x7fffffffd2d0}, int_ = 2, member_hook_ = {next_ = 0x0, prev_ = 0x0}}, [2 @0x7fffffffd330] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd370, prev_ = 0x7fffffffd300}, int_ = 3, member_hook_ = {next_ = 0x0, prev_ = 0x0}}}
 +c
 +fin
 +p mlist
-$7 = bi::list<IntListElement>
+$7 = 
 +c
 +fin
 +p mlist
-$8 = bi::list<IntListElement>
+$8 = {[0 @0x7fffffffd300] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd330, prev_ = 0x7fffffffd2d0}, int_ = 2, member_hook_ = {next_ = 0x7fffffffd348, prev_ = 0x7fffffffd360}}, [1 @0x7fffffffd330] = {<boost::intrusive::list_base_hook<void, void, void>> = {next_ = 0x7fffffffd370, prev_ = 0x7fffffffd300}, int_ = 3, member_hook_ = {next_ = 0x7fffffffd360, prev_ = 0x7fffffffd318}}}
 +c
 +fin
 +p bset
-$9 = bi::set<IntSetElement>
+$9 = 
 +c
 +fin
 +p bset
-$10 = bi::set<IntSetElement> = {[0 @0x7fffffffd2d0] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 1, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = (unknown: 2)}}, [1 @0x7fffffffd320] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd278, left_ = 0x7fffffffd2d0, right_ = 0x7fffffffd370, color_ = boost::intrusive::rbtree_node<void*>::black_t}, int_ = 2, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}, [2 @0x7fffffffd370] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 3, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}}
+$10 = {[0 @0x7fffffffd2d0] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 1, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = (unknown: 2)}}, [1 @0x7fffffffd320] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd278, left_ = 0x7fffffffd2d0, right_ = 0x7fffffffd370, color_ = boost::intrusive::rbtree_node<void*>::black_t}, int_ = 2, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}, [2 @0x7fffffffd370] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 3, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}}
 +c
 +fin
 +p mset
-$11 = bi::set<IntSetElement>
+$11 = 
 +c
 +fin
 +p mset
-$12 = bi::set<IntSetElement>
+$12 = {[0 @0x7fffffffd320] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd278, left_ = 0x7fffffffd2d0, right_ = 0x7fffffffd370, color_ = boost::intrusive::rbtree_node<void*>::black_t}, int_ = 2, member_hook_ = {parent_ = 0x7fffffffd2a8, left_ = 0x0, right_ = 0x7fffffffd398, color_ = boost::intrusive::rbtree_node<void*>::black_t}}, [1 @0x7fffffffd370] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 3, member_hook_ = {parent_ = 0x7fffffffd348, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}}
 +c
 +fin
 +p bset
-$13 = bi::set<IntSetElement>
+$13 = 
 +c
 +fin
 +p bset
-$14 = bi::set<IntSetElement> = {[0 @0x7fffffffd2d0] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 1, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = (unknown: 2)}}, [1 @0x7fffffffd320] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd270, left_ = 0x7fffffffd2d0, right_ = 0x7fffffffd370, color_ = boost::intrusive::rbtree_node<void*>::black_t}, int_ = 2, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::black_t}}, [2 @0x7fffffffd370] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 3, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}}
+$14 = {[0 @0x7fffffffd2d0] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 1, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = (unknown: 2)}}, [1 @0x7fffffffd320] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd270, left_ = 0x7fffffffd2d0, right_ = 0x7fffffffd370, color_ = boost::intrusive::rbtree_node<void*>::black_t}, int_ = 2, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::black_t}}, [2 @0x7fffffffd370] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 3, member_hook_ = {parent_ = 0x0, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}}
 +c
 +fin
 +p mset
-$15 = bi::set<IntSetElement>
+$15 = 
 +c
 +fin
 +p mset
-$16 = bi::set<IntSetElement>
+$16 = {[0 @0x7fffffffd320] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd270, left_ = 0x7fffffffd2d0, right_ = 0x7fffffffd370, color_ = boost::intrusive::rbtree_node<void*>::black_t}, int_ = 2, member_hook_ = {parent_ = 0x7fffffffd2a0, left_ = 0x0, right_ = 0x7fffffffd398, color_ = boost::intrusive::rbtree_node<void*>::black_t}}, [1 @0x7fffffffd370] = {<boost::intrusive::set_base_hook<void, void, void, void>> = {parent_ = 0x7fffffffd320, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}, int_ = 3, member_hook_ = {parent_ = 0x7fffffffd348, left_ = 0x0, right_ = 0x0, color_ = boost::intrusive::rbtree_node<void*>::red_t}}}
 +c
 +q

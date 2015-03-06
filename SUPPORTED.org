@@ -20,7 +20,7 @@
 | =boost::intrusive::list=                | 1.40    | =intrusive_1_40=   | no     | Johan Sternerup (johanst)       |                                |
 | =boost::intrusive::*set=                | "       | "                  |        | "                               |                                |
 | =boost::multi_index_container=          | 1.42    | =multi_index_1_42= | yes    | Matei David (mateidavid)        | only ordered&sequenced indexes |
-| =boost::intrusive::*list=               | 1.55    | =intrusive_1_55=   | yes    | "                               |                                |
+| =boost::intrusive::*list=               | 1.55    | =intrusive_1_55=   | yes    | "                               | works with 1.57                |
 | =boost::intrusive::*set=                | "       | "                  |        | "                               |                                |
 
 ***** Notes

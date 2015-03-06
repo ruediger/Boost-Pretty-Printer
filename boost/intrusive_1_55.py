@@ -93,33 +93,37 @@ def f(vtt):
 # resolve mhtraits::node_traits
 #   hook is 2nd template parameter (e.g. "list_member_hook")
 #   generic_hook is 1st subclass of hook
-#   get_node_algo is 1st template parameter of generic_hook
-#
-#   We hard-code node_traits as a function of get_node_algo.
+#   1.55:
+#     the 1st template parameter of generic_hook is get_node_algo
+#     we hard-code node_traits as a function of get_node_algo
+#   1.57:
+#     the 1st template arg of generic_hook is the node_algo type
+#     the 1st template arg of node_algo type is node_traits
 #
 @add_to_dict(inner_type, ('boost::intrusive::mhtraits', 'node_traits'))
 def f(vtt):
     gen_hook_t = vtt.template_argument(1).fields()[0].type
-    get_node_algo_t = gen_hook_t.template_argument(0)
-    voidptr_t = get_node_algo_t.template_argument(0)
-    for case in switch(template_name(get_node_algo_t)):
-        if case('boost::intrusive::get_list_node_algo'):
-            return gdb.lookup_type('boost::intrusive::list_node_traits<'
-                                   + str(voidptr_t) + '>')
-        if case('boost::intrusive::get_slist_node_algo'):
-            return gdb.lookup_type('boost::intrusive::slist_node_traits<'
-                                   + str(voidptr_t) + '>')
-        if case('boost::intrusive::get_set_node_algo'):
-            opt_size = get_node_algo_t.template_argument(1)
-            return gdb.lookup_type('boost::intrusive::rbtree_node_traits<'
-                                   + str(voidptr_t) + ',' + str(opt_size) + '>')
-        if case('boost::intrusive::get_avl_set_node_algo'):
-            opt_size = get_node_algo_t.template_argument(1)
-            return gdb.lookup_type('boost::intrusive::avltree_node_traits<'
-                                   + str(voidptr_t) + ',' + str(opt_size) + '>')
-        if case('boost::intrusive::get_bs_set_node_algo'):
-            return gdb.lookup_type('boost::intrusive::tree_node_traits<'
-                                   + str(voidptr_t) + '>')
+    template_arg_t = gen_hook_t.template_argument(0)
+    if template_name(template_arg_t).startswith('boost::intrusive::get_'):
+        # in 1.55, template_arg_t is of the form "get_*_node_algo"
+        voidptr_t = template_arg_t.template_argument(0)
+        for case in switch(template_name(template_arg_t)):
+            if case('boost::intrusive::get_list_node_algo'):
+                return lookup_type('boost::intrusive::list_node_traits<' + str(voidptr_t) + '>')
+            if case('boost::intrusive::get_slist_node_algo'):
+                return lookup_type('boost::intrusive::slist_node_traits<' + str(voidptr_t) + '>')
+            if case('boost::intrusive::get_set_node_algo'):
+                opt_size = template_arg_t.template_argument(1)
+                return lookup_type('boost::intrusive::rbtree_node_traits<' + str(voidptr_t) + ',' + str(opt_size) + '>')
+            if case('boost::intrusive::get_avl_set_node_algo'):
+                opt_size = template_arg_t.template_argument(1)
+                return lookup_type('boost::intrusive::avltree_node_traits<' + str(voidptr_t) + ',' + str(opt_size) + '>')
+            if case('boost::intrusive::get_bs_set_node_algo'):
+                return lookup_type('boost::intrusive::tree_node_traits<' + str(voidptr_t) + '>')
+    else:
+        # in 1.57, temlpate_arg_t is the node_algo type itself
+        # its first template argument node_traits
+        return template_arg_t.template_argument(0)
     assert False, 'could not determine node_traits'
 
 # resolve trivial_value_traits::node_traits
