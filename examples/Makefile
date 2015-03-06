@@ -27,7 +27,7 @@ TAG = gdb-${GDB_VERSION}.python-${PYTHON_VERSION}.boost-${BOOST_VERSION}
 # List of tests to be run. It can also be specified on the command line. E.g.,
 #   make TESTS=test-other
 #
-TESTS = test-container test-intrusive test-multi-index test-other
+TESTS = test-container test-intrusive test-multi-index test-other test-intrusive-advanced
 
 executable_name = ${1}.boost-${BOOST_VERSION}
 output_name = ${1}.${TAG}.out

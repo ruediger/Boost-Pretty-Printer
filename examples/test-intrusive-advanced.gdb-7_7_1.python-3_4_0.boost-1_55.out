@@ -1,0 +1,123 @@
+GDB_VERSION=7_7_1
+PYTHON_VERSION=3_4_0
+BOOST_VERSION=1_55
++py sys.path.insert(0, "..")
++py import boost.latest
++py boost.register_printers()
++py boost.add_trivial_printer("List_Obj", lambda v: v['_val'])
++py boost.add_trivial_printer("SList_Obj", lambda v: v['_val'])
++py boost.add_trivial_printer("Set_Obj", lambda v: v['_val'])
++info pretty-print global boost
++info pretty-print global trivial
++b done
++r
++p bh1_list_0
+$1 = bi::list<List_Obj>
++p bh1_list_1
+$2 = bi::list<List_Obj> = {[0 @0x626078] = 1, [1 @0x626010] = 0}
++p $at(bh1_list_1, 0)
+$3 = "1"
++p $at(bh1_list_1, 1)
+$4 = "0"
++p bh2_list_0
+$5 = bi::list<List_Obj>
++p bh2_list_1
+$6 = bi::list<List_Obj> = {[0 @0x6260e0] = 2, [1 @0x626010] = 0}
++p mh1_list_0
+$7 = bi::list<List_Obj>
++p mh1_list_1
+$8 = bi::list<List_Obj> = {[0 @0x626148] = 3, [1 @0x626010] = 0}
++p mh2_list_0
+$9 = bi::list<List_Obj>
++p mh2_list_1
+$10 = bi::list<List_Obj> = {[0 @0x6261b0] = 4, [1 @0x626010] = 0}
++p good_tvt_list_0
+$11 = bi::list<List_Obj>
++p good_tvt_list_1
+$12 = bi::list<List_Obj> = {[0 @0x626218] = 5, [1 @0x626010] = 0}
++p bad_tvt_list_0
+$13 = bi::list<List_Obj>
++py boost.static_method[('TVT_Bad_List_Node_Traits', 'get_next')] = lambda n: n['_next_2']
++p bad_tvt_list_0
+$14 = bi::list<List_Obj>
++p bad_tvt_list_1
+$15 = bi::list<List_Obj> = {[0 @0x626280] = 6, [1 @0x626010] = 0}
++p list_it_0
+$16 = 0x0 -> N/A
++p list_it_1
+$17 = 0x626078 -> 1
++p bh1_slist_0
+$18 = bi::slist<SList_Obj>
++p bh1_slist_1
+$19 = bi::slist<SList_Obj> = {[0 @0x626468] = 1, [1 @0x626430] = 0}
++p bh2_slist_0
+$20 = bi::slist<SList_Obj>
++p bh2_slist_1
+$21 = bi::slist<SList_Obj> = {[0 @0x6264a0] = 2, [1 @0x626430] = 0}
++p mh1_slist_0
+$22 = bi::slist<SList_Obj>
++p mh1_slist_1
+$23 = bi::slist<SList_Obj> = {[0 @0x6264d8] = 3, [1 @0x626430] = 0}
++p mh2_slist_0
+$24 = bi::slist<SList_Obj>
++p mh2_slist_1
+$25 = bi::slist<SList_Obj> = {[0 @0x626510] = 4, [1 @0x626430] = 0}
++p good_tvt_slist_0
+$26 = bi::slist<SList_Obj>
++p good_tvt_slist_1
+$27 = bi::slist<SList_Obj> = {[0 @0x626548] = 5, [1 @0x626430] = 0}
++p bad_tvt_slist_0
+$28 = bi::slist<SList_Obj>
++py boost.static_method[('TVT_Bad_SList_Node_Traits', 'get_next')] = lambda n: n['_next_2']
++p bad_tvt_slist_0
+$29 = bi::slist<SList_Obj>
++p bad_tvt_slist_1
+$30 = bi::slist<SList_Obj> = {[0 @0x626580] = 6, [1 @0x626430] = 0}
++p slist_it_0
+$31 = 0x0 -> N/A
++p slist_it_1
+$32 = 0x626468 -> 1
++p bh1_set_0
+$33 = bi::set<Set_Obj>
++p bh1_set_1
+$34 = bi::set<Set_Obj> = {[0 @0x626670] = 0, [1 @0x626738] = 1, [2 @0x6268c8] = 3, [3 @0x626a58] = 5, [4 @0x626be8] = 7, [5 @0x626d78] = 9}
++p bh2_set_0
+$35 = bi::set<Set_Obj>
++p bh2_set_1
+$36 = bi::set<Set_Obj> = {[0 @0x626670] = 0, [1 @0x626800] = 2, [2 @0x626990] = 4, [3 @0x626b20] = 6, [4 @0x626cb0] = 8}
++p $at(bh2_set_1, 0)
+$37 = "0"
++p $at(bh2_set_1, 1)
+$38 = "2"
++p $at(bh2_set_1, 2)
+$39 = "4"
++p $at(bh2_set_1, 3)
+$40 = "6"
++p $at(bh2_set_1, 4)
+$41 = "8"
++p mh1_set_0
+$42 = bi::set<Set_Obj>
++p mh1_set_1
+$43 = bi::set<Set_Obj> = {[0 @0x626670] = 0, [1 @0x6268c8] = 3}
++p mh2_set_0
+$44 = bi::set<Set_Obj>
++p mh2_set_1
+$45 = bi::set<Set_Obj> = {[0 @0x626670] = 0, [1 @0x626990] = 4}
++p good_tvt_set_0
+$46 = bi::set<Set_Obj>
++p good_tvt_set_1
+$47 = bi::set<Set_Obj> = {[0 @0x626670] = 0, [1 @0x626a58] = 5}
++p bad_tvt_set_0
+$48 = bi::set<Set_Obj>
++py boost.static_method[('TVT_Bad_Set_Node_Traits', 'get_parent')] = lambda n: n['_parent_2']
++py boost.static_method[('TVT_Bad_Set_Node_Traits', 'get_left')] = lambda n: n['_left_2']
++py boost.static_method[('TVT_Bad_Set_Node_Traits', 'get_right')] = lambda n: n['_right_2']
++p bad_tvt_set_0
+$49 = bi::set<Set_Obj>
++p bad_tvt_set_1
+$50 = bi::set<Set_Obj> = {[0 @0x626670] = 0, [1 @0x626b20] = 6}
++p set_it_0
+$51 = 0x0 -> N/A
++p set_it_1
+$52 = 0x626670 -> 0
++q
