@@ -1,0 +1,30 @@
+# -*- mode:org; mode:visual-line; coding:utf-8; -*-
+*** Notes
+
+**** Multi-Index Containers
+The printer included here can only print ordered (unique or non-unique) and sequenced indexes. Hashed and random-access indexes are not currently supported, though with the default settings, the printer will capture them and display an appropriate message.
+
+It is possible to specify which index to use for printing a specific container dynamically, from inside GDB. See [[examples/test-multi-index.gdb]].
+
+**** Inner Type and Static Method Errors
+Certain containers (notably, intrusive) are heavily customized using traits classes, and without access to those, one cannot print the containers reliably. Unfortunately, =gdb= is occasionally missing crucial inner typedefs for reasons unknown. E.g., the =node_traits= typedef is regularly missing from inside various =value_traits= classes. To work around this limitation, the package provides a way to bypass the inner type resolution from inside =gdb= by using the variable
+=boost.inner_type=.
+
+Another complication is due to the fact that several builtin value- and node-traits classes are poorly suited to work with variables living in =gdb= memory, but not in program memory (i.e., non-inferior values). A function taking a reference parameter (even const reference) can only work with inferior variables.  This package also provides a way to bypass (rewrite) certain functions from inside =gdb=, using the variable =boost.static_method=.
+
+For example usage of this bypass mechanism, see [[examples/test-intrusive-advanced.gdb]].
+
+**** Trivial Printers
+This package provides a convenient way to define trivial printers from inside =gdb=. E.g., suppose the type =SomeType= contains a field =height=, and we want to print =obj.height= instead of =obj= for objects of type =SomeType=. This can be achieved as follows:
+
+#+BEGIN_EXAMPLE
+# add new trivial printer
+py boost.add_trivial_printer("SomeType", lambda v: v['height'])
+# check it is registered
+info pretty-print global trivial
+# print something with it
+p obj
+# disable printer
+disable pretty-print global trivial;SomeType
+#+END_EXAMPLE
+

@@ -4,7 +4,7 @@ Since version 7.0, GDB has Python scripting support. This can be used to provide
 
 Help is appreciated!
 
-See [[supported.txt]] for supported classes and names of contributors.
+See [[SUPPORTED.org]] for supported classes and names of contributors. See [[NOTES.org]] for other notes.
 
 The pretty printers are licensed under the terms of the [[http://www.boost.org/users/license.html][Boost Software License, version 1.0]].
 
@@ -81,6 +81,3 @@ enable pretty-printer global boost;.*
 
 For more information, see the [[https://sourceware.org/gdb/onlinedocs/gdb/Pretty-Printing.html][GDB documentation]].
 
-*** Specific Printer Notes
-**** Multi-Index-Container
-The printer included here can only print Ordered (Unique or Non-Unique) and Sequenced indexes. Hashed and Random-Access indexes are not currently supported, though with the default settings, the printer will capture them and display an appropriate message. It is possible to specify which index to use for printing a specific container dynamically, from inside GDB (see the [[examples]] folder).
