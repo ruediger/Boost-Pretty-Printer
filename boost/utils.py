@@ -136,7 +136,7 @@ def save_value_as_variable(v, s):
     assert isinstance(v, gdb.Value)
     assert isinstance(s, str)
     _aux_save_value_as_variable(v)
-    execute('set var ' + s + ' = $_aux_save_value_as_variable()')
+    execute('set var ' + s + ' = $_aux_save_value_as_variable()', False, True)
 
 def to_eval(val, var_name=None):
     """
