@@ -611,21 +611,21 @@ def cond_add_type_recognizer(cond, msg):
 #   py boost_print.add_trivial_printer("List_Obj", lambda v: v['_val'])
 #     - for every object v of type "List_Obj", simply print v._val
 #
-def add_trivial_printer(type_name, fcn):
+def add_trivial_printer(type_name, f):
     """
     Add a trivial printer.
 
-    For a value v of type matching `type_name`, print it by invoking `fcn`(v).
+    For a value v of type matching `type_name`, print it by invoking `f`(v).
     """
-    class Printer:
+    class _Printer:
         printer_name = type_name
         type_name_re = '^' + type_name + '$'
-        f = fcn
         def __init__(self, v):
             self.v = v
+            self.f = f
         def to_string(self):
-            return str(Printer.f(self.v))
-    trivial_printer_gen.add(Printer)
+            return str(self.f(self.v))
+    trivial_printer_gen.add(_Printer)
 
 #
 # To specify which index to use for printing for a specific container
