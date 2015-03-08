@@ -120,10 +120,14 @@ def get_type_qualifiers(t):
 
 def template_name(t):
     """
-    Get template name of gdb.Type.
+    Get template name of gdb.Type. Only for struct/union/enum.
     """
     assert isinstance(t, gdb.Type)
-    return str(t.strip_typedefs()).split('<')[0]
+    bt = get_basic_type(t)
+    if bt.code in [ gdb.TYPE_CODE_STRUCT, gdb.TYPE_CODE_UNION, gdb.TYPE_CODE_ENUM ]:
+        return str(bt).split('<')[0]
+    else:
+        return ''
 
 class _aux_save_value_as_variable(gdb.Function):
     def __init__(self, v):
