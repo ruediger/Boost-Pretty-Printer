@@ -60,9 +60,9 @@ def message(s):
     print('*** ' + pkg_name + ': ' + s, file=sys.stderr)
 
 #
-# execute(), lookup_type(): imported from gdb
+# lookup_type(): imported from gdb
 #
-from gdb import execute, lookup_type
+from gdb import lookup_type
 
 #
 # get_basic_type(): imported from gdb.types, or workaround from libstdcxx
@@ -90,10 +90,10 @@ except ImportError:
         if gdb.VERSION.startswith("6.8.50.2009"):
             return gdb.parse_and_eval(exp)
         # Work around non-existing gdb.parse_and_eval as in released 7.0
-        execute("set logging redirect on")
-        execute("set logging on")
-        execute("print %s" % exp)
-        execute("set logging off")
+        gdb.execute("set logging redirect on")
+        gdb.execute("set logging on")
+        gdb.execute("print %s" % exp)
+        gdb.execute("set logging off")
         return gdb.history(0)
 
 def get_type_qualifiers(t):
@@ -139,7 +139,7 @@ def save_value_as_variable(v, s):
     assert isinstance(v, gdb.Value)
     assert isinstance(s, str)
     _aux_save_value_as_variable(v)
-    execute('set var ' + s + ' = $_aux_save_value_as_variable()', False, True)
+    gdb.execute('set var ' + s + ' = $_aux_save_value_as_variable()', False, True)
 
 def to_eval(val, var_name=None):
     """
