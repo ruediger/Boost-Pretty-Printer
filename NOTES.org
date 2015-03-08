@@ -45,10 +45,3 @@ $1 = std::list = {[0] = 1, [1] = 5, [2] = 17, [3] = 42}
 $2 = "17"
 #+END_EXAMPLE
 
-**** Inner Type and Static Method Errors
-Certain containers (notably, intrusive) are heavily customized using traits classes, and without access to those, one cannot print the containers reliably. Unfortunately, =gdb= is occasionally missing crucial inner typedefs for reasons unknown. E.g., the =node_traits= typedef is regularly missing from inside various =value_traits= classes. To work around this limitation, the package provides a way to bypass the inner type resolution from inside =gdb= by using the variable =boost.inner_type=.
-
-Another complication is due to the fact that several builtin value- and node-traits classes are poorly suited to work with variables living in =gdb= memory, but not in program memory (i.e., non-inferior values). A function taking a reference parameter (even const reference) can only work with inferior values.  This package also provides a way to bypass (rewrite) certain functions from inside =gdb=, using the variable =boost.static_method=.
-
-For examples of this bypass mechanism, see [[HACKING.org]] and [[examples/test-intrusive-advanced.gdb]].
-
