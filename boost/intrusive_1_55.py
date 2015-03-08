@@ -358,6 +358,10 @@ class Tree_Printer:
         def __init__(self, l):
             self.value_traits_t = l.type.fields()[0].type.template_argument(0)
             self.node_traits_t = get_inner_type(self.value_traits_t, 'node_traits')
+            self.optimize_size = False
+            if template_name(self.node_traits_t) in ['boost::intrusive::avltree_node_traits',
+                                                     'boost::intrusive::rbtree_node_traits']:
+                self.optimize_size = bool(self.node_traits_t.template_argument(1))
             self.header_node_rptr = get_raw_ptr(call_object_method(l, 'header_ptr'))
 
         def __iter__(self):
@@ -390,8 +394,7 @@ class Tree_Printer:
                 # if right subtree is not empty, find leftmost node in it
                 self.crt_node_rptr = n
                 while True:
-                    n = get_raw_ptr(call_static_method(
-                        self.node_traits_t, 'get_left', self.crt_node_rptr))
+                    n = get_raw_ptr(call_static_method(self.node_traits_t, 'get_left', self.crt_node_rptr))
                     if is_null(n):
                         break
                     self.crt_node_rptr = n
@@ -399,12 +402,12 @@ class Tree_Printer:
                 # if right subtree is empty, find first ancestor in whose left subtree we are
                 while True:
                     old_n = self.crt_node_rptr
-                    self.crt_node_rptr = get_raw_ptr(call_static_method(
-                        self.node_traits_t, 'get_parent', self.crt_node_rptr))
+                    self.crt_node_rptr = get_raw_ptr(call_static_method(self.node_traits_t, 'get_parent', self.crt_node_rptr))
+                    if self.optimize_size:
+                        self.crt_node_rptr = parse_and_eval('(' + str(get_basic_type(self.crt_node_rptr.type)) + ')(((size_t)' + str(self.crt_node_rptr).split()[0] + ') & (~(size_t)3))')
                     if self.crt_node_rptr == self.header_node_rptr:
                         break
-                    n = get_raw_ptr(call_static_method(
-                        self.node_traits_t, 'get_left', self.crt_node_rptr))
+                    n = get_raw_ptr(call_static_method(self.node_traits_t, 'get_left', self.crt_node_rptr))
                     if n == old_n:
                         break
 
