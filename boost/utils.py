@@ -499,7 +499,7 @@ class Printer_Gen(object):
         def __call__(self, v):
             if not self.enabled:
                 return None
-            if hasattr(self.Printer, 'supports') and self.Printer.supports(v):
+            if not hasattr(self.Printer, 'supports') or self.Printer.supports(v):
                 v.type_name = str(v.basic_type)
                 return self.Printer(v)
             return None
@@ -512,7 +512,7 @@ class Printer_Gen(object):
         self.no_template_name_list = list()
 
     def add(self, Printer):
-        if not hasattr(self.Printer, 'supports') and not hasattr(Printer, 'template_name'):
+        if not hasattr(Printer, 'supports') and not hasattr(Printer, 'template_name'):
             message('cannot import printer [' + Printer.printer_name + ']: neither supports() nor template_name is defined')
             return
         # get list of template names
