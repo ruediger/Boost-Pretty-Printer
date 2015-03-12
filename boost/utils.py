@@ -640,21 +640,42 @@ def cond_add_type_recognizer(cond, msg):
 #   py boost_print.add_trivial_printer("List_Obj", lambda v: v['_val'])
 #     - for every object v of type "List_Obj", simply print v._val
 #
-def add_trivial_printer(type_name, f):
+def add_trivial_printer(n, f):
     """
     Add a trivial printer.
 
-    For a value v of type matching `type_name`, print it by invoking `f`(v).
+    For a value v of type matching `template_name`, print it by invoking `f`(v).
     """
     class _Printer:
-        printer_name = type_name
-        template_name = type_name
+        printer_name = n
+        template_name = n
         def __init__(self, v):
             self.v = v
             self.f = f
         def to_string(self):
             return str(self.f(self.v))
     trivial_printer_gen.add(_Printer)
+
+#
+# Add trivial type printer
+#
+def add_trivial_type_printer(n, f, **kwargs):
+    """
+    Add trivial type printer.
+    """
+    assert type(n) == str
+    assert callable(f)
+    class _Type_Recognizer:
+        name = n
+        enabled = True
+        def recognize(self, t):
+            tname = template_name(t)
+            if tname != n:
+                return None
+            return f(t)
+    if 'obj' not in kwargs:
+        kwargs['obj'] = None
+    gdb.types.register_type_printer(kwargs['obj'], Type_Printer_Gen(_Type_Recognizer))
 
 #
 # To specify which index to use for printing for a specific container
