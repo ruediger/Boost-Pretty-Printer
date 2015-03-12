@@ -637,14 +637,14 @@ def cond_add_type_recognizer(cond, msg):
 #
 # Add trivial printers, even from inside gdb. E.g.:
 #
-#   py boost_print.add_trivial_printer("List_Obj", lambda v: v['_val'])
+#   py boost.add_trivial_printer("List_Obj", lambda v: v['_val'])
 #     - for every object v of type "List_Obj", simply print v._val
 #
 def add_trivial_printer(n, f):
     """
     Add a trivial printer.
 
-    For a value v of type matching `template_name`, print it by invoking `f`(v).
+    For a value v with template name matching `n`, print it by invoking `f`(v).
     """
     class _Printer:
         printer_name = n
@@ -662,6 +662,14 @@ def add_trivial_printer(n, f):
 def add_trivial_type_printer(n, f, **kwargs):
     """
     Add trivial type printer.
+
+    For a type t with template name matching `n`, print it by invoking `f`(t).
+
+    NOTE: The function automatically registers the type printer with gdb by invoking
+    gdb.types.register_type_printer(). This is necessary because unlike the case of
+    value printers, there is no top-level type printer to intermediate the process.
+    The optional keyword argument `obj` specifies the object file for which to do
+    the registration. (If not specified, the type printer will be global.)
     """
     assert type(n) == str
     assert callable(f)
