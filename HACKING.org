@@ -137,6 +137,10 @@ Accessing inferior, convenience, and python values:
 (gdb) p a_obj
 $10 = {_val = 17, _internal = 0}
 
+##### print struct field in gdb
+(gdb) p a_obj._val
+$11 = 17
+
 ##### "parse_and_eval": fetch gdb value in python
 (gdb) pi
 >>> v = gdb.parse_and_eval('a_obj')
@@ -144,6 +148,10 @@ $10 = {_val = 17, _internal = 0}
 <class 'gdb.Value'>
 >>> str(v)
 '{_val = 17, _internal = 0}'
+
+##### print struct field in python
+>>> str(v['_val'])
+'17'
 
 ##### check "v" is an inferior value
 >>> str(v.address)
