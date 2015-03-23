@@ -312,21 +312,21 @@ class List_Printer:
     def children (self):
         return self.Iterator(self.l)
 
-#@add_type_recognizer
+@add_type_recognizer
 class List_Type_Recognizer:
     "Type Recognizer for boost::intrusive::list"
     name = 'boost::intrusive::list-1.55'
     enabled = True
 
     def recognize(self, t):
-        qualifiers = get_type_qualifiers(t)
-        basic_t = gdb.types.get_basic_type(t)
-        if not str(basic_t).startswith('boost::intrusive::list<'):
+        t_name = template_name(t)
+        if t_name not in ['boost::intrusive::list', 'boost::intrusive::slist']:
             return None
-        res = '%'
+        res = ''
+        qualifiers = get_type_qualifiers(t)
         if qualifiers:
             res += '(' + qualifiers + ')'
-        res += 'bi::list<' + str(basic_t.template_argument(0)) + '>'
+        res += short_ns(t_name) + '<' + str(get_basic_type(t).template_argument(0)) + '>'
         return res
 
 @add_printer
@@ -411,48 +411,37 @@ class Tree_Printer:
                     if n == old_n:
                         break
 
-    def __init__(self, l):
-        self.l = l
+    def __init__(self, v):
+        self.v = v
+        self.bstree_impl_t = self.get_bstree_impl_base(self.v.type)
+        self.value_t = get_inner_type(self.bstree_impl_t.template_argument(0), 'value_type').strip_typedefs()
 
     def to_string (self):
-        if not self.l.qualifiers:
+        if not self.v.qualifiers:
             return None
-        res = '(' + self.l.qualifiers + ')'
-        if str(self.l.type).startswith('boost::intrusive::'):
-            value_type = self.l.type.template_argument(0)
-            res += (short_ns(template_name(self.l.type)) +
-                    '<' + str(value_type.strip_typedefs()) + '>')
+        res = '(' + self.v.qualifiers + ')'
+        if v.template_name.startswith('boost::intrusive::'):
+            res += short_ns(v.template_name) + '<' + str(self.value_t) + '>'
         else:
-            res += str(self.l.type)
+            res += str(self.v.type)
         return res
 
     def children (self):
-        return self.Iterator(self.l.cast(self.get_bstree_impl_base(self.l.type)))
+        return self.Iterator(self.v.cast(self.bstree_impl_t))
 
-#@add_type_recognizer
+@add_type_recognizer
 class Tree_Type_Recognizer:
     "Type Recognizer for boost::intrusive::tree"
     name = 'boost::intrusive::tree-1.55'
     enabled = True
 
-    @staticmethod
-    def supports(t):
-        d = 5
-        while (d > 0 and isinstance(t, gdb.Type)
-               and template_name(t) != 'boost::intrusive::bstree_impl'):
-            try:
-                t = t.fields()[0].type
-            except:
-                return None
-            d -= 1
-        return d > 0 and isinstance(t, gdb.Type)
-
     def recognize(self, t):
-        qualifiers = get_type_qualifiers(t)
-        basic_t = gdb.types.get_basic_type(t)
-        if not self.supports(basic_t):
+        basic_t = get_basic_type(t)
+        bstree_impl_t = Tree_Printer.get_bstree_impl_base(basic_t)
+        if not bstree_impl_t:
             return None
-        res = '%'
+        qualifiers = get_type_qualifiers(t)
+        res = ''
         if qualifiers:
             res += '(' + qualifiers + ')'
         res += short_ns(template_name(basic_t)) + '<' + str(basic_t.template_argument(0)) + '>'
