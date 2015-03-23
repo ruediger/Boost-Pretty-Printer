@@ -238,7 +238,7 @@ def call_static_method(t, f, *args):
         message('call_static_method:\n' +
                 '\tcall failed: ' + cmd + '\n' +
                 '\tto bypass call with a python function <f>, use:\n' +
-                '\t  py boost_print.static_method[("' + str(t.strip_typedefs())
+                '\t  py boost.static_method[("' + str(t.strip_typedefs())
                 + '", "' + f + '")] = <f>')
         raise gdb.error
 
@@ -300,7 +300,7 @@ def get_inner_type(t, s):
         message('get_inner_type:\n' +
                 '\tfailed to find type: ' + inner_type_name + '\n' +
                 '\tto bypass this failure, add the result manually with:\n' +
-                '\t  py boost_print.inner_type[("' +
+                '\t  py boost.inner_type[("' +
                 str(t.strip_typedefs()) + '", "' + s + '")] = <type>')
         raise gdb.error
 
@@ -351,7 +351,7 @@ def get_raw_ptr(p):
                 + '\tcall to operator->() failed on type: '
                 + str(p.type.strip_typedefs()) + '\n'
                 + '\tto bypass this with python function <f>, add:\n'
-                + '\t  py boost_print.raw_ptr["' +
+                + '\t  py boost.raw_ptr["' +
                 str(p.type.strip_typedefs()) + '"] = <f>')
         raise gdb.error
 
@@ -403,7 +403,7 @@ def is_null(p):
     message('is_null:\n'
             + '\tcannot run is_null() on type: ' + str(p.type.strip_typedefs()) + '\n'
             + '\tto bypass this with python function <f>, add:\n'
-            + '\t  py boost_print.null_dict["' + str(p.type.strip_typedefs()) + '"] = <f>')
+            + '\t  py boost.null_dict["' + str(p.type.strip_typedefs()) + '"] = <f>')
     raise gdb.error
 
 def add_to_dict(d, *keys):
