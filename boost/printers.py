@@ -300,7 +300,7 @@ class BoostArray:
     def display_hint(self):
         return 'array'
 
-@cond_add_printer(have_python_2, 'needs python 2')
+@add_printer
 class BoostVariant:
     "Pretty Printer for boost::variant (Boost.Variant)"
     printer_name = 'boost::variant'
@@ -314,8 +314,7 @@ class BoostVariant:
 
     def to_string(self):
         m = BoostVariant.regex.search(self.typename)
-        # map() usage below is python2-specific
-        types = map(lambda s: s.strip(), re.split(r', (?=(?:<[^>]*?(?: [^>]*)*))|, (?=[^>,]+(?:,|$))', m.group(1)))
+        types = [s.strip() for s in re.split(r', (?=(?:<[^>]*?(?: [^>]*)*))|, (?=[^>,]+(?:,|$))', m.group(1))]
         which = intptr(self.value['which_'])
         type = types[which]
         data = ''

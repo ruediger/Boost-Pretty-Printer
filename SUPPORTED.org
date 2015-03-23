@@ -10,7 +10,7 @@
 | =boost::(scoped/intrusive)_(ptr/array)= | "       | "                  |        |                                 |                                |
 | =boost::(shared/weak)_(ptr/array)=      | "       | "                  |        |                                 |                                |
 | =boost::array=                          | "       | "                  |        |                                 |                                |
-| =boost::variant=                        | "       | "                  |        |                                 | python 2 only                  |
+| =boost::variant=                        | "       | "                  |        |                                 |                                |
 | =boost::uuids::uuid=                    | "       | "                  |        | Ivan Tarasov (ivant)            |                                |
 | =boost::gregorian::date=                | "       | "                  |        | Brian O'Kennedy (brokenn)       |                                |
 | =boost::posix_time::ptime=              | "       | "                  |        | "                               |                                |
