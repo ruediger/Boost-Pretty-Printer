@@ -16,20 +16,26 @@ To install, check out the git repository:
 git clone git://github.com/ruediger/Boost-Pretty-Printer.git
 #+END_EXAMPLE
 
-then add the following lines to your =~/.gdbinit=:
+Then, add the following lines to your =~/.gdbinit=:
 #+BEGIN_EXAMPLE
 python
 import sys
 sys.path.insert(0, 'PATH-TO-THE-REPO/Boost-Pretty-Printer')
-import boost.latest
+import boost.latest ### see note on Entry Points below
 boost.register_printers()
 end
 #+END_EXAMPLE
 
-and of course, replace =PATH-TO-THE-REPO= with the absolute path to the Boost Pretty Printer repository. If you have no =~/.gdbinit= file just create it.
+And of course, replace =PATH-TO-THE-REPO= with the absolute path to the Boost Pretty Printer repository. If you have no =~/.gdbinit= file just create it.
 
 Now you can simply use GDB's =print= (short =p=) statement to pretty print the supported boost objects.
-
+**** Entry Points
+In the past, all printers in this package would be loaded by =import boost= or =import boost.printers=. This has now changed, and the current options are as follows:
+- =import boost=: Import only the various utilities in this package under the namespace =boost=, including the top-level printer generators =boost= and =trivial=, but do not register any actual printers.
+- =import boost.latest=: In addition to the effects of =import boost=, also register the latest boost printers for every supported type. Most users will want this.
+- =import boost.intrusive_1_40=: In addition to the effects of =import boost=, also register printers in that specific module, but not in any other modules. For a list of modules and printers, see [[SUPPORTED.org]]. This allows you to try out an older printer for a specific type in case the latest printer for that type isn't working.
+- =import boost.all=: In addition to the effects of =import boost=, also register all printers available in this package. In general this is a bad idea, unless you know what you are doing. The problem is that the package might contain several printers supporting the same types (e.g. there are printers for =boost::intrisive::list= in both =intrusive_1_40= and =intrusive_1_55=), and by having all of them enabled, you cannot control which one gets used.
+Remember, regardless of the specific import being used, the top-level printer generators must be registered with =gdb= by using =boost.register_printers()=.
 *** Example
 #+BEGIN_EXAMPLE
   $ cat > foo.c++
