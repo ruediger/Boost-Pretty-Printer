@@ -295,7 +295,7 @@ def get_inner_type(t, s):
     # finally, try plain inner type access
     inner_type_name = str(t.strip_typedefs()) + '::' + s
     try:
-        return lookup_type(inner_type_name)
+        return lookup_type(inner_type_name).strip_typedefs()
     except gdb.error:
         message('get_inner_type:\n' +
                 '\tfailed to find type: ' + inner_type_name + '\n' +
@@ -697,3 +697,9 @@ def add_trivial_type_printer(n, f, **kwargs):
 # (gdb) p s_5
 #
 multi_index_selector = dict()
+
+#
+# If set to true, do not print intrusive container hooks.
+#
+options = dict()
+options['hide_intrusive_hooks'] = False

@@ -44,6 +44,8 @@ class Generic_Hook_Printer:
         self.value = value
 
     def to_string(self):
+        if options['hide_intrusive_hooks']:
+            return None
         # the actual node is either the first subclass,
         # or the first subclass of the first subclass
         node = self.value.cast(self.value.type.fields()[0].type)
@@ -56,10 +58,16 @@ class Hook_Type_Recognizer:
     "Type Recognizer for boost::intrusive::*_(base|member)_hook"
     name = 'boost::intrusive::hook-1.55'
     enabled = True
-    target_re = re.compile('^boost::intrusive::(avl_set|bs_set|list|set|slist|splay_set|unordered_set)_(base|member)_hook<.*>$')
+    template_name = ['boost::intrusive::avl_set_base_hook', 'boost::intrusive::avl_set_member_hook',
+                     'boost::intrusive::bs_set_base_hook', 'boost::intrusive::bs_set_member_hook',
+                     'boost::intrusive::list_base_hook', 'boost::intrusive::list_member_hook',
+                     'boost::intrusive::slist_base_hook', 'boost::intrusive::slist_member_hook',
+                     'boost::intrusive::set_base_hook', 'boost::intrusive::set_member_hook',
+                     'boost::intrusive::splay_set_base_hook', 'boost::intrusive::splay_set_member_hook',
+                     'boost::intrusive::unordered_set_base_hook', 'boost::intrusive::unordered_set_member_hook']
 
     def recognize(self, t):
-        if not t.tag or not self.target_re.search(t.tag):
+        if not t.tag or not template_name(t) in self.template_name:
             return None
         # just print the underlying generic hook
         generic_hook_t = t.fields()[0].type
@@ -268,10 +276,10 @@ class List_Printer:
     template_name = ['boost::intrusive::list', 'boost::intrusive::slist']
 
     class Iterator:
-        def __init__(self, l):
-            self.value_traits_t = l.type.fields()[0].type.template_argument(0)
+        def __init__(self, v):
+            self.value_traits_t = v.value_traits_t
             self.node_traits_t = get_inner_type(self.value_traits_t, 'node_traits')
-            self.root_node_rptr = get_raw_ptr(call_object_method(l, 'get_root_node'))
+            self.root_node_rptr = get_raw_ptr(call_object_method(v, 'get_root_node'))
 
         def __iter__(self):
             self.count = 0
@@ -289,7 +297,7 @@ class List_Printer:
             except:
                 val_str = 'N/A'
             result = ('[%d @%s]' % (self.count, print_ptr(val_rptr)), val_str)
-            self.count = self.count + 1
+            self.count += 1
             self.crt_node_rptr = get_raw_ptr(call_static_method(
                 self.node_traits_t, 'get_next', self.crt_node_rptr))
             return result
@@ -297,20 +305,21 @@ class List_Printer:
         def next(self):
             return self.__next__()
 
-    def __init__(self, l):
-        self.l = l
-        self.value_type = self.l.type.template_argument(0)
+    def __init__(self, v):
+        self.v = v
+        self.v.value_t = self.v.basic_type.template_argument(0)
+        self.v.list_impl_t = get_basic_type(self.v.basic_type.fields()[0].type)
+        self.v.value_traits_t = self.v.list_impl_t.template_argument(0)
 
     def to_string (self):
-        if not self.l.qualifiers:
+        if not self.v.qualifiers:
             return None
-        res = '(' + self.l.qualifiers + ')'
-        res += (short_ns(template_name(self.l.type)) +
-                '<' + str(self.value_type.strip_typedefs()) + '>')
+        res = '(' + self.v.qualifiers + ')'
+        res += short_ns(self.v.template_name) + '<' + str(self.v.value_t) + '>'
         return res
 
     def children (self):
-        return self.Iterator(self.l)
+        return self.Iterator(self.v)
 
 @add_type_recognizer
 class List_Type_Recognizer:
@@ -337,15 +346,21 @@ class Tree_Printer:
 
     @staticmethod
     def get_bstree_impl_base(t):
-        d = 5
-        while (d > 0 and isinstance(t, gdb.Type) and t.code == gdb.TYPE_CODE_STRUCT
+        #
+        # Given a type `t`, look for a `bstree_impl` base up to 5 levels up the
+        # class hierarchy. If found, also retrieve the `value_type` as the first
+        # template parameter of either the super class of `bstree_impl` (when
+        # this is `bstree`), or the super super (for all other trees).
+        #
+        t_list = list()
+        while (len(t_list) < 5 and isinstance(t, gdb.Type) and t.code == gdb.TYPE_CODE_STRUCT
                and template_name(t) != 'boost::intrusive::bstree_impl'):
+            t_list.append(t)
             try:
-                t = t.fields()[0].type
+                t = get_basic_type(t.fields()[0].type)
             except:
                 return None
-            d -= 1
-        if d > 0 and isinstance(t, gdb.Type) and t.code == gdb.TYPE_CODE_STRUCT:
+        if isinstance(t, gdb.Type) and template_name(t) == 'boost::intrusive::bstree_impl':
             return t
         else:
             return None
@@ -355,14 +370,14 @@ class Tree_Printer:
         return Tree_Printer.get_bstree_impl_base(v.type) != None
 
     class Iterator:
-        def __init__(self, l):
-            self.value_traits_t = l.type.fields()[0].type.template_argument(0)
+        def __init__(self, v):
+            self.value_traits_t = v.value_traits_t
             self.node_traits_t = get_inner_type(self.value_traits_t, 'node_traits')
             self.optimize_size = False
             if template_name(self.node_traits_t) in ['boost::intrusive::avltree_node_traits',
                                                      'boost::intrusive::rbtree_node_traits']:
                 self.optimize_size = bool(self.node_traits_t.template_argument(1))
-            self.header_node_rptr = get_raw_ptr(call_object_method(l, 'header_ptr'))
+            self.header_node_rptr = get_raw_ptr(call_object_method(v.cast(v.bstree_impl_t), 'header_ptr'))
 
         def __iter__(self):
             self.count = 0
@@ -380,7 +395,7 @@ class Tree_Printer:
             except:
                 val_str = 'N/A'
             result = ('[%d @%s]' % (self.count, print_ptr(val_rptr)), val_str)
-            self.count = self.count + 1
+            self.count += 1
             self.advance()
             return result
 
@@ -413,21 +428,22 @@ class Tree_Printer:
 
     def __init__(self, v):
         self.v = v
-        self.bstree_impl_t = self.get_bstree_impl_base(self.v.type)
-        self.value_t = get_inner_type(self.bstree_impl_t.template_argument(0), 'value_type').strip_typedefs()
+        self.v.bstree_impl_t = self.get_bstree_impl_base(v.type)
+        self.v.value_traits_t = self.v.bstree_impl_t.template_argument(0)
+        self.v.value_t = get_inner_type(self.v.value_traits_t, 'value_type')
 
     def to_string (self):
         if not self.v.qualifiers:
             return None
         res = '(' + self.v.qualifiers + ')'
-        if v.template_name.startswith('boost::intrusive::'):
-            res += short_ns(v.template_name) + '<' + str(self.value_t) + '>'
+        if self.v.template_name.startswith('boost::intrusive::'):
+            res += short_ns(self.v.template_name) + '<' + str(self.v.value_t) + '>'
         else:
             res += str(self.v.type)
         return res
 
     def children (self):
-        return self.Iterator(self.v.cast(self.bstree_impl_t))
+        return self.Iterator(self.v)
 
 @add_type_recognizer
 class Tree_Type_Recognizer:
@@ -444,5 +460,6 @@ class Tree_Type_Recognizer:
         res = ''
         if qualifiers:
             res += '(' + qualifiers + ')'
-        res += short_ns(template_name(basic_t)) + '<' + str(basic_t.template_argument(0)) + '>'
+        value_t = get_inner_type(bstree_impl_t.template_argument(0), 'value_type')
+        res += short_ns(template_name(basic_t)) + '<' + str(value_t) + '>'
         return res
