@@ -60,6 +60,16 @@ def message(s):
     print('*** ' + pkg_name + ': ' + s, file=sys.stderr)
 
 #
+# Print long error message only once.
+#
+class _Long_Message(object):
+    counts = dict()
+def long_message(tag, msg):
+    if tag not in _Long_Message.counts:
+        _Long_Message.counts[tag] = 1
+        message(msg)
+
+#
 # lookup_type(): imported from gdb
 #
 from gdb import lookup_type
@@ -235,11 +245,12 @@ def call_static_method(t, f, *args):
     try:
         return parse_and_eval(cmd)
     except:
-        message('call_static_method:\n' +
-                '\tcall failed: ' + cmd + '\n' +
-                '\tto bypass call with a python function <f>, use:\n' +
-                '\t  py boost.static_method[("' + str(t.strip_typedefs())
-                + '", "' + f + '")] = <f>')
+        message('call_static_method: call failed: ' + cmd)
+        long_message(
+            'call_static_method',
+            '\n\tto bypass call with a python function <f>, use:\n' +
+            '\t  py boost.static_method[("' + str(t.strip_typedefs())
+            + '", "' + f + '")] = <f>')
         raise gdb.error
 
 #
@@ -297,11 +308,16 @@ def get_inner_type(t, s):
     try:
         return lookup_type(inner_type_name).strip_typedefs()
     except gdb.error:
-        message('get_inner_type:\n' +
-                '\tfailed to find type: ' + inner_type_name + '\n' +
-                '\tto bypass this failure, add the result manually with:\n' +
-                '\t  py boost.inner_type[("' +
-                str(t.strip_typedefs()) + '", "' + s + '")] = <type>')
+        message('get_inner_type: failed to find type: ' + inner_type_name)
+        long_message(
+            'get_inner_type',
+            '\n\tBy default, gcc eliminates unused typedefs from object files, which can\n' +
+            '\tcause gdb not to find them at runtime. To elimiate this behaviour, use the\n' +
+            '\tflag `-fno-eliminate-unused-debug-types`. NOTE: clang (3.5) seems to be\n' +
+            '\tsilently ignoring this flag.\n' +
+            '\tAlternatively, to bypass this failure, add the result manually with:\n' +
+            '\t  py boost.inner_type[("' +
+            str(t.strip_typedefs()) + '", "' + s + '")] = <type>')
         raise gdb.error
 
 #
@@ -347,12 +363,11 @@ def get_raw_ptr(p):
     try:
         return parse_and_eval(p_str +'.operator->()')
     except gdb.error:
-        message('get_raw_ptr:\n'
-                + '\tcall to operator->() failed on type: '
-                + str(p.type.strip_typedefs()) + '\n'
-                + '\tto bypass this with python function <f>, add:\n'
-                + '\t  py boost.raw_ptr["' +
-                str(p.type.strip_typedefs()) + '"] = <f>')
+        message('get_raw_ptr: call to operator->() failed on type: ' + str(p.type.strip_typedefs()))
+        long_message(
+            'get_raw_ptr',
+            '\n\tto bypass this with python function <f>, add:\n' +
+            '\t  py boost.raw_ptr["' + str(p.type.strip_typedefs()) + '"] = <f>')
         raise gdb.error
 
 def print_ptr(p):
@@ -400,10 +415,11 @@ def is_null(p):
     if f:
         return f(p)
 
-    message('is_null:\n'
-            + '\tcannot run is_null() on type: ' + str(p.type.strip_typedefs()) + '\n'
-            + '\tto bypass this with python function <f>, add:\n'
-            + '\t  py boost.null_dict["' + str(p.type.strip_typedefs()) + '"] = <f>')
+    message('is_null: cannot run is_null() on type: ' + str(p.type.strip_typedefs()))
+    long_message(
+        'is_null',
+        '\n\tto bypass this with python function <f>, add:\n' +
+        '\t  py boost.null_dict["' + str(p.type.strip_typedefs()) + '"] = <f>')
     raise gdb.error
 
 def add_to_dict(d, *keys):

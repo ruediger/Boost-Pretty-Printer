@@ -87,4 +87,4 @@ $(foreach f,${TESTS},$(eval $(call add_gdb_run,$f)))
 # would override the generic one.
 #
 %.boost-${BOOST_VERSION}: %.cpp
-	$(CXX) -o $@ -O0 -g3 -ggdb -std=c++11 -Wall -Wextra -pedantic $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS)
+	$(CXX) -o $@ -std=c++11 -O0 -g3 -ggdb -fno-eliminate-unused-debug-types -Wall -Wextra -pedantic $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS)

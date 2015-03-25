@@ -98,7 +98,7 @@ class Hook_Printer:
 # resolve bhtraits::node_traits
 #   node_traits is the 2nd template argument
 #
-@add_to_dict(inner_type, ('boost::intrusive::bhtraits', 'node_traits'))
+#@add_to_dict(inner_type, ('boost::intrusive::bhtraits', 'node_traits'))
 def f(vtt):
     return vtt.template_argument(1)
 
@@ -112,7 +112,7 @@ def f(vtt):
 #     the 1st template arg of generic_hook is the node_algo type
 #     the 1st template arg of node_algo type is node_traits
 #
-@add_to_dict(inner_type, ('boost::intrusive::mhtraits', 'node_traits'))
+#@add_to_dict(inner_type, ('boost::intrusive::mhtraits', 'node_traits'))
 def f(vtt):
     gen_hook_t = vtt.template_argument(1).fields()[0].type
     template_arg_t = gen_hook_t.template_argument(0)
@@ -141,7 +141,7 @@ def f(vtt):
 # resolve trivial_value_traits::node_traits
 #   node_traits is the 1st template argument
 #
-@add_to_dict(inner_type, ('boost::intrusive::trivial_value_traits', 'node_traits'))
+#@add_to_dict(inner_type, ('boost::intrusive::trivial_value_traits', 'node_traits'))
 def f(vtt):
     return vtt.template_argument(0)
 
@@ -278,7 +278,7 @@ class List_Printer:
     class Iterator:
         def __init__(self, v):
             self.value_traits_t = v.value_traits_t
-            self.node_traits_t = get_inner_type(self.value_traits_t, 'node_traits')
+            self.node_traits_t = v.node_traits_t
             self.root_node_rptr = get_raw_ptr(call_object_method(v, 'get_root_node'))
 
         def __iter__(self):
@@ -307,9 +307,10 @@ class List_Printer:
 
     def __init__(self, v):
         self.v = v
-        self.v.value_t = self.v.basic_type.template_argument(0)
         self.v.list_impl_t = get_basic_type(self.v.basic_type.fields()[0].type)
+        self.v.value_t = self.v.basic_type.template_argument(0)
         self.v.value_traits_t = self.v.list_impl_t.template_argument(0)
+        self.v.node_traits_t = get_inner_type(self.v.list_impl_t, 'node_traits')
 
     def to_string (self):
         if not self.v.qualifiers:
@@ -372,7 +373,7 @@ class Tree_Printer:
     class Iterator:
         def __init__(self, v):
             self.value_traits_t = v.value_traits_t
-            self.node_traits_t = get_inner_type(self.value_traits_t, 'node_traits')
+            self.node_traits_t = v.node_traits_t
             self.optimize_size = False
             if template_name(self.node_traits_t) in ['boost::intrusive::avltree_node_traits',
                                                      'boost::intrusive::rbtree_node_traits']:
@@ -429,8 +430,9 @@ class Tree_Printer:
     def __init__(self, v):
         self.v = v
         self.v.bstree_impl_t = self.get_bstree_impl_base(v.type)
+        self.v.value_t = get_inner_type(self.v.bstree_impl_t, 'value_type')
         self.v.value_traits_t = self.v.bstree_impl_t.template_argument(0)
-        self.v.value_t = get_inner_type(self.v.value_traits_t, 'value_type')
+        self.v.node_traits_t = get_inner_type(self.v.bstree_impl_t, 'node_traits')
 
     def to_string (self):
         if not self.v.qualifiers:
@@ -460,6 +462,6 @@ class Tree_Type_Recognizer:
         res = ''
         if qualifiers:
             res += '(' + qualifiers + ')'
-        value_t = get_inner_type(bstree_impl_t.template_argument(0), 'value_type')
+        value_t = get_inner_type(bstree_impl_t, 'value_type')
         res += short_ns(template_name(basic_t)) + '<' + str(value_t) + '>'
         return res

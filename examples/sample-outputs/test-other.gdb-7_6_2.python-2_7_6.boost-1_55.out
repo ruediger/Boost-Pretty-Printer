@@ -55,9 +55,9 @@ $23 = {[0 @0x7fffffffd100L] = {<boost::intrusive::list_base_hook<void, void, voi
 +p v_gregorian_date_1
 $24 = (boost::gregorian::date) uninitialized
 +p v_gregorian_date_2
-$25 = (boost::gregorian::date) 2015-03-24
+$25 = (boost::gregorian::date) 2015-03-25
 +p v_ptime_1
 $26 = (boost::posix_time::ptime) uninitialized
 +p v_ptime_2
-$27 = (boost::posix_time::ptime) 2015-Mar-24 01:00:00.000000
+$27 = (boost::posix_time::ptime) 2015-Mar-25 01:00:00.000000
 +q
