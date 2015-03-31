@@ -500,10 +500,15 @@ class Printer_Gen(object):
     Top-level printer generator.
     """
     class SubPrinter_Gen(object):
-        def __init__(self, Printer):
+        def __init__(self, Printer, tn=str()):
             self.Printer = Printer
             # set printer_name
-            self.name = Printer.printer_name
+            assert tn != '' or hasattr(Printer, 'printer_name')
+            if tn != '':
+                self.name = tn
+            elif hasattr(Printer, 'printer_name'):
+                self.name = Printer.printer_name
+            # if version is available as attribute, append it to printer name
             if hasattr(Printer, 'version'):
                 self.name += '-' + Printer.version
             # set enabled
@@ -515,10 +520,17 @@ class Printer_Gen(object):
         def __call__(self, v):
             if not self.enabled:
                 return None
-            if not hasattr(self.Printer, 'supports') or self.Printer.supports(v):
-                v.type_name = str(v.basic_type)
+            if hasattr(self.Printer, 'supports') and not self.Printer.supports(v):
+                return None
+            if hasattr(self.Printer, 'transform') and callable(self.Printer.transform):
+                tv = self.Printer.transform(v)
+                if type(tv) == gdb.Value:
+                    p = gdb.default_visualizer(tv)
+                    if p:
+                        return p
+                return self.Printer(tv)
+            else:
                 return self.Printer(v)
-            return None
 
     def __init__(self, name):
         self.name = name
@@ -527,12 +539,14 @@ class Printer_Gen(object):
         self.template_name_dict = dict()
         self.no_template_name_list = list()
 
-    def add(self, Printer):
-        if not hasattr(Printer, 'supports') and not hasattr(Printer, 'template_name'):
+    def add(self, Printer, tn=str()):
+        if not hasattr(Printer, 'supports') and not hasattr(Printer, 'template_name') and tn == '':
             message('cannot import printer [' + Printer.printer_name + ']: neither supports() nor template_name is defined')
             return
         # get list of template names
-        if not hasattr(Printer, 'template_name'):
+        if tn != '':
+            l = [tn]
+        elif not hasattr(Printer, 'template_name'):
             l = list()
         elif type(Printer.template_name) == str:
             l = [Printer.template_name]
@@ -542,7 +556,7 @@ class Printer_Gen(object):
             message('cannot import printer [' + Printer.printer_name + ']: template_name has type=' + str(type(Printer.template_name)))
             return
         # create new printer
-        p = Printer_Gen.SubPrinter_Gen(Printer)
+        p = Printer_Gen.SubPrinter_Gen(Printer, tn)
         # add it to subprinters
         self.subprinters.append(p)
         # add it to template_name_dict
@@ -559,6 +573,7 @@ class Printer_Gen(object):
         v = GDB_Value_Wrapper(value.cast(get_basic_type(value.type)))
         v.qualifiers = qualifiers
         v.basic_type = v.type
+        v.type_name = str(v.basic_type)
         v.template_name = template_name(v.basic_type)
         if v.template_name not in self.template_name_dict:
             l = self.no_template_name_list
@@ -656,30 +671,32 @@ def cond_add_type_recognizer(cond, msg):
 #   py boost.add_trivial_printer("List_Obj", lambda v: v['_val'])
 #     - for every object v of type "List_Obj", simply print v._val
 #
-def add_trivial_printer(n, f):
+def add_trivial_printer(tn, f):
     """
     Add a trivial printer.
 
-    For a value v with template name matching `n`, print it by invoking `f`(v).
+    For a value v with template name matching `tn`, print it by invoking `f`(v).
     """
+    assert type(tn) == str and tn != ''
+    assert callable(f)
     class _Printer:
-        printer_name = n
-        template_name = n
+        printer_name = tn
+        template_name = tn
+        transform = staticmethod(f)
         def __init__(self, v):
             self.v = v
-            self.f = f
         def to_string(self):
-            return str(self.f(self.v))
+            return str(self.v)
     trivial_printer_gen.add(_Printer)
 
 #
 # Add trivial type printer
 #
-def add_trivial_type_printer(n, f, **kwargs):
+def add_trivial_type_printer(tn, f, **kwargs):
     """
     Add trivial type printer.
 
-    For a type t with template name matching `n`, print it by invoking `f`(t).
+    For a type t with template name matching `tn`, print it by invoking `f`(t).
 
     NOTE: The function automatically registers the type printer with gdb by invoking
     gdb.types.register_type_printer(). This is necessary because unlike the case of
@@ -687,16 +704,17 @@ def add_trivial_type_printer(n, f, **kwargs):
     The optional keyword argument `obj` specifies the object file for which to do
     the registration. (If not specified, the type printer will be global.)
     """
-    assert type(n) == str
+    assert type(tn) == str and tn != ''
     assert callable(f)
     class _Type_Recognizer:
-        name = n
+        name = tn
         enabled = True
+        transform = staticmethod(f)
         def recognize(self, t):
-            tname = template_name(t)
-            if tname != n:
+            _tn = template_name(t)
+            if _tn != self.name:
                 return None
-            return f(t)
+            return self.transform(t)
     if 'obj' not in kwargs:
         kwargs['obj'] = None
     gdb.types.register_type_printer(kwargs['obj'], Type_Printer_Gen(_Type_Recognizer))
