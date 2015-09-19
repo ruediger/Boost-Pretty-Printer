@@ -206,6 +206,13 @@ def call_object_method(v, f, *args):
             '\t  py boost.object_method["' + key + '"] = <f>')
         raise gdb.error
 
+static_var_addr = dict()
+
+def get_static_var_addr(s):
+    if s in static_var_addr:
+        return parse_and_eval('(void**)' + str(static_var_addr[s]))
+    return None
+
 #
 # Bypass static method calls
 #
