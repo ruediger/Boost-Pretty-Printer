@@ -173,19 +173,38 @@ def to_eval(val, var_name=None):
         save_value_as_variable(val, var_name)
         return var_name
 
+object_method = dict()
+
 def call_object_method(v, f, *args):
     """
     Apply method `f` to object `v`, with arguments `args`.
     """
     assert isinstance(v, gdb.Value)
     assert isinstance(f, str)
+    # try the bypass function call first, by type name
+    key = str(get_basic_type(v.type)) + '::' + f
+    if key in object_method:
+        return object_method[key](v, *args)
+    # try the bypass function call first, by template name
+    key = template_name(v.type) + '::' + f
+    if key in object_method:
+        return object_method[key](v, *args)
     i = 0
     args_to_eval = list()
     for arg in args:
         assert isinstance(arg, gdb.Value), 'extra argument %s not a gdb.Value' % i + 1
         args_to_eval.append(to_eval(arg, '$_call_object_method_arg_%s' % i + 1))
-    return parse_and_eval(to_eval(v, '$_call_object_method_arg_0') + '.' + f
-                          + '(' + ', '.join(args_to_eval) + ')')
+    try:
+        return parse_and_eval(to_eval(v, '$_call_object_method_arg_0') + '.' + f
+                              + '(' + ', '.join(args_to_eval) + ')')
+    except:
+        message('call_object_method: call failed to: ' + key)
+        long_message(
+            'call_object_method',
+            '\n\tgdb might eliminate inline functions\n' +
+            '\tto add a python function bypass, use:\n' +
+            '\t  py boost.object_method["' + key + '"] = <f>')
+        raise gdb.error
 
 #
 # Bypass static method calls
