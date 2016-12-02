@@ -1324,3 +1324,51 @@ class Boost_Multi_Index:
         if self.empty_cont():
             return 'empty %s' % self.type_name
         return '%s' % self.type_name
+
+@_register_printer
+class BoostUnorderedMapPrinter:
+    "Pretty Printer for boost::unordered_map (Boost.Unordered)"
+    printer_name = 'boost::unordered_map'
+    version = '1.58'
+    type_name_re = '^boost::unordered::unordered_map<(.*)>$'
+
+    class _iterator:
+        def __init__ (self, fields):
+            self.key_type = fields.val.type.template_argument(0)
+            self.value_type = fields.val.type.template_argument(1)
+            self.buckets = fields.val['table_']['buckets_']
+            self.bucket_count = fields.val['table_']['bucket_count_']
+            self.current_bucket = self.bucket_count
+            pair = "std::pair<%s const, %s>" % (self.key_type, self.value_type)
+            self.pair = gdb.lookup_type(pair)
+            self.pair_pointer = self.pair.pointer()
+            self.base_pointer = gdb.lookup_type("boost::unordered::detail::value_base< %s >" % pair).pointer()
+            self.node_pointer = gdb.lookup_type("boost::unordered::detail::ptr_node< %s >" % pair).pointer()
+            self.node = self.buckets[self.current_bucket]['next_']
+
+        def __iter__(self):
+            return self
+
+        def next(self):
+            if not self.node:
+                raise StopIteration
+            iterator = self.node.cast(self.node_pointer).dereference()['value_base_'].address.cast(self.pair_pointer).dereference()
+            self.node = self.node['next_']
+
+            return ('[%s]' % iterator['first'], iterator['second'])
+
+    def __init__(self, val):
+        self.val = val
+        self.key_type = self.val.type.strip_typedefs().template_argument(0)
+        self.value_type = self.val.type.strip_typedefs().template_argument(1)
+
+    def children(self):
+        return self._iterator(self)
+
+    def to_string(self):
+        size = self.val['table_']['size_']
+        if size:
+            return "boost::unordered_map<%s,%s> with %d elements" % (self.key_type,self.value_type,size)
+        else:
+            return "boost::unordered_map<%s,%s>" % (self.key_type,self.value_type)
+
