@@ -508,21 +508,27 @@ class BoostGregorianDate:
         self.value = value
 
     def to_string(self):
-        n = int(self.value['days_'])
+        n = intptr(self.value['days_'])
+        date_int_type_bits = self.value['days_'].type.sizeof * 8
+        # Compatibility fix for gdb+python2, which erroneously converts big 64-bit unsigned
+        # values to negative python ints. It affects various special values and dates in VERY distant future.
+        if n < 0:
+            n += 2**date_int_type_bits
+
         # Check for uninitialized case
-        if n==2**32-2:
+        if n == 2**date_int_type_bits - 2:
             return '(%s) uninitialized' % self.typename
         # Convert date number to year-month-day
         a = n + 32044
-        b = (4*a + 3) / 146097
-        c = a - (146097*b)/4
-        d = (4*c + 3)/1461
-        e = c - (1461*d)/4
-        m = (5*e + 2)/153
-        day = e + 1 - (153*m + 2)/5
-        month = m + 3 - 12*(m/10)
-        year = 100*b + d - 4800 + (m/10)
-        return '(%s) %4d-%02d-%02d' % (self.typename, year,month,day)
+        b = (4*a + 3) // 146097
+        c = a - (146097*b) // 4
+        d = (4*c + 3) // 1461
+        e = c - (1461*d) // 4
+        m = (5*e + 2) // 153
+        day = e + 1 - (153*m + 2) // 5
+        month = m + 3 - 12*(m // 10)
+        year = 100*b + d - 4800 + (m // 10)
+        return '(%s) %4d-%02d-%02d' % (self.typename, year, month, day)
 
 @add_printer
 class BoostPosixTimePTime:

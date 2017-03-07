@@ -322,7 +322,8 @@ class UuidTest(PrettyPrinterTest):
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
 
-class GregorianDateTest(PrettyPrinterTest):
+
+class DateTimeTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_date_time')
@@ -342,7 +343,6 @@ class GregorianDateTest(PrettyPrinterTest):
         self.assertIsNone(display_hint)
 
     def test_date(self):
-        # ERROR: Seems like there is a division problem with python3 here (/ → // should help)
         string, children, display_hint = self.get_printer_result('einstein')
         self.assertEqual(string, '(boost::gregorian::date) 1879-03-14')
         self.assertIsNone(children)
