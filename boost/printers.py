@@ -346,7 +346,7 @@ class BoostUuid:
         self.value = value
 
     def to_string(self):
-        u = (self.value['data'][i] for i in xrange(16))
+        u = (int(self.value['data'][i]) for i in xrange(16))
         s = 'xxxx-xx-xx-xx-xxxxxx'.replace('x', '%02x') % tuple(u)
         return '(%s) %s' % (self.typename, s)
 

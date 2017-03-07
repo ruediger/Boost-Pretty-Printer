@@ -321,21 +321,13 @@ class VariantTest(PrettyPrinterTest):
         self.assertIsNone(display_hint)
 
 
+@unittest.skipIf(boost_version < (1, 42, 0), 'implemented in boost 1.42 and later')
 class UuidTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_uuid')
 
     def test_uuid(self):
-        # Fails with Python 3
-        #Traceback (most recent call last):
-        #   File "test.py", line 312, in test_uuid
-        #     string, children, display_hint = self.get_printer_result('uuid')
-        #   File "test.py", line 45, in get_printer_result
-        #     string = pretty_printer.to_string()
-        #   File "/home/mbalabin/programming/gdb/Boost-Pretty-Printer/boost/printers.py", line 343, in to_string
-        #     s = 'xxxx-xx-xx-xx-xxxxxx'.replace('x', '%02x') % tuple(u)
-        # TypeError: %x format: an integer is required, not gdb.Value
         string, children, display_hint = self.get_printer_result('uuid')
         self.assertEqual(string, '(boost::uuids::uuid) 01234567-89ab-cdef-0123-456789abcdef')
         self.assertIsNone(children)
