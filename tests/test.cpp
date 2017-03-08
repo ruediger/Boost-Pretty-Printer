@@ -8,7 +8,9 @@
 #include <boost/logic/tribool.hpp>
 
 #include <boost/smart_ptr.hpp>
+#if BOOST_VERSION >= 105500
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
+#endif
 
 #include <boost/circular_buffer.hpp>
 
@@ -65,26 +67,32 @@ break_here:
 
 void test_scoped_ptr()
 {
-	// boost::intrusive_array wtf???
-
-	struct S: public boost::intrusive_ref_counter<S>
-	{
-		int i;
-	};
-
 	boost::scoped_ptr<int> scoped_ptr_empty;
 	boost::scoped_ptr<int> scoped_ptr(new int(42));
 
 	boost::scoped_array<int> scoped_array_empty;
 	boost::scoped_array<int> scoped_array(new int[1]);
 	scoped_array[0] = 42;
+break_here:
+	;
+}
+
+void test_intrusive_ptr()
+{
+#if BOOST_VERSION >= 105500
+	struct S: public boost::intrusive_ref_counter<S>
+	{
+		int i;
+	};
 
 	boost::intrusive_ptr<S> intrusive_empty;
 	boost::intrusive_ptr<S> intrusive(new S);
 	intrusive->i = 42;
+#endif
 break_here:
 	;
 }
+
 
 void test_shared_ptr()
 {
@@ -203,6 +211,7 @@ int main()
 	test_reference_wrapper();
 	test_tribool();
 	test_scoped_ptr();
+	test_intrusive_ptr();
 	test_shared_ptr();
 	test_circular_buffer();
 	test_array();

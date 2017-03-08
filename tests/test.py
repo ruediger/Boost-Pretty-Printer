@@ -3,11 +3,13 @@
 from __future__ import print_function, unicode_literals, absolute_import, division
 import sys
 import unittest
-import importlib
 import datetime
 import time
 import gdb
+import boost
+import boost.detect_version
 
+boost_version = boost.detect_version.unpack_boost_version(int(gdb.parse_and_eval('boost_version')) )
 
 # Avoiding module 'six' because it might be unavailable
 if sys.version_info.major > 2:
@@ -43,7 +45,7 @@ class PrettyPrinterTest(unittest.TestCase):
         """
         value = gdb.parse_and_eval(c_variable_name)
         pretty_printer = gdb.default_visualizer(value)
-        self.assertIsNotNone(pretty_printer)
+        self.assertIsNotNone(pretty_printer, 'Pretty printer was not registred')
 
         string = pretty_printer.to_string()
         if string is not None:
@@ -138,7 +140,7 @@ class TriboolTest(PrettyPrinterTest):
 
 
 class ScopedPtrTest(PrettyPrinterTest):
-    """Test for scoped_ptr, scoped_array and intrusive_ptr (classes are handled by a single printer)
+    """Test for scoped_ptr and scoped_array (classes are handled by a single printer)
 
     Note: printers for scoped_ptr, scoped_array and intrusive_ptr are not really helpful: they only print the address
     of a pointed value. The pointed value should be printed as a child.
@@ -170,6 +172,18 @@ class ScopedPtrTest(PrettyPrinterTest):
         self.assertTrue(not string.endswith('0x0'))
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
+
+
+@unittest.skipIf(boost_version < (1, 55), 'implemented in boost 1.55 and later')
+class IntrusivePtrTest(PrettyPrinterTest):
+    """Test for intrusive_ptr
+
+    Note: printers for scoped_ptr, scoped_array and intrusive_ptr are not really helpful: they only print the address
+    of a pointed value. The pointed value should be printed as a child.
+    """
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_ptr')
 
     def test_intrusive_empty(self):
         string, children, display_hint = self.get_printer_result('intrusive_empty')
@@ -302,6 +316,7 @@ class VariantTest(PrettyPrinterTest):
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
 
+
 class UuidTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
@@ -421,7 +436,7 @@ class FlatSetTest(PrettyPrinterTest):
     def test_empty_set(self):
         # Works with neither boost 1.55 nor boost 1.60
         string, children, display_hint = self.get_printer_result('empty_set')
-        self.assertEqual(string, 'boost::container::flat_set<int>')
+        self.assertEqual(string, 'empty boost::container::flat_set<int>')
         self.assertEqual(children, [])
         self.assertEqual(display_hint, 'array')
 
@@ -434,20 +449,15 @@ class FlatMapTest(PrettyPrinterTest):
     def test_empty_set(self):
         # Works with neither boost 1.55 nor boost 1.60
         string, children, display_hint = self.get_printer_result('empty_map')
-        self.assertEqual(string, 'boost::container::flat_map<int, int>')
+        self.assertEqual(string, 'empty boost::container::flat_map<int, int>')
         self.assertEqual(children, [])
         self.assertEqual(display_hint, 'map')
 
 
 def setUpModule():
-    boost_version = int(gdb.parse_and_eval('boost_version'))
-    boost_major = boost_version // 100000
-    boost_minor = boost_version // 100 % 1000
     print('*** GDB version:', gdb.VERSION)
     print('*** Python version: {}.{}.{}'.format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))
-    print('*** Boost version: {}.{}'.format(boost_major, boost_minor))
-    # A specific version of boost printers corresponding to boost_version can be loaded here
-    boost_printers_module = importlib.import_module('boost.latest')
-    boost_printers_module.register_printers()
+    print('*** Boost version: {}.{}.{}'.format(*boost_version))
+    boost.register_printers()
 
 unittest.main(verbosity=2)

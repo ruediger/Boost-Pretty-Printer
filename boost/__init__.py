@@ -33,32 +33,6 @@
 # Inspired _but not copied_ from libstdc++'s pretty printers
 #
 
-#
-# Package name.
-#
-pkg_name = __name__
-
-#
-# Files that do not contain printers.
-#
-non_printer_files = [
-    '__init__.py',
-    'utils.py',
-    'all.py',
-    'latest.py',
-    None ][:-1]
-non_printer_files
-
-#
-# Files that contain the latest printers.
-#
-latest_printer_files = [
-    'printers.py',
-    'intrusive_1_55.py',
-    'multi_index_1_42.py',
-    None ][:-1]
-
-#
-# Import everything from the utils module into the top-level package namespace.
-#
-from .utils import *
+from __future__ import print_function, unicode_literals, absolute_import, division
+from . import printers
+from .utils import register_printers

@@ -3,10 +3,9 @@ from __future__ import print_function
 import gdb
 import gdb.types
 import gdb.printing
-import re
 import sys
 
-from boost import *
+from .detect_version import detect_boost_version
 
 #
 # Indicators for python2 and python3
@@ -57,7 +56,7 @@ def message(s):
     """
     Print string argument to stderr, prefixed by the package name. Ok for both Py2 & Py3.
     """
-    print('*** ' + pkg_name + ': ' + s, file=sys.stderr)
+    print('*** boost printers: ' + s, file=sys.stderr)
 
 #
 # Print long error message only once.
@@ -105,6 +104,7 @@ except ImportError:
         gdb.execute("print %s" % exp)
         gdb.execute("set logging off")
         return gdb.history(0)
+
 
 def get_type_qualifiers(t):
     """
@@ -534,9 +534,6 @@ class Printer_Gen(object):
                 self.name = tn
             elif hasattr(Printer, 'printer_name'):
                 self.name = Printer.printer_name
-            # if version is available as attribute, append it to printer name
-            if hasattr(Printer, 'version'):
-                self.name += '-' + Printer.version
             # set enabled
             if hasattr(Printer, 'enabled'):
                 self.enabled = Printer.enabled
@@ -611,8 +608,6 @@ class Printer_Gen(object):
                 return printer
         return None
 
-boost_printer_gen = Printer_Gen('boost')
-trivial_printer_gen = Printer_Gen('trivial')
 
 class Type_Printer_Gen:
     """
@@ -626,30 +621,46 @@ class Type_Printer_Gen:
     def instantiate(self):
         return self.Type_Recognizer()
 
-type_printer_list = list()
+type_printer_list = []
+boost_printer_list = []
+trivial_printer_list = []
 
 #
 # This function registers the top-level Printer generator with gdb.
 # This should be called from .gdbinit.
 #
-def register_printers(obj=None):
+def register_printers(obj=None, boost_version=None):
     """
     Register top-level printers 'boost' and 'trivial' with objfile `obj`.
     """
-    message('registering top-level printers:' +
-            ' (name="' + boost_printer_gen.name + '" id=' + str(id(boost_printer_gen)) + ')' +
-            ' (name="' + trivial_printer_gen.name + '" id=' + str(id(trivial_printer_gen)) + ')' +
-            ' with objfile=' + str(obj))
-    gdb.printing.register_pretty_printer(obj, boost_printer_gen, replace=True)
+    if boost_version is None:
+        message('Detecting boost_version... ')
+        boost_version = detect_boost_version()
+        message('Detected boost version: {}.{}.{}'.format(*boost_version))
+    supported_printers = [printer for printer in boost_printer_list
+                          if printer.min_supported_version <= boost_version <= printer.max_supported_version]
+    if supported_printers:
+        boost_printer_gen = Printer_Gen('boost')
+        for printer in supported_printers:
+            boost_printer_gen.add(printer)
+        gdb.printing.register_pretty_printer(obj, boost_printer_gen, replace=True)
+    else:
+        message('No boost printers are available for boost version {}.{}.{}!'.format(*boost_version))
+
+    trivial_printer_gen = Printer_Gen('trivial')
+    for printer in trivial_printer_list:
+        trivial_printer_gen.add(printer)
     gdb.printing.register_pretty_printer(obj, trivial_printer_gen, replace=True)
+
     for tp in type_printer_list:
         gdb.types.register_type_printer(obj, tp)
+
 
 def add_printer(p):
     """
     Decorator that adds the given printer `p` to the top-level 'boost' printer.
     """
-    boost_printer_gen.add(p)
+    boost_printer_list.append(p)
     return p
 
 class _cant_add_printer:
@@ -713,7 +724,7 @@ def add_trivial_printer(tn, f):
             self.v = v
         def to_string(self):
             return str(self.v)
-    trivial_printer_gen.add(_Printer)
+    trivial_printer_list.append(_Printer)
 
 #
 # Add trivial type printer
@@ -744,6 +755,7 @@ def add_trivial_type_printer(tn, f, **kwargs):
     if 'obj' not in kwargs:
         kwargs['obj'] = None
     gdb.types.register_type_printer(kwargs['obj'], Type_Printer_Gen(_Type_Recognizer))
+
 
 #
 # To specify which index to use for printing for a specific container
