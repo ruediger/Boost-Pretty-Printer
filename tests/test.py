@@ -9,8 +9,6 @@ import gdb
 import boost
 import boost.detect_version
 
-boost_version = boost.detect_version.unpack_boost_version(int(gdb.parse_and_eval('boost_version')) )
-
 # Avoiding module 'six' because it might be unavailable
 if sys.version_info.major > 2:
     text_type = str
@@ -18,6 +16,9 @@ if sys.version_info.major > 2:
 else:
     text_type = unicode
     string_types = basestring
+
+# Boost version defined in test.cpp
+boost_version = boost.detect_version.unpack_boost_version(int(gdb.parse_and_eval('boost_version')) )
 
 
 def execute_cpp_function(function_name):
@@ -65,6 +66,9 @@ class PrettyPrinterTest(unittest.TestCase):
         # print('children:', children)
         # print('display_hint:', display_hint)
         return string, children, display_hint
+
+    def __str__(self):
+        return '{}.{}'.format(self.__class__.__name__, self._testMethodName)
 
 
 class IteratorRangeTest(PrettyPrinterTest):
