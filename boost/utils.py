@@ -775,3 +775,6 @@ multi_index_selector = dict()
 #
 options = dict()
 options['hide_intrusive_hooks'] = False
+
+# Latest boost currently supported by printers
+last_supported_boost_version = (1, 64, 0)

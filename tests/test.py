@@ -424,30 +424,80 @@ class DateTimeTest(PrettyPrinterTest):
         pass
 
 
+@unittest.skipIf(boost_version < (1, 48, 0), 'implemented in boost 1.48 and later')
 class FlatSetTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_flat_set')
 
     def test_empty_set(self):
-        # Works with neither boost 1.55 nor boost 1.60
         string, children, display_hint = self.get_printer_result('empty_set')
-        self.assertEqual(string, 'empty boost::container::flat_set<int>')
+        self.assertEqual(string, 'boost::container::flat_set<int> size=0 capacity=0')
         self.assertEqual(children, [])
         self.assertEqual(display_hint, 'array')
 
+    def test_full_set(self):
+        string, children, display_hint = self.get_printer_result('fset', int)
+        self.assertEqual(string, 'boost::container::flat_set<int> size=2 capacity=4')
+        self.assertEqual(children, [1, 2])
+        self.assertEqual(display_hint, 'array')
 
+    def test_empty_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_iter')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_empty_const_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_const_iter')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_iter(self):
+        string, children, display_hint = self.get_printer_result('itr', int)
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2])
+        self.assertEqual(display_hint, None)
+
+
+@unittest.skipIf(boost_version < (1, 48, 0), 'implemented in boost 1.48 and later')
 class FlatMapTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_flat_map')
 
-    def test_empty_set(self):
-        # Works with neither boost 1.55 nor boost 1.60
+    def test_empty_map(self):
         string, children, display_hint = self.get_printer_result('empty_map')
-        self.assertEqual(string, 'empty boost::container::flat_map<int, int>')
+        self.assertEqual(string, 'boost::container::flat_map<int, int> size=0 capacity=0')
         self.assertEqual(children, [])
         self.assertEqual(display_hint, 'map')
+
+    def test_map_full(self):
+        string, children, display_hint = self.get_printer_result('fmap', int)
+        self.assertEqual(string, 'boost::container::flat_map<int, int> size=2 capacity=4')
+        self.assertEqual(children, [1, 10, 2, 20])
+        self.assertEqual(display_hint, 'map')
+
+    def test_empty_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_iter')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_empty_const_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_const_iter')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_iter(self):
+        string, children, display_hint = self.get_printer_result('itr')
+        self.assertEqual(string, None)
+        self.assertEqual(len(children), 1)
+        self.assertEqual(int(children[0]["first"]), 2)
+        self.assertEqual(int(children[0]["second"]), 20)
+        self.assertEqual(display_hint, None)
 
 
 def setUpModule():

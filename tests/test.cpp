@@ -177,6 +177,7 @@ void test_flat_set()
 	FlatSetOfInt::const_iterator uninitialized_const_iter;
 
 	FlatSetOfInt fset;
+	fset.reserve(4);
 	fset.insert(1);
 	fset.insert(2);
 	auto itr = fset.find(2);
@@ -188,6 +189,14 @@ void test_flat_map()
 {
 	using FlatMapOfInt = boost::container::flat_map<int, int>;
 	FlatMapOfInt empty_map;
+	FlatMapOfInt::iterator uninitialized_iter;
+	FlatMapOfInt::const_iterator uninitialized_const_iter;
+
+	FlatMapOfInt fmap;
+	fmap.reserve(4);
+	fmap[1] = 10;
+	fmap[2] = 20;
+	auto itr = fmap.find(2);
 break_here:
 	;
 }
