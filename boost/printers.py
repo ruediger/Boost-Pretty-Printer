@@ -291,16 +291,20 @@ class BoostCircular:
 class BoostArray:
     "Pretty Printer for boost::array (Boost.Array)"
     printer_name = 'boost::array'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
+    min_supported_version = (1, 50, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::array'
 
     def __init__(self, value):
-        self.typename = value.type_name
         self.value = value
+        self.size = int(value.type.template_argument(1))
 
     def to_string(self):
-        return self.value['elems']
+        return None
+
+    def children(self):
+        for idx in range(self.size):
+            yield '[{}]'.format(idx), self.value['elems'][idx]
 
     def display_hint(self):
         return 'array'

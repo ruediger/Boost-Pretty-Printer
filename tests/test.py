@@ -279,27 +279,21 @@ class CircularBufferTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
 class ArrayTest(PrettyPrinterTest):
-    # The whole printer is a mess. For an empty array the printer crashes with an
-    # exception ("gdb.error: There is no member or method named elems."). The content on an non-array is printed in
-    # to_string, children() is not defined.
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_array')
 
-    # def test_empty(self):
-    #     string, children, display_hint = self.get_printer_result('empty')
-    #     self.assertTrue(string.endswith('of length 0'))
-    #     self.assertEqual(children, [])
-    #     self.assertEqual(display_hint, 'array')
-    #
-    # def test_three_elements(self):
-    #     string, children, display_hint = self.get_printer_result('three_elements', int)
-    #     print('string:', string)
-    #     print('children:', children)
-    #     print('display_hint:', display_hint)
-    #     self.assertTrue(string.endswith('of length 3'))
-    #     self.assertEqual(children, [10, 20, 30])
-    #     self.assertEqual(display_hint, 'array')
+    def test_empty(self):
+        string, children, display_hint = self.get_printer_result('empty')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_three_elements(self):
+        string, children, display_hint = self.get_printer_result('three_elements', int)
+        self.assertEqual(string, None)
+        self.assertEqual(children, [10, 20, 30])
+        self.assertEqual(display_hint, 'array')
 
 
 class VariantTest(PrettyPrinterTest):
