@@ -144,101 +144,90 @@ class TriboolTest(PrettyPrinterTest):
 
 
 class ScopedPtrTest(PrettyPrinterTest):
-    """Test for scoped_ptr and scoped_array (classes are handled by a single printer)
-
-    Note: printers for scoped_ptr, scoped_array and intrusive_ptr are not really helpful: they only print the address
-    of a pointed value. The pointed value should be printed as a child.
-    """
+    """Test for scoped_ptr and scoped_array"""
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_scoped_ptr')
 
     def test_scoped_ptr_empty(self):
         string, children, display_hint = self.get_printer_result('scoped_ptr_empty')
-        self.assertTrue(string.endswith('0x0'))
-        self.assertIsNone(children)
+        self.assertEqual(string, 'uninitialized')
+        self.assertEqual(children, [])
         self.assertIsNone(display_hint)
 
     def test_scoped_ptr(self):
-        string, children, display_hint = self.get_printer_result('scoped_ptr')
-        self.assertTrue(not string.endswith('0x0'))
-        self.assertIsNone(children)
+        string, children, display_hint = self.get_printer_result('scoped_ptr', int)
+        self.assertNotEqual(string, 'uninitialized')
+        self.assertEqual(children, [42])
         self.assertIsNone(display_hint)
 
     def test_scoped_array_empty(self):
         string, children, display_hint = self.get_printer_result('scoped_array_empty')
-        self.assertTrue(string.endswith('0x0'))
+        self.assertEqual(string, 'uninitialized')
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
 
     def test_scoped_array(self):
         string, children, display_hint = self.get_printer_result('scoped_array')
-        self.assertTrue(not string.endswith('0x0'))
+        self.assertNotEqual(string, 'uninitialized')
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
 
 
 @unittest.skipIf(boost_version < (1, 55), 'implemented in boost 1.55 and later')
 class IntrusivePtrTest(PrettyPrinterTest):
-    """Test for intrusive_ptr
-
-    Note: printers for scoped_ptr, scoped_array and intrusive_ptr are not really helpful: they only print the address
-    of a pointed value. The pointed value should be printed as a child.
-    """
+    """Test for intrusive_ptr"""
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_intrusive_ptr')
 
     def test_intrusive_empty(self):
         string, children, display_hint = self.get_printer_result('intrusive_empty')
-        self.assertTrue(string.endswith('0x0'))
-        self.assertIsNone(children)
+        self.assertEqual(string, 'uninitialized')
+        self.assertEqual(children, [])
         self.assertIsNone(display_hint)
 
     def test_intrusive(self):
         string, children, display_hint = self.get_printer_result('intrusive')
-        self.assertTrue(not string.endswith('0x0'))
-        self.assertIsNone(children)
+        self.assertNotEqual(string, 'uninitialized')
+        self.assertEqual(len(children), 1)
+        self.assertEqual(int(children[0]['i']), 42)
         self.assertIsNone(display_hint)
 
 
 class SharedPtrTest(PrettyPrinterTest):
-    """Test for shared_ptr, shared_array and weak_ptr (classes are handled by a single printer)
-
-    Note: printers for shared_ptr, shared_array and weak_ptr are not really helpful: they only print the address
-    of a pointed value. The pointed value should be printed as a child.
-    """
+    """Test for shared_ptr, shared_array and weak_ptr"""
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_shared_ptr')
 
     def test_empty_shared_ptr(self):
         string, children, display_hint = self.get_printer_result('empty_shared_ptr')
-        self.assertEqual(string, '(boost::shared_ptr<int>) 0x0')
-        self.assertIsNone(children)
+        self.assertEqual(string, 'uninitialized')
+        self.assertEqual(children, [])
         self.assertIsNone(display_hint)
 
     def test_shared_ptr(self):
-        string, children, display_hint = self.get_printer_result('shared_ptr')
-        self.assertTrue(string.startswith('(boost::shared_ptr<int>) (count 1, weak count 2)'))
-        self.assertIsNone(children)
+        string, children, display_hint = self.get_printer_result('shared_ptr', int)
+        self.assertEqual(string, 'count 1, weak count 2')
+        self.assertEqual(children, [9])
         self.assertIsNone(display_hint)
 
     def test_weak_ptr(self):
         string, children, display_hint = self.get_printer_result('weak_ptr')
-        self.assertTrue(string.startswith('(boost::weak_ptr<int>) (count 1, weak count 2)'))
-        self.assertIsNone(children)
+        self.assertEqual(string, 'count 1, weak count 2')
+        self.assertEqual(children, [9])
         self.assertIsNone(display_hint)
 
     def test_empty_shared_array(self):
         string, children, display_hint = self.get_printer_result('empty_shared_array')
-        self.assertEqual(string, '(boost::shared_array<int>) 0x0')
+        self.assertEqual(string, 'uninitialized')
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
 
     def test_shared_array(self):
         string, children, display_hint = self.get_printer_result('shared_array')
-        self.assertTrue(string.startswith('(boost::shared_array<int>) (count 1, weak count 1)'))
+        self.assertTrue(string.startswith('count 1, weak count 1'))
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
 

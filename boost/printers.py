@@ -187,28 +187,54 @@ class BoostTribool:
 
 @add_printer
 class BoostScopedPtr:
-    "Pretty Printer for boost::scoped/intrusive_ptr/array (Boost.SmartPtr)"
-    printer_name = 'boost::scoped/intrusive_ptr/array'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
-    template_name = ['boost::intrusive_array', 'boost::intrusive_ptr',
-                     'boost::scoped_array', 'boost::scoped_ptr']
+    "Pretty Printer for boost::scoped_ptr and boost::intrusive_ptr (Boost.SmartPtr)"
+    printer_name = 'boost::scoped/intrusive_ptr'
+    min_supported_version = (1, 50, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = ['boost::intrusive_ptr', 'boost::scoped_ptr']
 
     def __init__(self, value):
-        self.typename = value.type_name
         self.value = value
 
     def to_string(self):
-        return '(%s) %s' % (self.typename, self.value['px'])
+        return 'uninitialized' if self.value['px'] == 0 else str(self.value['px'])
+
+    def children(self):
+        if self.value['px'] != 0:
+            yield 'value', self.value['px'].dereference()
+
+
+@add_printer
+class BoostScopedArray:
+    "Pretty Printer for boost::scoped_array (Boost.SmartPtr)"
+    printer_name = 'boost::scoped_array'
+    min_supported_version = (1, 50, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = ['boost::scoped_array']
+
+    def __init__(self, value):
+        self.value = value
+
+    def to_string(self):
+        # Array elements can not be displayed because size of the array is not known
+        return 'uninitialized' if self.value['px'] == 0 else 'array start {}'.format(self.value['px'])
+
+
+def read_atomic_counter(counter):
+    """Read atomic counter used in control blocks of boost::shared_ptr and boost::shared_array"""
+    # If std library is not libstdc++ or implementation of std::atomic changes, this method will break.
+    # Unfortunately, libstdc++ does not provide a printer for std::atomic.
+    is_std_atomic = get_basic_type(counter.type).name.startswith('std::atomic')
+    return int(counter['_M_i'] if is_std_atomic else counter)
+
 
 @add_printer
 class BoostSharedPtr:
-    "Pretty Printer for boost::shared/weak_ptr/array (Boost.SmartPtr)"
-    printer_name = 'boost::shared/weak_ptr/array'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
-    template_name = ['boost::shared_array', 'boost::shared_ptr',
-                     'boost::weak_array', 'boost::weak_ptr']
+    """Pretty Printer for boost::shared_ptr and boost::weak_ptr (Boost.SmartPtr)"""
+    printer_name = 'boost::shared/weak_ptr'
+    min_supported_version = (1, 50, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = ['boost::shared_ptr', 'boost::weak_ptr']
 
     def __init__(self, value):
         self.typename = value.type_name
@@ -216,13 +242,39 @@ class BoostSharedPtr:
 
     def to_string(self):
         if self.value['px'] == 0x0:
-            return '(%s) %s' % (self.typename, self.value['px'])
+            return 'uninitialized'
         countobj = self.value['pn']['pi_'].dereference()
-        refcount = countobj['use_count_']
-        weakcount = countobj['weak_count_']
-        return '(%s) (count %d, weak count %d) %s' % (self.typename,
-                                                      refcount, weakcount,
-                                                      self.value['px'])
+        refcount = read_atomic_counter(countobj['use_count_'])
+        weakcount = read_atomic_counter(countobj['weak_count_'])
+        return 'count {}, weak count {}'.format(refcount, weakcount)
+
+    def children(self):
+        if self.value['px'] != 0:
+            yield 'value', self.value['px'].dereference()
+
+
+@add_printer
+class BoostSharedArray:
+    """Pretty Printer for boost::shared_array and boost::weak_array (Boost.SmartPtr)"""
+    printer_name = 'boost::shared/weak_array'
+    min_supported_version = (1, 50, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = ['boost::shared_array', 'boost::weak_array']
+
+    def __init__(self, value):
+        self.typename = value.type_name
+        self.value = value
+
+    def to_string(self):
+        if self.value['px'] == 0x0:
+            return 'uninitialized'
+
+        # Array elements can not be displayed because size of the array is not known
+        countobj = self.value['pn']['pi_'].dereference()
+        refcount = read_atomic_counter(countobj['use_count_'])
+        weakcount = read_atomic_counter(countobj['weak_count_'])
+        return 'count {}, weak count {}, array start {}'.format(refcount, weakcount, self.value['px'])
+
 
 @add_printer
 class BoostCircular:
