@@ -482,6 +482,237 @@ class FlatMapTest(PrettyPrinterTest):
         self.assertEqual(int(children[0]["second"]), 20)
         self.assertEqual(display_hint, None)
 
+class IntrusiveBaseSetTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_set_base')
+
+    def test_empty_base_set(self):
+        string, children, display_hint = self.get_printer_result('empty_base_set')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_base_set_1(self):
+        string, children, display_hint = self.get_printer_result('bset_1', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_base_set_2(self):
+        string, children, display_hint = self.get_printer_result('bset_2', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_base_set_iter_1(self):
+        string, children, display_hint = self.get_printer_result('iter_1', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2])
+        self.assertEqual(display_hint, None)
+
+    def test_base_set_iter_2(self):
+        string, children, display_hint = self.get_printer_result('iter_2', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [3])
+        self.assertEqual(display_hint, None)
+
+
+class IntrusiveMemberSetTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_set_member')
+
+    def test_empty_member_set(self):
+        string, children, display_hint = self.get_printer_result('empty_member_set')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_member_set_1(self):
+        string, children, display_hint = self.get_printer_result('member_set_1', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_member_set_2(self):
+        string, children, display_hint = self.get_printer_result('member_set_2', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_member_set_iter1(self):
+        string, children, display_hint = self.get_printer_result('iter1', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1])
+        self.assertEqual(display_hint, None)
+
+    def test_member_set_iter2(self):
+        string, children, display_hint = self.get_printer_result('iter2', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2])
+        self.assertEqual(display_hint, None)
+
+class IntrusiveBaseListTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_list_base')
+
+    def test_empty_base_list(self):
+        string, children, display_hint = self.get_printer_result('empty_base_list')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_base_list_1(self):
+        string, children, display_hint = self.get_printer_result('base_list_1', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_base_list_2(self):
+        string, children, display_hint = self.get_printer_result('base_list_2', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_base_list_iter_1(self):
+        string, children, display_hint = self.get_printer_result('iter_1', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2])
+        self.assertEqual(display_hint, None)
+
+    def test_base_list_iter_2(self):
+        string, children, display_hint = self.get_printer_result('iter_2', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [3])
+        self.assertEqual(display_hint, None)
+
+
+class IntrusiveBaseListDefaultTagTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_list_base_default_tag')
+
+    def test_empty_base_list(self):
+        string, children, display_hint = self.get_printer_result('empty_base_list')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_base_list(self):
+        string, children, display_hint = self.get_printer_result('base_list', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_base_list_iter(self):
+        string, children, display_hint = self.get_printer_result('iter', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2])
+        self.assertEqual(display_hint, None)
+
+
+class IntrusiveMemberListTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_list_member')
+
+    def test_empty_member_list(self):
+        string, children, display_hint = self.get_printer_result('empty_member_list')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_member_list_1(self):
+        string, children, display_hint = self.get_printer_result('member_list_1', lambda val: int(val['i']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_member_list_2(self):
+        string, children, display_hint = self.get_printer_result('member_list_2', lambda val: int(val['i']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [3, 2, 1])
+        self.assertEqual(display_hint, 'array')
+
+    def test_member_list_iter_1(self):
+        string, children, display_hint = self.get_printer_result('iter_1', lambda val: int(val['i']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1])
+        self.assertEqual(display_hint, None)
+
+    def test_member_list_iter_2(self):
+        string, children, display_hint = self.get_printer_result('iter_2', lambda val: int(val['i']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [3])
+        self.assertEqual(display_hint, None)
+
+
+class IntrusiveBaseSlistTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_slist_base')
+
+    def test_empty_list(self):
+        string, children, display_hint = self.get_printer_result('empty_list')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_list_1(self):
+        string, children, display_hint = self.get_printer_result('list_1', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_list_2(self):
+        string, children, display_hint = self.get_printer_result('list_2', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_iter_1(self):
+        string, children, display_hint = self.get_printer_result('iter_1', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2])
+        self.assertEqual(display_hint, None)
+
+    def test_iter_2(self):
+        string, children, display_hint = self.get_printer_result('iter_2', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [3])
+        self.assertEqual(display_hint, None)
+
+
+class IntrusiveMemberSlistTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_slist_member')
+
+    def test_empty_member_list(self):
+        string, children, display_hint = self.get_printer_result('empty_list')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_member_list(self):
+        string, children, display_hint = self.get_printer_result('list', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(display_hint, 'array')
+
+    def test_member_list_iter(self):
+        string, children, display_hint = self.get_printer_result('iter', lambda val: int(val['int_']))
+        self.assertEqual(string, None)
+        self.assertEqual(children, [2])
+        self.assertEqual(display_hint, None)
+
+# TODO: More intrusive tests:
+# 1. avltree, splaytree, sgtree
+# 2. Multiset, unordered_set
+# 3. Non-raw pointers
+# 4. Custom node traits
 
 def setUpModule():
     print('*** GDB version:', gdb.VERSION)

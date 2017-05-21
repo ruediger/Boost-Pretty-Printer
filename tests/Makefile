@@ -22,7 +22,7 @@ interactive: ${BIN}
 	PYTHONPATH="$$PWD/.." ${GDB} --nx ${BIN}
 
 ${BIN}: ${SRC}
-	$(CXX) -o $@ -std=c++11 -O0 -g3 -ggdb -fno-eliminate-unused-debug-types -Wall -Wextra -Wno-unused-label -Wno-unused-variable -Wno-unused-but-set-variable -pedantic $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $^
+	$(CXX) -o $@ -std=c++11 -O0 -g3 -ggdb -fno-eliminate-unused-debug-types -Wall -Wextra -Wno-unused-label -Wno-unused-variable -Wno-unused-but-set-variable -pedantic -DBOOST_INTRUSIVE_VARIADIC_TEMPLATES $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $^
 
 clean:
 	rm -f ${BIN}

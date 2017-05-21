@@ -330,7 +330,7 @@ def get_inner_type(t, s):
         return v(t)
 
     # finally, try plain inner type access
-    inner_type_name = str(t.strip_typedefs()) + '::' + s
+    inner_type_name = str(get_basic_type(t)) + '::' + s
     try:
         return lookup_type(inner_type_name).strip_typedefs()
     except gdb.error:
@@ -343,8 +343,8 @@ def get_inner_type(t, s):
             '\tsilently ignoring this flag.\n' +
             '\tAlternatively, to bypass this failure, add the result manually with:\n' +
             '\t  py boost.inner_type[("' +
-            str(t.strip_typedefs()) + '", "' + s + '")] = <type>')
-        raise gdb.error
+            str(get_basic_type(t)) + '", "' + s + '")] = <type>')
+        raise
 
 #
 # Raw pointer transformation
@@ -479,6 +479,15 @@ class at_func(gdb.Function):
         return str(val)
 
 _at = at_func()
+
+
+def unwind_references(value):
+    """Convert reference (or reference chain) to actual value"""
+    # gdb.TYPE_CODE_RVALUE_REF is also available in recent gdb versions
+    while value.type.code == gdb.TYPE_CODE_REF:
+        value = value.referenced_value()
+    return value
+
 
 #
 # GDB_Value_Wrapper: Wrapper class for gdb.Value
@@ -773,8 +782,7 @@ multi_index_selector = dict()
 #
 # If set to true, do not print intrusive container hooks.
 #
-options = dict()
-options['hide_intrusive_hooks'] = False
+options = {'hide_intrusive_hooks': True}
 
 # Latest boost currently supported by printers
 last_supported_boost_version = (1, 64, 0)

@@ -2,29 +2,28 @@
 #include <tuple>
 
 #include <boost/version.hpp>
+
 #include <boost/range/iterator_range.hpp>
-#include <boost/optional.hpp>
-#include <boost/ref.hpp>
-#include <boost/logic/tribool.hpp>
+#include <boost/circular_buffer.hpp>
+#include <boost/array.hpp>
+#include <boost/container/flat_set.hpp>
+#include <boost/container/flat_map.hpp>
+#include <boost/intrusive/set.hpp>
+#include <boost/intrusive/list.hpp>
+#include <boost/intrusive/slist.hpp>
 
 #include <boost/smart_ptr.hpp>
 #if BOOST_VERSION >= 105500
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #endif
 
-#include <boost/circular_buffer.hpp>
-
-#include <boost/array.hpp>
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
+#include <boost/ref.hpp>
 #include <boost/uuid/uuid.hpp>
-
-#include <boost/container/flat_set.hpp>
-#include <boost/container/flat_map.hpp>
-
-#include <boost/intrusive/set.hpp>
-#include <boost/intrusive/list.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/logic/tribool.hpp>
 
 unsigned const boost_version = BOOST_VERSION;
 
@@ -201,14 +200,284 @@ break_here:
 	;
 }
 
-void test_intrusive_set()
+void test_intrusive_set_base()
 {
+    namespace bi = boost::intrusive;
+    struct Tag1
+    {
+    };
+    struct Tag2
+    {
+    };
+    using Hook1 = bi::set_base_hook<bi::tag<Tag1>>;
+    using Hook2 = bi::set_base_hook<bi::tag<Tag2>>;
+	struct IntSetElement
+	    : public Hook1
+	    , public Hook2
+	{
+		IntSetElement(int i) : int_(i) {}
+
+		bool operator<(IntSetElement const& rhs) const { return int_ < rhs.int_; }
+		int int_;
+	};
+
+	IntSetElement elem1(1);
+	IntSetElement elem2(2);
+	IntSetElement elem3(3);
+
+	using BaseSet1 = boost::intrusive::set<IntSetElement, bi::base_hook<Hook1>>;
+	using BaseSet2 = boost::intrusive::set<IntSetElement, bi::base_hook<Hook2>>;
+
+	BaseSet1 empty_base_set;
+
+	BaseSet1 bset_1;
+	bset_1.insert(elem3);
+	bset_1.insert(elem2);
+	bset_1.insert(elem1);
+
+	BaseSet2 bset_2;
+	bset_2.insert(elem3);
+	bset_2.insert(elem2);
+
+	auto iter_1 = std::next(bset_1.begin());
+	auto iter_2 = std::next(bset_2.begin());
+break_here:
+	bset_1.clear();
+	bset_2.clear();
+}
+
+void test_intrusive_set_member()
+{
+    namespace bi = boost::intrusive;
+	struct IntSetElement
+	{
+		IntSetElement(int i) : int_(i) {}
+
+		bool operator<(IntSetElement const& rhs) const { return int_ < rhs.int_; }
+		int int_;
+		bi::set_member_hook<> member_hook_1;
+		bi::set_member_hook<> member_hook_2;
+	};
+
+	IntSetElement elem1(1);
+	IntSetElement elem2(2);
+	IntSetElement elem3(3);
+
+	using MemberSet1 = bi::set<
+	    IntSetElement,
+	    bi::member_hook<IntSetElement, bi::set_member_hook<>, &IntSetElement::member_hook_1>>;
+    using MemberSet2 = bi::set<
+        IntSetElement,
+        bi::member_hook<IntSetElement, bi::set_member_hook<>, &IntSetElement::member_hook_2>>;
+
+	MemberSet1 empty_member_set;
+
+	MemberSet1 member_set_1;
+	member_set_1.insert(elem3);
+	member_set_1.insert(elem2);
+	member_set_1.insert(elem1);
+
+	MemberSet2 member_set_2;
+	member_set_2.insert(elem3);
+	member_set_2.insert(elem2);
+
+	auto iter1 = member_set_1.begin();
+	auto iter2 = member_set_2.begin();
+break_here:
+	member_set_1.clear();
+	member_set_2.clear();
+}
+
+void test_intrusive_list_base()
+{
+    namespace bi = boost::intrusive;
+    struct Tag1
+    {
+    };
+    struct Tag2
+    {
+    };
+    using Hook1 = bi::list_base_hook<bi::tag<Tag1>>;
+    using Hook2 = bi::list_base_hook<bi::tag<Tag2>>;
+
+	struct IntListElement
+	    : public Hook1
+	    , public Hook2
+	{
+		IntListElement(int i) : int_(i) {}
+		int int_;
+	};
+
+	IntListElement elem1(1);
+	IntListElement elem2(2);
+	IntListElement elem3(3);
+
+	using BaseList1 = bi::list<IntListElement, bi::base_hook<Hook1>>;
+	using BaseList2 = bi::list<IntListElement, bi::base_hook<Hook2>>;
+
+	BaseList1 empty_base_list;
+
+	BaseList1 base_list_1;
+	base_list_1.push_back(elem1);
+	base_list_1.push_back(elem2);
+	base_list_1.push_back(elem3);
+
+	BaseList2 base_list_2;
+	base_list_2.push_back(elem1);
+	base_list_2.push_back(elem3);
+
+	// AFAIU, intrusive iterators are not default-initialized to any value. It is not possible
+	// to distinguish an uninitialized iterator from an initialized one, and thus it is pointless to test it.
+	//BaseList::iterator base_list_null_iter;
+	auto iter_1 = std::next(base_list_1.begin());
+	auto iter_2 = std::next(base_list_2.begin());
 break_here:
 	;
 }
 
-void test_intrusive_list()
+void test_intrusive_list_base_default_tag()
 {
+    namespace bi = boost::intrusive;
+
+	struct IntListElement : public bi::list_base_hook<>
+	{
+		IntListElement(int i) : int_(i) {}
+		int int_;
+	};
+
+	IntListElement elem1(1);
+	IntListElement elem2(2);
+	IntListElement elem3(3);
+
+	using BaseList = bi::list<IntListElement>;
+
+	BaseList empty_base_list;
+
+	BaseList base_list;
+	base_list.push_back(elem1);
+	base_list.push_back(elem2);
+	base_list.push_back(elem3);
+
+	// AFAIU, intrusive iterators are not default-initialized to any value. It is not possible
+	// to distinguish an uninitialized iterator from an initialized one, and thus it is pointless to test it.
+	//BaseList::iterator base_list_null_iter;
+	auto iter = std::next(base_list.begin());
+break_here:
+	;
+}
+
+void test_intrusive_list_member()
+{
+	namespace bi = boost::intrusive;
+	struct IntListElement
+	{
+		IntListElement(int ii) : i(ii) {}
+
+		int i;
+		bi::list_member_hook<> member_hook_1;
+		bi::list_member_hook<> member_hook_2;
+	};
+
+	IntListElement elem1(1);
+	IntListElement elem2(2);
+	IntListElement elem3(3);
+
+	using MemberList1 = bi::list<
+		IntListElement,
+		bi::member_hook<IntListElement, bi::list_member_hook<>, &IntListElement::member_hook_1>>;
+	using MemberList2 = boost::intrusive::list<
+		IntListElement,
+		bi::member_hook<IntListElement, bi::list_member_hook<>, &IntListElement::member_hook_2>>;
+
+	MemberList1 empty_member_list;
+
+	MemberList1 member_list_1;
+	member_list_1.push_back(elem1);
+	member_list_1.push_back(elem2);
+	member_list_1.push_back(elem3);
+
+	MemberList2 member_list_2;
+	member_list_2.push_back(elem3);
+	member_list_2.push_back(elem2);
+	member_list_2.push_back(elem1);
+
+	auto iter_1 = member_list_1.begin();
+	auto iter_2 = member_list_2.begin();
+break_here:
+	;
+}
+
+void test_intrusive_slist_base()
+{
+    namespace bi = boost::intrusive;
+    struct Tag1
+    {
+    };
+    struct Tag2
+    {
+    };
+    using Hook1 = bi::list_base_hook<bi::tag<Tag1>>;
+    using Hook2 = bi::list_base_hook<bi::tag<Tag2>>;
+
+	struct IntListElement
+	    : public Hook1
+	    , public Hook2
+	{
+		IntListElement(int i) : int_(i) {}
+		int int_;
+	};
+
+	IntListElement elem1(1);
+	IntListElement elem2(2);
+	IntListElement elem3(3);
+
+	using BaseList1 = bi::slist<IntListElement, bi::base_hook<Hook1>>;
+	using BaseList2 = bi::slist<IntListElement, bi::base_hook<Hook2>>;
+
+	BaseList1 empty_list;
+
+	BaseList1 list_1;
+	list_1.push_front(elem3);
+	list_1.push_front(elem2);
+	list_1.push_front(elem1);
+
+	BaseList2 list_2;
+	list_2.push_front(elem3);
+	list_2.push_front(elem2);
+
+	auto iter_1 = std::next(list_1.begin());
+	auto iter_2 = std::next(list_2.begin());
+break_here:
+	;
+}
+
+void test_intrusive_slist_member()
+{
+	struct IntListElement
+	{
+		IntListElement(int i) : int_(i) {}
+		int int_;
+		boost::intrusive::slist_member_hook<> member_hook_;
+	};
+
+	using ListMemberOption = boost::intrusive::member_hook<
+		IntListElement,
+		boost::intrusive::slist_member_hook<>,
+		&IntListElement::member_hook_>;
+	using MemberSlist = boost::intrusive::slist<IntListElement, ListMemberOption>;
+
+	MemberSlist empty_list;
+
+	IntListElement elem1(1);
+	IntListElement elem2(2);
+	IntListElement elem3(3);
+
+	MemberSlist list;
+	list.push_front(elem3);
+	list.push_front(elem2);
+	list.push_front(elem1);
+
+	auto iter = std::next(list.begin());
 break_here:
 	;
 }
@@ -216,21 +485,29 @@ break_here:
 int main()
 {
 	test_iterator_range();
-	test_optional();
-	test_reference_wrapper();
-	test_tribool();
+	test_circular_buffer();
+	test_array();
+	test_flat_set();
+	test_flat_map();
+
+	test_intrusive_set_base();
+	test_intrusive_set_member();
+	test_intrusive_list_base();
+	test_intrusive_list_base_default_tag();
+	test_intrusive_list_member();
+	test_intrusive_slist_base();
+	test_intrusive_slist_member();
+
 	test_scoped_ptr();
 	test_intrusive_ptr();
 	test_shared_ptr();
-	test_circular_buffer();
-	test_array();
+
 	test_variant();
+	test_optional();
+	test_reference_wrapper();
 	test_uuid();
 	test_date_time();
-	test_flat_set();
-	test_flat_map();
-	test_intrusive_set();
-	test_intrusive_list();
+	test_tribool();
 
 	return EXIT_SUCCESS;
 }

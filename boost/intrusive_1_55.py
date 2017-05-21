@@ -1,83 +1,18 @@
+# coding: utf-8
+
 ########################################
 # Intrusive containers 1.55
 ########################################
 
-from boost import *
+from .utils import *
 
-def short_ns(tag):
-    if tag.startswith('boost::intrusive::'):
-        return 'bi::' + tag[18:]
-    else:
-        return tag
-
-@add_type_recognizer
-class Generic_Hook_Type_Recognizer:
-    "Type Recognizer for boost::intrusive::generic_hook"
-    name = 'boost::intrusive::generic_hook-1.55'
-    version = '1.55'
-    enabled = True
-    target_re = re.compile('^boost::intrusive::generic_hook<.*>$')
-
-    def recognize(self, t):
-        if not t.tag or self.target_re.search(t.tag) == None:
-            return None
-        # hook_tag: default (base) or member
-        hook_tag = str(t.template_argument(1).strip_typedefs())
-        # link mode
-        link_mode = str(t.template_argument(2)).split('::')[2]
-        # node_type: first subclass, or the first subclass of the first subclass
-        node_t = t.fields()[0].type
-        if str(node_t.strip_typedefs()).startswith('boost::intrusive::node_holder'):
-            node_t = node_t.fields()[0].type
-        node_tag = str(node_t.strip_typedefs())
-        return ('bi::generic_hook<' + short_ns(node_tag) + ', '
-                + short_ns(hook_tag) + ', ' + link_mode + '>')
-
-@add_printer
-class Generic_Hook_Printer:
-    "Pretty Printer for boost::intrusive::generic_hook"
-    printer_name = 'boost::intrusive::generic_hook'
-    version = '1.55'
-    template_name = 'boost::intrusive::generic_hook'
-
-    def __init__(self, value):
-        self.value = value
-
-    def to_string(self):
-        if options['hide_intrusive_hooks']:
-            return None
-        # the actual node is either the first subclass,
-        # or the first subclass of the first subclass
-        node = self.value.cast(self.value.type.fields()[0].type)
-        if str(node.type.strip_typedefs()).startswith('boost::intrusive::node_holder'):
-            node = node.cast(node.type.fields()[0].type)
-        return str(node)
-
-@add_type_recognizer
-class Hook_Type_Recognizer:
-    "Type Recognizer for boost::intrusive::*_(base|member)_hook"
-    name = 'boost::intrusive::hook-1.55'
-    enabled = True
-    template_name = ['boost::intrusive::avl_set_base_hook', 'boost::intrusive::avl_set_member_hook',
-                     'boost::intrusive::bs_set_base_hook', 'boost::intrusive::bs_set_member_hook',
-                     'boost::intrusive::list_base_hook', 'boost::intrusive::list_member_hook',
-                     'boost::intrusive::slist_base_hook', 'boost::intrusive::slist_member_hook',
-                     'boost::intrusive::set_base_hook', 'boost::intrusive::set_member_hook',
-                     'boost::intrusive::splay_set_base_hook', 'boost::intrusive::splay_set_member_hook',
-                     'boost::intrusive::unordered_set_base_hook', 'boost::intrusive::unordered_set_member_hook']
-
-    def recognize(self, t):
-        if not t.tag or not template_name(t) in self.template_name:
-            return None
-        # just print the underlying generic hook
-        generic_hook_t = t.fields()[0].type
-        return Generic_Hook_Type_Recognizer().recognize(generic_hook_t)
 
 @add_printer
 class Hook_Printer:
     "Pretty Printer for boost::intrusive::*_(base|member)_hook"
     printer_name = 'boost::intrusive::hook'
-    version = '1.55'
+    min_supported_version = (1, 55, 0)
+    max_supported_version = last_supported_boost_version
     template_name = ['boost::intrusive::avl_set_base_hook', 'boost::intrusive::avl_set_member_hook',
                      'boost::intrusive::bs_set_base_hook', 'boost::intrusive::bs_set_member_hook',
                      'boost::intrusive::list_base_hook', 'boost::intrusive::list_member_hook',
@@ -90,10 +25,14 @@ class Hook_Printer:
         self.val = value
 
     def to_string(self):
-        # cast to and print underlying generic hook
-        generic_hook_t = self.val.type.fields()[0].type
-        generic_hook = self.val.cast(generic_hook_t)
-        return str(generic_hook)
+        return '<content hidden>' if options.get('hide_intrusive_hooks', False) else None
+
+    def children(self):
+        if not options.get('hide_intrusive_hooks', False):
+            for field in self.val.type.fields():
+                field_name_str = field.name if field.name is not None else '<anonymous>'
+                yield field_name_str, self.val[field]
+
 
 # resolve bhtraits::node_traits
 #   node_traits is the 2nd template argument
@@ -157,28 +96,26 @@ def f(vtt, node_rptr):
 #
 @add_to_dict(static_method, ('boost::intrusive::bhtraits', 'to_value_ptr'))
 def f(vtt, node_rptr):
-    # first, find the tag type
-    tag_t = vtt.template_argument(3)
-    # find a 'generic_hook' 1st base class of a base class of value type
-    # with the appropriate tag
-    value_t = vtt.template_argument(0)
-    subclass_t = None
-    for f in value_t.fields():
-        if f.type.code != gdb.TYPE_CODE_STRUCT:
-            # the remaining types aren't subclasses
-            break
-        t1 = f.type
-        t2 = t1.fields()[0].type
-        if (template_name(t2) == 'boost::intrusive::generic_hook'
-            and t2.template_argument(1).strip_typedefs() == tag_t.strip_typedefs()):
-            subclass_t = t2
-            break
-    assert subclass_t, 'no subclass hook with tag: ' + str(tag_t.strip_typedefs())
-    # first upcast into generic_hook ptr with correct tag
-    subclass_rptr = node_rptr.cast(subclass_t.pointer())
-    val_rptr_t = value_t.pointer()
-    # second upcast into value
-    return subclass_rptr.cast(val_rptr_t)
+    def get_hook_type(value_t, tag_t):
+        """Get a base hook type of a type value_t corresponding to a type tag_t"""
+        value_base_types = (field.type for field in value_t.fields() if field.is_base_class)
+        for value_base_type in value_base_types:
+            # Checking if base_type is a hook
+            for field in value_base_type.fields():
+                if field.is_base_class and template_name(field.type) == 'boost::intrusive::generic_hook':
+                    # Check if tag is appropriate
+                    hooktags_struct = get_inner_type(field.type, 'hooktags')
+                    hook_tag = get_inner_type(hooktags_struct, 'tag')
+                    if get_basic_type(hook_tag) == get_basic_type(tag_t):
+                        return value_base_type
+        assert False, 'no subclass hook with tag: ' + str(tag_t.strip_typedefs())
+
+    value_type = vtt.template_argument(0)
+    tag_type = vtt.template_argument(3)
+    hook_type = get_hook_type(value_type, tag_type)
+    hook_ptr = node_rptr.cast(hook_type.pointer())
+    value_ptr = hook_ptr.cast(value_type.pointer())
+    return value_ptr
 
 # resolve mhtraits::to_value_ptr
 #   offset is 3rd template argument
@@ -192,6 +129,7 @@ def f(vtt, node_rptr):
     val_rptr_t = value_t.pointer()
     return parse_and_eval('(' + str(val_rptr_t.strip_typedefs()) +
                           ')(' + str(node_rptr_int - offset_int) + ')')
+
 
 # resolve (s)list_node_traits::get_next
 #
@@ -228,31 +166,13 @@ def f(ntt, node_rptr):
 def f(ntt, node_rptr):
     return node_rptr['right_']
 
-def apply_pointed_node(it):
-    """Apply iterator::pointed_node."""
-    assert isinstance(it, gdb.Value)
-
-    # builtin iterators
-    #
-    if (template_name(it.type) == 'boost::intrusive::list_iterator'
-        or template_name(it.type) == 'boost::intrusive::slist_iterator'
-        or template_name(it.type) == 'boost::intrusive::tree_iterator'):
-        return it['members_']['nodeptr_']
-
-    return call_object_method(it, 'pointed_node')
-
-def value_rptr_from_iiterator(it):
-    # value traits is first template argument
-    value_traits_t = it.type.template_argument(0)
-    # apply pointed_node() to get node_ptr
-    node_rptr = get_raw_ptr(apply_pointed_node(it))
-    return get_raw_ptr(call_static_method(value_traits_t, 'to_value_ptr', node_rptr))
 
 @add_printer
 class Iterator_Printer:
     "Pretty Printer for boost::intrusive::(list|slist|tree)_iterator"
     printer_name = 'boost::intrusive::iterator'
-    version = '1.55'
+    min_supported_version = (1, 55, 0)
+    max_supported_version = last_supported_boost_version
     template_name = ['boost::intrusive::list_iterator',
                      'boost::intrusive::slist_iterator',
                      'boost::intrusive::tree_iterator']
@@ -261,18 +181,21 @@ class Iterator_Printer:
         self.val = value
 
     def to_string(self):
-        value_rptr = value_rptr_from_iiterator(self.val)
-        try:
-            value_str = str(value_rptr.dereference())
-        except:
-            value_str = 'N/A'
-        return str(self.val['members_']['nodeptr_']) + ' -> ' + value_str
+        return None
+
+    def children(self):
+        value_traits_t = self.val.type.template_argument(0)
+        node_rptr = unwind_references(call_object_method(self.val, 'pointed_node'))
+        value_rptr = get_raw_ptr(call_static_method(value_traits_t, 'to_value_ptr', node_rptr))
+        yield 'value', value_rptr.dereference()
+
 
 @add_printer
 class List_Printer:
     "Pretty Printer for boost::intrusive list and slist"
     printer_name = 'boost::intrusive::list'
-    version = '1.55'
+    min_supported_version = (1, 55, 0)
+    max_supported_version = last_supported_boost_version
     template_name = ['boost::intrusive::list', 'boost::intrusive::slist']
 
     class Iterator:
@@ -292,11 +215,9 @@ class List_Printer:
                 raise StopIteration
             val_rptr = get_raw_ptr(call_static_method(
                 self.value_traits_t, 'to_value_ptr', self.crt_node_rptr))
-            try:
-                val_str = str(val_rptr.referenced_value())
-            except:
-                val_str = 'N/A'
-            result = ('[%d @%s]' % (self.count, print_ptr(val_rptr)), val_str)
+            index_str = '[%d @%s]' % (self.count, print_ptr(val_rptr))
+            result = index_str, val_rptr.referenced_value()
+
             self.count += 1
             self.crt_node_rptr = get_raw_ptr(call_static_method(
                 self.node_traits_t, 'get_next', self.crt_node_rptr))
@@ -313,37 +234,20 @@ class List_Printer:
         self.v.node_traits_t = get_inner_type(self.v.list_impl_t, 'node_traits')
 
     def to_string (self):
-        if not self.v.qualifiers:
-            return None
-        res = '(' + self.v.qualifiers + ')'
-        res += short_ns(self.v.template_name) + '<' + str(self.v.value_t) + '>'
-        return res
+        return None
 
     def children (self):
         return self.Iterator(self.v)
 
-@add_type_recognizer
-class List_Type_Recognizer:
-    "Type Recognizer for boost::intrusive::list"
-    name = 'boost::intrusive::list-1.55'
-    enabled = True
-
-    def recognize(self, t):
-        t_name = template_name(t)
-        if t_name not in ['boost::intrusive::list', 'boost::intrusive::slist']:
-            return None
-        res = ''
-        qualifiers = get_type_qualifiers(t)
-        if qualifiers:
-            res += '(' + qualifiers + ')'
-        res += short_ns(t_name) + '<' + str(get_basic_type(t).template_argument(0)) + '>'
-        return res
+    def display_hint(self):
+        return 'array'
 
 @add_printer
 class Tree_Printer:
     "Pretty Printer for boost::intrusive ordered sets"
     printer_name = 'boost::intrusive::set'
-    version = '1.55'
+    min_supported_version = (1, 55, 0)
+    max_supported_version = last_supported_boost_version
 
     @staticmethod
     def get_bstree_impl_base(t):
@@ -391,11 +295,8 @@ class Tree_Printer:
                 raise StopIteration
             val_rptr = get_raw_ptr(call_static_method(
                 self.value_traits_t, 'to_value_ptr', self.crt_node_rptr))
-            try:
-                val_str = str(val_rptr.referenced_value())
-            except:
-                val_str = 'N/A'
-            result = ('[%d @%s]' % (self.count, print_ptr(val_rptr)), val_str)
+            index_str = '[%d @%s]' % (self.count, print_ptr(val_rptr))
+            result = index_str, val_rptr.referenced_value()
             self.count += 1
             self.advance()
             return result
@@ -435,33 +336,11 @@ class Tree_Printer:
         self.v.node_traits_t = get_inner_type(self.v.bstree_impl_t, 'node_traits')
 
     def to_string (self):
-        if not self.v.qualifiers:
-            return None
-        res = '(' + self.v.qualifiers + ')'
-        if self.v.template_name.startswith('boost::intrusive::'):
-            res += short_ns(self.v.template_name) + '<' + str(self.v.value_t) + '>'
-        else:
-            res += str(self.v.type)
-        return res
+        # Print size?
+        return None
 
     def children (self):
         return self.Iterator(self.v)
 
-@add_type_recognizer
-class Tree_Type_Recognizer:
-    "Type Recognizer for boost::intrusive::tree"
-    name = 'boost::intrusive::tree-1.55'
-    enabled = True
-
-    def recognize(self, t):
-        basic_t = get_basic_type(t)
-        bstree_impl_t = Tree_Printer.get_bstree_impl_base(basic_t)
-        if not bstree_impl_t:
-            return None
-        qualifiers = get_type_qualifiers(t)
-        res = ''
-        if qualifiers:
-            res += '(' + qualifiers + ')'
-        value_t = get_inner_type(bstree_impl_t, 'value_type')
-        res += short_ns(template_name(basic_t)) + '<' + str(value_t) + '>'
-        return res
+    def display_hint(self):
+        return 'array'

@@ -45,7 +45,8 @@ from .utils import *
 ###
 ### - 'printer_name' : Subprinter name used by gdb. (Required.) If it contains
 ###     regex operators, they must be escaped when refering to it from gdb.
-### - 'version' : Appended to the subprinter name. (Required.)
+### - 'min_supported_version' and 'max_supported_version' : 3-tuples containing min
+###     and max versions of boost supported by the printer. Required.
 ### - 'supports(GDB_Value_Wrapper)' classmethod : If it exists, it is used to
 ###     determine if the Printer supports the given object.
 ### - 'template_name' : string or list of strings. Only objects with this
