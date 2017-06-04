@@ -2,6 +2,9 @@
 
 from __future__ import print_function, unicode_literals, absolute_import, division
 import sys
+import os
+import re
+import inspect
 import unittest
 import datetime
 import time
@@ -714,10 +717,19 @@ class IntrusiveMemberSlistTest(PrettyPrinterTest):
 # 3. Non-raw pointers
 # 4. Custom node traits
 
-def setUpModule():
-    print('*** GDB version:', gdb.VERSION)
-    print('*** Python version: {}.{}.{}'.format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))
-    print('*** Boost version: {}.{}.{}'.format(*boost_version))
-    boost.register_printers()
+print('*** GDB version:', gdb.VERSION)
+print('*** Python version: {}.{}.{}'.format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))
+print('*** Boost version: {}.{}.{}'.format(*boost_version))
 
-unittest.main(verbosity=2)
+boost.register_printers(boost_version=boost_version)
+
+test_re_str = os.environ.get('TEST_REGEX', '.*')
+test_re = re.compile(test_re_str)
+test_cases = [obj for obj in globals().values()
+              if inspect.isclass(obj)
+              and issubclass(obj, PrettyPrinterTest)
+              and obj is not PrettyPrinterTest
+              and test_re.search(obj.__name__)]
+test_cases.sort(key=lambda case: case.__name__)
+test_suite = unittest.TestSuite(unittest.TestLoader().loadTestsFromTestCase(test_case) for test_case in test_cases)
+unittest.TextTestRunner(verbosity=2).run(test_suite)
