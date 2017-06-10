@@ -133,10 +133,21 @@ break_here:
 	;
 }
 
+struct VariantA
+{
+    int a_;
+    double x_[100000];
+};
+struct VariantB
+{
+    int b_;
+};
+
 void test_variant()
 {
-	boost::variant<int, bool> variant_int(42);
-	boost::variant<int, bool> variant_bool(true);
+    using Variant = boost::variant<VariantA, VariantB>;
+    Variant variant_a(VariantA{42, {}});
+    Variant variant_b(VariantB{24});
 break_here:
 	;
 }

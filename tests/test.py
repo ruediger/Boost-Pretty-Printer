@@ -289,21 +289,20 @@ class ArrayTest(PrettyPrinterTest):
 
 
 class VariantTest(PrettyPrinterTest):
-    # Printing held value as a child would be better
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_variant')
 
-    def test_int_variant(self):
-        string, children, display_hint = self.get_printer_result('variant_int')
-        self.assertEqual(string, '(boost::variant<...>) which (0) = int value = 42')
-        self.assertIsNone(children)
+    def test_variant_a(self):
+        string, children, display_hint = self.get_printer_result('variant_a', lambda val: int(val['a_']))
+        self.assertEqual(string, '(boost::variant<...>) type = VariantA')
+        self.assertEqual(children, [42])
         self.assertIsNone(display_hint)
 
-    def test_str_variant(self):
-        string, children, display_hint = self.get_printer_result('variant_bool')
-        self.assertEqual(string, '(boost::variant<...>) which (1) = bool value = true')
-        self.assertIsNone(children)
+    def test_variant_b(self):
+        string, children, display_hint = self.get_printer_result('variant_b', lambda val: int(val['b_']))
+        self.assertEqual(string, '(boost::variant<...>) type = VariantB')
+        self.assertEqual(children, [24])
         self.assertIsNone(display_hint)
 
 

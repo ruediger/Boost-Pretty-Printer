@@ -33,6 +33,7 @@
 # Inspired _but not copied_ from libstdc++'s pretty printers
 #
 
+from __future__ import print_function
 import datetime
 import re
 from .utils import *
@@ -366,29 +367,33 @@ class BoostArray:
 class BoostVariant:
     "Pretty Printer for boost::variant (Boost.Variant)"
     printer_name = 'boost::variant'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
+    min_supported_version = (1, 50, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::variant'
     regex = re.compile('^boost::variant<(.*)>$')
 
     def __init__(self, value):
         self.typename = value.type_name
         self.value = value
+        # Due to some mysterious reason, self.value.type template_name(which) does not work unless variadic templates
+        # are disabled using BOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES.
+        # It might be https://sourceware.org/bugzilla/show_bug.cgi?id=17311
+        m = BoostVariant.regex.search(self.typename)
+        self.types = [s.strip() for s in re.split(r', (?=(?:<[^>]*?(?: [^>]*)*))|, (?=[^>,]+(?:,|$))', m.group(1))]
 
     def to_string(self):
-        m = BoostVariant.regex.search(self.typename)
-        types = [s.strip() for s in re.split(r', (?=(?:<[^>]*?(?: [^>]*)*))|, (?=[^>,]+(?:,|$))', m.group(1))]
         which = intptr(self.value['which_'])
-        type = types[which]
-        data = ''
-        try:
-            ptrtype = lookup_type(type).pointer()
-            data = self.value['storage_']['data_']['buf'].address.cast(ptrtype)
-        except:
-            data = self.value['storage_']['data_']['buf']
-        return '(boost::variant<...>) which (%d) = %s value = %s' % (which,
-                                                                     type,
-                                                                     data.dereference())
+        assert which >= 0, 'Heap backup is not supported'
+        type = self.types[which]
+        return '(boost::variant<...>) type = {}'.format(type)
+
+    def children(self):
+        which = intptr(self.value['which_'])
+        assert which >= 0, 'Heap backup is not supported'
+        type = self.types[which]
+        ptrtype = lookup_type(type).pointer()
+        dataptr = self.value['storage_']['data_']['buf'].address.cast(ptrtype)
+        yield 'value', dataptr.dereference()
 
 @add_printer
 class BoostUuid:
