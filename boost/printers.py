@@ -452,8 +452,8 @@ class BoostGregorianDate:
 class BoostPosixTimePTime:
     "Pretty Printer for boost::posix_time::ptime"
     printer_name = 'boost::posix_time::ptime'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
+    min_supported_version = (1, 50, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::posix_time::ptime'
 
     def __init__(self, value):
@@ -473,5 +473,5 @@ class BoostPosixTimePTime:
             return '(%s) negative infinity' % self.typename
         # Subtract the unix epoch from the timestamp and convert the resulting timestamp into something human readable
         unix_epoch_time = (n-210866803200000000)/1000000.0
-        time_string = datetime.datetime.fromtimestamp(unix_epoch_time).strftime('%Y-%b-%d %H:%M:%S.%f')
-        return '(%s) %s' % (self.typename, time_string)
+        time_string = datetime.datetime.utcfromtimestamp(unix_epoch_time).isoformat(' ')
+        return '(%s) %sZ' % (self.typename, time_string)

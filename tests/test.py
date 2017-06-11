@@ -324,14 +324,6 @@ class DateTimeTest(PrettyPrinterTest):
     def setUpClass(cls):
         execute_cpp_function('test_date_time')
 
-    @staticmethod
-    def format_ptime(dt):
-        # Since ptime is pretty-printed as a local time, we need to convert our datetime to local time first
-        local_offset_sec = time.altzone if time.daylight else time.timezone
-        dt_local = dt - datetime.timedelta(seconds=local_offset_sec)
-        dt_local_str = dt_local.strftime('%Y-%b-%d %H:%M:%S.%f')
-        return '(boost::posix_time::ptime) {}'.format(dt_local_str)
-
     def test_uninitialized_date(self):
         string, children, display_hint = self.get_printer_result('uninitialized_date')
         self.assertEqual(string, '(boost::gregorian::date) uninitialized')
@@ -365,47 +357,23 @@ class DateTimeTest(PrettyPrinterTest):
     def test_time_1970_01_01(self):
         string, children, display_hint = self.get_printer_result('unix_epoch')
         dt = datetime.datetime(year=1970, month=1, day=1)
-        self.assertEqual(string, self.format_ptime(dt))
+        self.assertEqual(string, '(boost::posix_time::ptime) {}Z'.format(dt))
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
 
     def test_time_2016_02_11_09_50_45(self):
         string, children, display_hint = self.get_printer_result('ligo')
         dt = datetime.datetime(year=2016, month=2, day=11, hour=9, minute=50, second=45)
-        self.assertEqual(string, self.format_ptime(dt))
+        self.assertEqual(string, '(boost::posix_time::ptime) {}Z'.format(dt))
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
 
     def test_time_1879_03_14(self):
-        # python2:
-        #Traceback (most recent call last):
-        #   File "test.py", line 367, in test_time3
-        #     string, children, display_hint = self.get_printer_result('einstein_time')
-        #   File "test.py", line 48, in get_printer_result
-        #     string = pretty_printer.to_string()
-        #   File "/home/mbalabin/programming/gdb/Boost-Pretty-Printer/boost/printers.py", line 551, in to_string
-        #     time_string = datetime.datetime.fromtimestamp(unix_epoch_time).strftime('%Y-%b-%d %H:%M:%S.%f')
-        # ValueError: year=1879 is before 1900; the datetime strftime() methods require year >= 1900
-
-        # python3:
-        # FAIL: test_time3 (__main__.GregorianDate)
-        # ----------------------------------------------------------------------
-        # Traceback (most recent call last):
-        #   File "test.py", line 370, in test_time3
-        #     self.assertEqual(string, self.format_ptime(dt))
-        # AssertionError: '(boost::posix_time::ptime) 1879-Mar-14 05:48:48.000000' != '(boost::posix_time::ptime) 1879-Mar-14 07:00:00.000000'
-        # - (boost::posix_time::ptime) 1879-Mar-14 05:48:48.000000
-        # ?                                         ^ ^^ ^^
-        # + (boost::posix_time::ptime) 1879-Mar-14 07:00:00.000000
-        # ?
-
-        # todo: Stop using strftime at all. It has numerous problems on various python versions. Switch to isoformat().
-        # see also: http://stackoverflow.com/a/32206673
-        # string, children, display_hint = self.get_printer_result('einstein_time')
-        # dt = datetime.datetime(year=1879, month=3, day=14)
-        # self.assertEqual(string, self.format_ptime(dt))
-        # self.assertIsNone(children)
-        # self.assertIsNone(display_hint)
+        string, children, display_hint = self.get_printer_result('einstein_time')
+        dt = datetime.datetime(year=1879, month=3, day=14)
+        self.assertEqual(string, '(boost::posix_time::ptime) {}Z'.format(dt))
+        self.assertIsNone(children)
+        self.assertIsNone(display_hint)
         pass
 
 
