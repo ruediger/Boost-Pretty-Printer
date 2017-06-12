@@ -1,11 +1,13 @@
+# coding: utf-8
+
 ##################################################
 # boost::intrusive::set                          #
 ##################################################
 
-from boost import *
+from .utils import *
 
 def get_named_template_argument(gdb_type, arg_name):
-    n = 0;
+    n = 0
     while True:
         try:
             arg = gdb_type.strip_typedefs().template_argument(n)
@@ -44,7 +46,8 @@ def intrusive_iterator_to_string(iterator_value):
 class BoostIntrusiveSet:
     "Pretty Printer for boost::intrusive::set (Boost.Intrusive)"
     printer_name = 'boost::intrusive::set'
-    version = '1.40'
+    min_supported_version = (1, 40, 0)
+    max_supported_version = (1, 54, 0)
     template_name = 'boost::intrusive::set'
 
     class Iterator:
@@ -144,7 +147,8 @@ class BoostIntrusiveSet:
 class BoostIntrusiveTreeIterator:
     "Pretty Printer for boost::intrusive::set<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::tree_iterator'
-    version = '1.40'
+    min_supported_version = (1, 40, 0)
+    max_supported_version = (1, 54, 0)
     template_name = 'boost::intrusive::tree_iterator'
 
     def __init__(self, value):
@@ -163,7 +167,8 @@ class BoostIntrusiveTreeIterator:
 class BoostIntrusiveList:
     "Pretty Printer for boost::intrusive::list (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list'
-    version = '1.40'
+    min_supported_version = (1, 40, 0)
+    max_supported_version = (1, 54, 0)
     template_name = 'boost::intrusive::list'
 
     class Iterator:
@@ -253,7 +258,8 @@ class BoostIntrusiveList:
 class BoostIntrusiveListIterator:
     "Pretty Printer for boost::intrusive::list<*>::iterator (Boost.Intrusive)"
     printer_name = 'boost::intrusive::list_iterator'
-    version = '1.40'
+    min_supported_version = (1, 40, 0)
+    max_supported_version = (1, 54, 0)
     template_name = '^boost::intrusive::list_iterator'
 
     def __init__(self, value):

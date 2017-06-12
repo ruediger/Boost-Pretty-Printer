@@ -6,8 +6,10 @@
 #include <boost/range/iterator_range.hpp>
 #include <boost/circular_buffer.hpp>
 #include <boost/array.hpp>
+#if BOOST_VERSION >= 104800
 #include <boost/container/flat_set.hpp>
 #include <boost/container/flat_map.hpp>
+#endif
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/slist.hpp>
@@ -20,7 +22,9 @@
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 #include <boost/ref.hpp>
+#if BOOST_VERSION >= 104200
 #include <boost/uuid/uuid.hpp>
+#endif
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/logic/tribool.hpp>
@@ -154,9 +158,11 @@ break_here:
 
 void test_uuid()
 {
+#if BOOST_VERSION >= 104200
 	boost::uuids::uuid uuid = {
 		0x01 ,0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
 		0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
+#endif
 break_here:
 	;
 }
@@ -180,6 +186,7 @@ break_here:
 
 void test_flat_set()
 {
+#if BOOST_VERSION >= 104800
 	using FlatSetOfInt = boost::container::flat_set<int>;
 
 	FlatSetOfInt empty_set;
@@ -191,12 +198,14 @@ void test_flat_set()
 	fset.insert(1);
 	fset.insert(2);
 	auto itr = fset.find(2);
+#endif
 break_here:
 	;
 }
 
 void test_flat_map()
 {
+#if BOOST_VERSION >= 104800
 	using FlatMapOfInt = boost::container::flat_map<int, int>;
 	FlatMapOfInt empty_map;
 	FlatMapOfInt::iterator uninitialized_iter;
@@ -207,6 +216,7 @@ void test_flat_map()
 	fmap[1] = 10;
 	fmap[2] = 20;
 	auto itr = fmap.find(2);
+#endif
 break_here:
 	;
 }

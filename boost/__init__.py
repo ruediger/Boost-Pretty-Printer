@@ -37,4 +37,5 @@ from __future__ import print_function, unicode_literals, absolute_import, divisi
 from . import printers
 from . import flat_containers
 from . import intrusive_1_55
+from . import intrusive_1_40
 from .utils import register_printers, options, last_supported_boost_version
