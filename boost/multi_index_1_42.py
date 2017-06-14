@@ -1,5 +1,6 @@
-from boost import *
+# coding: utf-8
 
+from .utils import *
 
 #
 # Some utility methods.
@@ -121,7 +122,8 @@ _boost_multi_index_index_size['boost::multi_index::random_access'] = 1
 class Boost_Multi_Index:
     "Printer for boost::multi_index_container"
     printer_name = 'boost::multi_index_container'
-    version = '1.42'
+    min_supported_version = (1, 42, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::multi_index::multi_index_container'
 
     #
