@@ -307,18 +307,6 @@ class BoostCircular:
             elem = crt.dereference()
             self.count = self.count + 1
             return ('[%d]' % count, elem)
-            #
-            # dead code
-            #
-            if self.item == self.last:
-                raise StopIteration
-            count = self.count
-            self.count = self.count + 1
-            elem = self.item.dereference()
-            self.item = self.item + 1
-            if self.item == self.end:
-                self.item == self.buff
-            return ('[%d]' % count, elem)
 
         def next(self):
             return self.__next__()
@@ -331,8 +319,6 @@ class BoostCircular:
         return self._iterator(self.value['m_first'], self.value['m_last'], self.value['m_buff'], self.value['m_end'], self.value['m_size'])
 
     def to_string(self):
-        first = self.value['m_first']
-        last = self.value['m_last']
         buff = self.value['m_buff']
         end = self.value['m_end']
         size = self.value['m_size']

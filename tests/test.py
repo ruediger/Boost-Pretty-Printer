@@ -65,9 +65,6 @@ class PrettyPrinterTest(unittest.TestCase):
         else:
             display_hint = None
 
-        # print('string:', string)
-        # print('children:', children)
-        # print('display_hint:', display_hint)
         return string, children, display_hint
 
     def __str__(self):
