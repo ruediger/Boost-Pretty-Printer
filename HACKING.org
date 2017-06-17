@@ -18,8 +18,11 @@ Broadly speaking: the executable =a.out= is started, =gdb= runs on top of it, an
 Suppose the API of a data structure we want to visualize in =gdb= provides the usual =begin()= and =end()= methods that yield iterators, but that for whatever reason, iterators must be incremented by calling a function with the signature =void advance(iterator&)=. This works just fine if used in the C++ program. Now, consider what happens when we try to print this data structure naively from a pretty printer. First, =a.out= is stopped at the moment the printer runs. Next, the printer invokes =begin()=. Assuming that works, the returned value cannot possibly be an inferior value, because the function call occured inside =gdb= or =python=, but not inside =a.out=! Thus, /the iterator is stored in a python value/, not an inferior value. As such, it has no address inside the memory space of =a.out=. Now, if we want to call =advance()=, we have a big problem: its argument is a reference, meaning a pointer, but the iterator value we hold has no address. So the call to =advance()= will fail with a semi-cryptic error message of the form "no address". Usually, the problem is more widespread than just a single function. Printing a container using the library API might involve calling under the hood 10 other functions, operators, constructors, assignment operators, and so on, many of which take their arguments by reference.
 
 The only way to pretty print this data structure is to write some python code that simulates what =advance()= is doing. The problem, of course, is that the python code usually ends up using implementation details of the container, such as private data members, which are prone to change under the hood with every update.
+
 **** Multiple Printer Versions
-Because printers are volatile, if several versions exist for a given printer, it is desirable to keep all of them around. For instance, the package currently has printers for intrusive containers (such as =boost::intrusive::list=) for Boost versions 1.40 and 1.55. If one needs to debug a program compiled with 1.46, it is not automatically known which printer will work, if any work at all. The user should be able to try them both. However, a complication here is that there is no automatic way for =python= to select the correct one. If 2 printers for the same type are registered and enabled, either could end up being used. In such situations, one of the printers needs to be either not registered or disabled. Here is how printers are registered and enabled.
+Because printers are volatile, if several versions exist for a given printer, it is desirable to keep all of them around. For instance, the package currently has printers for intrusive containers (such as =boost::intrusive::list=) for Boost versions 1.40 and 1.55. It is recommended to specify boost version when you import printers. If you do not pass boost version to register_printers() then your boost version is detected automatically by compiling a test program with your default compiler.
+
+Here is how printers are registered and enabled.
 
 - Packages can be imported by =python= in several ways: by =~/.gdbinit=, by =gdb= command files such as =a.out-gdb.gdb=, or by =gdb= command lines (e.g. =(gdb) python import sys=)
 
@@ -30,8 +33,8 @@ Because printers are volatile, if several versions exist for a given printer, it
 (gdb) info pretty-printer global boost
 global pretty-printers:
   boost
-    boost::array-1.40
-    boost::circular_buffer-1.40
+    boost::array
+    boost::circular_buffer
     ...
 #+END_EXAMPLE
 
@@ -43,20 +46,13 @@ global pretty-printers:
 (gdb) info pretty-printer global boost
 global pretty-printers:
   boost
-    boost::array-1.40 [disabled]
-    boost::circular_buffer-1.40
+    boost::array [disabled]
+    boost::circular_buffer
     ...
 (gdb) enable pretty-printer global boost;boost::array
 1 printer enabled
 153 of 155 printers enabled
 #+END_EXAMPLE
-
-- By importing the special module =boost.latest=, only the latest version for each printer will be registered. By importing =boost.all=, all known printers will be registered. The file [[SUPPORTED.org]] provides a list of printer versions, module names, along with a flag indicating if they will be imported by =boost.latest= or not.
-
-- To try a printer which is not imported by =boost.latest= (say, =intrusive_1_40=), you can either:
-  - Use =import boost.all=, then disable the printers you don't want (in this case, all other versions of =intrusive=)
-  - Use =import boost.intrusive_1_40=. In this case, no other printers will be registered. If =boost.latest= is loaded by =~/.gdbinit=, you might want to comment that out, or start =gdb= with the flag =-n= and do all the importing by hand.
-In either case, you still have to register the top-level printer by calling =boost.register_printers()=, as explained above.
 
 **** Python Versions
 Since =gdb= verion 7.6 or so, the =python= interpreter used by =gdb= can be either =python2= or =python3=. The =gdb= version bundled with Ubuntu has =python3=. When compiling =gdb= from source, the =configure= scripts will by default use the version that an unqualified =python= resolves to, which is usually =python2=. This can be changed by running =configure --with-python=python3=, but not everyone does that. Long story short, it would be good to have the printers in this package work with both =python2= and =python3=. This doesn't seem to be too hard to do. Here are some specific notes in this sense.
@@ -97,16 +93,16 @@ Executing =python= code in =gdb=:
 ##### "py": execute one python command
 (gdb) py print(sys.version_info)
 sys.version_info(major=3, minor=4, micro=0, releaselevel='final', serial=0)
-(gdb) 
+(gdb)
 ##### "pi": enter python interative mode
 (gdb) pi
->>> 
+>>>
 ##### usual python mode; Ctrl-D to exit
 >>> print(sys.version)
-3.4.0 (default, Apr 11 2014, 13:08:40) 
+3.4.0 (default, Apr 11 2014, 13:08:40)
 [GCC 4.8.2]
 >>> [Ctrl-D]
-(gdb) 
+(gdb)
 #+END_EXAMPLE
 
 Create a sample program, compile it, and run in =gdb=:
@@ -263,7 +259,7 @@ Individual printers are =python= classes. They get registered with the top-level
 ***** Individual Printers
 The following attributes of individual printers are relevant for interatcion with the top-level printer generator:
 - The string attribute =printer_name= is required.
-- The string attribute =version= is optional. If present, it will be added as a suffix to =printer_name=.
+- String attributes =min_supported_version= and =max_supported_version= are required and contain tuples with minimal and maximal boost versions which are supported by the printer.
 - The list-of-strings (or single string) attribute =template_name= is optional, but recommended. It specifies a list of template names that this printer works for. The printer will never be called on an object with a template name not in this list. The only situation where this attribute might not exist is if the list of template names is too long, or perhaps not fixed a priori. E.g., the printer might decide to print an object if it has a certain base type. Then, it would be impossible to filter by the template name of the super type.
 - The class method =supports()= is optional. If present, it will be called with a value as argument to determine if the printer supports printing that value. This occurs after filtering by =template_name=.
 - At least one (or both) of =template_name= and =supports= must exist. The =template_name= filtering is recommended for efficiency purposes.
@@ -317,7 +313,7 @@ As a more complicated example, we try to print a =std::list= from the sample pro
 gdb -q -n a.out -ex 'b done' -ex 'r'
 (gdb) p a_list
 $1 = {<std::_List_base<A, std::allocator<A> >> = {
-    _M_impl = {<std::allocator<std::_List_node<A> >> = {<__gnu_cxx::new_allocator<std::_List_node<A> >> = {<No data fields>}, <No data fields>}, _M_node = {_M_next = 0x602010, 
+    _M_impl = {<std::allocator<std::_List_node<A> >> = {<__gnu_cxx::new_allocator<std::_List_node<A> >> = {<No data fields>}, <No data fields>}, _M_node = {_M_next = 0x602010,
         _M_prev = 0x602050}}}, <No data fields>}
 ##### UGH!
 #+END_EXAMPLE
@@ -430,12 +426,12 @@ If you are interested in adding new printers to this package, please organize th
 
 - Write the code in such a way that it works with both Py2 and Py3. See [[#python-versions][Python Versions]] section.
 
-- At the top of your file, use =from boost import *=. This will pull in all names from =utils.py=.
+- At the top of your file, use =from .utils import *=. This will pull in all names from =utils.py=.
 
 - If you have convenience functions of general interest, add them to =utils.py=. Otherwise, put functions in your new file.
 
-- Edit =__init__.py= and add your new file to =latest_printer_files=, so that it's loaded automatically by =import boost.latest=. If you're updating a printer, remove the old version from that list.
+- Edit =__init__.py= and import new file to register printers.
 
-- Re-run the examples, inspect output by hand to see everything is ok.
+- Write unit tests for your new printer (see =tests/test.py= and =tests/test.cpp=) and run them with both Python2 and Python 3 enabled gdb.
 
 - Update [[SUPPORTED.org]].
