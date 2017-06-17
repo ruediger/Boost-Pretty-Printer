@@ -36,9 +36,9 @@ class FlatSetBase:
         self.val = value
         self.element_type = get_basic_type(value.type).template_argument(0)
 
-    def to_string (self):
+    def to_string(self):
         return 'boost::container::flat_set<{}> size={} capacity={}'.format(
-                self.element_type, self.get_size(), self.get_capacity())
+            self.element_type, self.get_size(), self.get_capacity())
 
     def children(self):
         for idx in xrange(self.get_size()):
@@ -58,9 +58,9 @@ class FlatMapBase:
         self.key_type = get_basic_type(value.type).template_argument(0)
         self.value_type = get_basic_type(value.type).template_argument(1)
 
-    def to_string (self):
+    def to_string(self):
         return 'boost::container::flat_map<{}, {}> size={} capacity={}'.format(
-                self.key_type, self.value_type, self.get_size(), self.get_capacity())
+            self.key_type, self.value_type, self.get_size(), self.get_capacity())
 
     def children(self):
         for idx in xrange(self.get_size()):
@@ -145,6 +145,7 @@ class FlatMap152Printer(FlatMapBase, FlatTree152):
 class FlatMap154Printer(FlatMapBase, FlatTree154):
     min_supported_version = (1, 54, 0)
     max_supported_version = last_supported_boost_version
+
     def __init__(self, value):
         FlatMapBase.__init__(self, value)
 
@@ -156,11 +157,12 @@ class BoostContainerVectorIterator:
     printer_name = 'boost::container::container_detail::vec_iterator'
     min_supported_version = (1, 50, 0)
     max_supported_version = last_supported_boost_version
-    template_name = [  # 1.50 − 1.54
-                     'boost::container::container_detail::vector_iterator',
-                     'boost::container::container_detail::vector_const_iterator',
-                       # 1.55+
-                     'boost::container::container_detail::vec_iterator']
+    template_name = [
+        # 1.50 − 1.54
+        'boost::container::container_detail::vector_iterator',
+        'boost::container::container_detail::vector_const_iterator',
+        # 1.55+
+        'boost::container::container_detail::vec_iterator']
 
     def __init__(self, value):
         self.val = value

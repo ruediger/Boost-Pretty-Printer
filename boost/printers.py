@@ -39,22 +39,22 @@ import re
 from .utils import *
 
 
-###
-### Individual Printers follow.
-###
-### Relevant fields:
-###
-### - 'printer_name' : Subprinter name used by gdb. (Required.) If it contains
-###     regex operators, they must be escaped when refering to it from gdb.
-### - 'min_supported_version' and 'max_supported_version' : 3-tuples containing min
-###     and max versions of boost supported by the printer. Required.
-### - 'supports(GDB_Value_Wrapper)' classmethod : If it exists, it is used to
-###     determine if the Printer supports the given object.
-### - 'template_name' : string or list of strings. Only objects with this
-###     template name will attempt to use this printer.
-###     (Either supports() or template_name is required.)
-### - '__init__' : Its only argument is a GDB_Value_Wrapper.
-###
+#
+# Individual Printers follow.
+#
+# Relevant fields:
+#
+# - 'printer_name' : Subprinter name used by gdb. (Required.) If it contains
+# regex operators, they must be escaped when refering to it from gdb.
+# - 'min_supported_version' and 'max_supported_version' : 3-tuples containing min
+# and max versions of boost supported by the printer. Required.
+# - 'supports(GDB_Value_Wrapper)' classmethod : If it exists, it is used to
+# determine if the Printer supports the given object.
+# - 'template_name' : string or list of strings. Only objects with this
+# template name will attempt to use this printer.
+# (Either supports() or template_name is required.)
+# - '__init__' : Its only argument is a GDB_Value_Wrapper.
+#
 
 @add_printer
 class BoostIteratorRange:
@@ -99,6 +99,7 @@ class BoostIteratorRange:
 
     def display_hint(self):
         return 'array'
+
 
 @add_printer
 class BoostOptional:
@@ -151,6 +152,7 @@ class BoostOptional:
         else:
             return "%s is initialized" % self.typename
 
+
 @add_printer
 class BoostReferenceWrapper:
     "Pretty Printer for boost::reference_wrapper (Boost.Ref)"
@@ -165,6 +167,7 @@ class BoostReferenceWrapper:
 
     def to_string(self):
         return '(%s) %s' % (self.typename, self.value['t_'].dereference())
+
 
 @add_printer
 class BoostTribool:
@@ -186,6 +189,7 @@ class BoostTribool:
         elif(state == 1):
             s = 'true'
         return '(%s) %s' % (self.typename, s)
+
 
 @add_printer
 class BoostScopedPtr:
@@ -288,12 +292,12 @@ class BoostCircular:
 
     class _iterator:
         def __init__(self, first, last, buff, end, size):
-            self.item = first # virtual beginning of the circular buffer
-            self.last = last  # virtual end of the circular buffer (one behind the last element).
-            self.buff = buff  # internal buffer used for storing elements in the circular buffer
-            self.end = end    # internal buffer's end (end of the storage space).
+            self.item = first  # virtual beginning of the circular buffer
+            self.last = last   # virtual end of the circular buffer (one behind the last element).
+            self.buff = buff   # internal buffer used for storing elements in the circular buffer
+            self.end = end     # internal buffer's end (end of the storage space).
             self.size = size
-            self.capa = int(end-buff)
+            self.capa = int(end - buff)
             self.count = 0
 
         def __iter__(self):
@@ -303,7 +307,7 @@ class BoostCircular:
             if self.count == self.size:
                 raise StopIteration
             count = self.count
-            crt=self.buff + (count + self.item - self.buff) % self.capa
+            crt = self.buff + (count + self.item - self.buff) % self.capa
             elem = crt.dereference()
             self.count = self.count + 1
             return ('[%d]' % count, elem)
@@ -316,16 +320,21 @@ class BoostCircular:
         self.value = value
 
     def children(self):
-        return self._iterator(self.value['m_first'], self.value['m_last'], self.value['m_buff'], self.value['m_end'], self.value['m_size'])
+        return self._iterator(self.value['m_first'],
+                              self.value['m_last'],
+                              self.value['m_buff'],
+                              self.value['m_end'],
+                              self.value['m_size'])
 
     def to_string(self):
         buff = self.value['m_buff']
         end = self.value['m_end']
         size = self.value['m_size']
-        return '%s of length %d/%d' % (self.typename, int(size), int(end-buff))
+        return '%s of length %d/%d' % (self.typename, int(size), int(end - buff))
 
     def display_hint(self):
         return 'array'
+
 
 @add_printer
 class BoostArray:
@@ -349,6 +358,7 @@ class BoostArray:
     def display_hint(self):
         return 'array'
 
+
 @add_printer
 class BoostVariant:
     "Pretty Printer for boost::variant (Boost.Variant)"
@@ -365,7 +375,8 @@ class BoostVariant:
         # are disabled using BOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES.
         # It might be https://sourceware.org/bugzilla/show_bug.cgi?id=17311
         m = BoostVariant.regex.search(self.typename)
-        self.types = [s.strip() for s in re.split(r', (?=(?:<[^>]*?(?: [^>]*)*))|, (?=[^>,]+(?:,|$))', m.group(1))]
+        self.types = [s.strip() for s in re.split(
+            r', (?=(?:<[^>]*?(?: [^>]*)*))|, (?=[^>,]+(?:,|$))', m.group(1))]
 
     def to_string(self):
         which = intptr(self.value['which_'])
@@ -380,6 +391,7 @@ class BoostVariant:
         ptrtype = lookup_type(type).pointer()
         dataptr = self.value['storage_']['data_']['buf'].address.cast(ptrtype)
         yield 'value', dataptr.dereference()
+
 
 @add_printer
 class BoostUuid:
@@ -424,15 +436,16 @@ class BoostGregorianDate:
             return '(%s) uninitialized' % self.typename
         # Convert date number to year-month-day
         a = n + 32044
-        b = (4*a + 3) // 146097
-        c = a - (146097*b) // 4
-        d = (4*c + 3) // 1461
-        e = c - (1461*d) // 4
-        m = (5*e + 2) // 153
-        day = e + 1 - (153*m + 2) // 5
-        month = m + 3 - 12*(m // 10)
-        year = 100*b + d - 4800 + (m // 10)
+        b = (4 * a + 3) // 146097
+        c = a - (146097 * b) // 4
+        d = (4 * c + 3) // 1461
+        e = c - (1461 * d) // 4
+        m = (5 * e + 2) // 153
+        day = e + 1 - (153 * m + 2) // 5
+        month = m + 3 - 12 * (m // 10)
+        year = 100 * b + d - 4800 + (m // 10)
         return '(%s) %4d-%02d-%02d' % (self.typename, year, month, day)
+
 
 @add_printer
 class BoostPosixTimePTime:
@@ -449,15 +462,15 @@ class BoostPosixTimePTime:
     def to_string(self):
         n = int(self.value['time_']['time_count_']['value_'])
         # Check for uninitialized case
-        if n==2**63-2:
+        if n == 2**63 - 2:
             return '(%s) uninitialized' % self.typename
         # Check for boost::posix_time::pos_infin case
-        if n==2**63-1:
+        if n == 2**63 - 1:
             return '(%s) positive infinity' % self.typename
         # Check for boost::posix_time::neg_infin case
-        if n==-2**63:
+        if n == -2**63:
             return '(%s) negative infinity' % self.typename
         # Subtract the unix epoch from the timestamp and convert the resulting timestamp into something human readable
-        unix_epoch_time = (n-210866803200000000)/1000000.0
+        unix_epoch_time = (n - 210866803200000000) / 1000000.0
         time_string = datetime.datetime.utcfromtimestamp(unix_epoch_time).isoformat(' ')
         return '(%s) %sZ' % (self.typename, time_string)

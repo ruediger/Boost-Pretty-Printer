@@ -3,6 +3,7 @@ from __future__ import print_function
 import gdb
 import gdb.types
 import gdb.printing
+from gdb import lookup_type
 import sys
 
 from .detect_version import detect_boost_version
@@ -69,11 +70,6 @@ def long_message(tag, msg):
         message(msg)
 
 #
-# lookup_type(): imported from gdb
-#
-from gdb import lookup_type
-
-#
 # get_basic_type(): imported from gdb.types, or workaround from libstdcxx
 #
 try:
@@ -128,23 +124,27 @@ def get_type_qualifiers(t):
         assert False, 'could not determine type qualifiers'
     return qualifiers
 
+
 def template_name(t):
     """
     Get template name of gdb.Type. Only for struct/union/enum.
     """
     assert isinstance(t, gdb.Type)
     bt = get_basic_type(t)
-    if bt.code in [ gdb.TYPE_CODE_STRUCT, gdb.TYPE_CODE_UNION, gdb.TYPE_CODE_ENUM ]:
+    if bt.code in [gdb.TYPE_CODE_STRUCT, gdb.TYPE_CODE_UNION, gdb.TYPE_CODE_ENUM]:
         return str(bt).split('<')[0]
     else:
         return ''
+
 
 class _aux_save_value_as_variable(gdb.Function):
     def __init__(self, v):
         super(_aux_save_value_as_variable, self).__init__('_aux_save_value_as_variable')
         self.value = v
+
     def invoke(self):
         return self.value
+
 
 def save_value_as_variable(v, s):
     """
@@ -154,6 +154,7 @@ def save_value_as_variable(v, s):
     assert isinstance(s, str)
     _aux_save_value_as_variable(v)
     gdb.execute('set var ' + s + ' = $_aux_save_value_as_variable()', False, True)
+
 
 def to_eval(val, var_name=None):
     """
@@ -173,7 +174,9 @@ def to_eval(val, var_name=None):
         save_value_as_variable(val, var_name)
         return var_name
 
+
 object_method = dict()
+
 
 def call_object_method(v, f, *args):
     """
@@ -206,12 +209,15 @@ def call_object_method(v, f, *args):
             '\t  py boost.object_method["' + key + '"] = <f>')
         raise gdb.error
 
+
 static_var_addr = dict()
+
 
 def get_static_var_addr(s):
     if s in static_var_addr:
         return parse_and_eval('(void**)' + str(static_var_addr[s]))
     return None
+
 
 #
 # Bypass static method calls
@@ -225,6 +231,7 @@ def get_static_var_addr(s):
 #   parameter, the type name that matched.
 #
 static_method = dict()
+
 
 def call_static_method(t, f, *args):
     """Apply static method `t`::`f` to gdb.Value objects in `args`.
@@ -279,6 +286,7 @@ def call_static_method(t, f, *args):
             + '", "' + f + '")] = <f>')
         raise gdb.error
 
+
 #
 # Bypass inner type deduction
 #
@@ -291,6 +299,7 @@ def call_static_method(t, f, *args):
 #   If value is a function, call it giving the outter type as argument.
 #
 inner_type = dict()
+
 
 def get_inner_type(t, s):
     """
@@ -346,6 +355,7 @@ def get_inner_type(t, s):
             str(get_basic_type(t)) + '", "' + s + '")] = <type>')
         raise
 
+
 #
 # Raw pointer transformation
 #
@@ -355,6 +365,7 @@ def get_inner_type(t, s):
 #   Python function to call to obtain a raw pointer.
 #
 raw_ptr = dict()
+
 
 def get_raw_ptr(p):
     """
@@ -387,7 +398,7 @@ def get_raw_ptr(p):
     p_str = to_eval(p, '$_get_raw_ptr_p')
     #save_value_as_variable(p, '$_p')
     try:
-        return parse_and_eval(p_str +'.operator->()')
+        return parse_and_eval(p_str + '.operator->()')
     except gdb.error:
         message('get_raw_ptr: call to operator->() failed on type: ' + str(p.type.strip_typedefs()))
         long_message(
@@ -395,6 +406,7 @@ def get_raw_ptr(p):
             '\n\tto bypass this with python function <f>, add:\n' +
             '\t  py boost.raw_ptr["' + str(p.type.strip_typedefs()) + '"] = <f>')
         raise gdb.error
+
 
 def print_ptr(p):
     """
@@ -404,6 +416,7 @@ def print_ptr(p):
         return hex(intptr(p))
     else:
         return str(p)
+
 
 #
 # Null value checker
@@ -415,6 +428,7 @@ def print_ptr(p):
 #   value represents null.
 #
 null_dict = dict()
+
 
 def is_null(p):
     """
@@ -448,11 +462,13 @@ def is_null(p):
         '\t  py boost.null_dict["' + str(p.type.strip_typedefs()) + '"] = <f>')
     raise gdb.error
 
+
 def add_to_dict(d, *keys):
     """
     Decorator that adds its argument object to  dict `d` under every key in `*keys`.
     """
     assert isinstance(d, dict)
+
     def inner_decorator(obj):
         for k in keys:
             d[k] = obj
@@ -477,6 +493,7 @@ class at_func(gdb.Function):
             i -= 1
         _, val = next(it)
         return str(val)
+
 
 _at = at_func()
 
@@ -509,26 +526,11 @@ elif have_python_2:
         Wrapper class for gdb.Value.
         Its sole purpose is to provide a __dict__, which allows setting custom attributes.
         """
+
         def __init__(self, value):
             super(GDB_Value_Wrapper, self).__init__(value)
             self.__dict__ = {}
 
-
-###
-### Individual value printers appear in various .py files.
-###
-### Relevant fields:
-###
-### - 'printer_name' : Subprinter name used by gdb. (Required.) If it contains
-###     regex operators, they must be escaped when refering to it from gdb.
-### - 'version' : Appended to the subprinter name. (Optional.)
-### - 'supports(GDB_Value_Wrapper)' classmethod : If it exists, it is used to
-###     determine if the Printer supports the given object.
-### - 'template_name' : string or list of strings. Only objects with this
-###     template name will attempt to use this printer.
-###     (Either supports() or template_name is required.)
-### - '__init__' : Its only argument is a GDB_Value_Wrapper.
-###
 
 class Printer_Gen(object):
     """
@@ -613,7 +615,7 @@ class Printer_Gen(object):
             l = self.template_name_dict[v.template_name]
         for subprinter_gen in l:
             printer = subprinter_gen(v)
-            if printer != None:
+            if printer is not None:
                 return printer
         return None
 
@@ -622,6 +624,7 @@ class Type_Printer_Gen:
     """
     Top-level type printer generator.
     """
+
     def __init__(self, Type_Recognizer):
         self.name = Type_Recognizer.name
         self.enabled = Type_Recognizer.enabled
@@ -630,14 +633,12 @@ class Type_Printer_Gen:
     def instantiate(self):
         return self.Type_Recognizer()
 
+
 type_printer_list = []
 boost_printer_list = []
 trivial_printer_list = []
 
-#
-# This function registers the top-level Printer generator with gdb.
-# This should be called from .gdbinit.
-#
+
 def register_printers(obj=None, boost_version=None):
     """
     Register top-level printers 'boost' and 'trivial' with objfile `obj`.
@@ -672,12 +673,15 @@ def add_printer(p):
     boost_printer_list.append(p)
     return p
 
+
 class _cant_add_printer:
     def __init__(self, msg):
         self.msg = msg
+
     def __call__(self, p):
         message('printer [' + p.printer_name + '] not supported: ' + self.msg)
         return p
+
 
 def cond_add_printer(cond, msg):
     """
@@ -688,6 +692,7 @@ def cond_add_printer(cond, msg):
     else:
         return _cant_add_printer(msg)
 
+
 def add_type_recognizer(r):
     """
     Add a type recognizer.
@@ -695,12 +700,15 @@ def add_type_recognizer(r):
     type_printer_list.append(Type_Printer_Gen(r))
     return r
 
+
 class _cant_add_type_recognizer:
     def __init__(self, msg):
         self.msg = msg
+
     def __call__(self, p):
         message('type recognizer [' + p.printer_name + '] not supported: ' + self.msg)
         return p
+
 
 def cond_add_type_recognizer(cond, msg):
     """
@@ -711,33 +719,33 @@ def cond_add_type_recognizer(cond, msg):
     else:
         return _cant_add_type_recognizer(msg)
 
-#
-# Add trivial printers, even from inside gdb. E.g.:
-#
-#   py boost.add_trivial_printer("List_Obj", lambda v: v['_val'])
-#     - for every object v of type "List_Obj", simply print v._val
-#
+
 def add_trivial_printer(tn, f):
     """
     Add a trivial printer.
+    For a value v with template name matching `tn`, print it by invoking `f`(v). Works even from inside gdb. E.g.:
 
-    For a value v with template name matching `tn`, print it by invoking `f`(v).
+    py boost.add_trivial_printer("List_Obj", lambda v: v['_val'])
+        - for every object v of type "List_Obj", simply print v._val
+
+
     """
     assert type(tn) == str and tn != ''
     assert callable(f)
+
     class _Printer:
         printer_name = tn
         template_name = tn
         transform = staticmethod(f)
+
         def __init__(self, v):
             self.v = v
+
         def to_string(self):
             return str(self.v)
     trivial_printer_list.append(_Printer)
 
-#
-# Add trivial type printer
-#
+
 def add_trivial_type_printer(tn, f, **kwargs):
     """
     Add trivial type printer.
@@ -752,10 +760,12 @@ def add_trivial_type_printer(tn, f, **kwargs):
     """
     assert type(tn) == str and tn != ''
     assert callable(f)
+
     class _Type_Recognizer:
         name = tn
         enabled = True
         transform = staticmethod(f)
+
         def recognize(self, t):
             _tn = template_name(t)
             if _tn != self.name:

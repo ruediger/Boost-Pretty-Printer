@@ -21,7 +21,7 @@ else:
     string_types = basestring
 
 # Boost version defined in test.cpp
-boost_version = boost.detect_version.unpack_boost_version(int(gdb.parse_and_eval('boost_version')) )
+boost_version = boost.detect_version.unpack_boost_version(int(gdb.parse_and_eval('boost_version')))
 
 
 def execute_cpp_function(function_name):
@@ -56,8 +56,8 @@ class PrettyPrinterTest(unittest.TestCase):
             string = text_type(string)
 
         children = [children_type(value) for index, value in pretty_printer.children()] \
-                   if hasattr(pretty_printer, 'children') \
-                   else None
+            if hasattr(pretty_printer, 'children') \
+            else None
 
         if hasattr(pretty_printer, 'display_hint'):
             self.assertIsInstance(pretty_printer.display_hint(), string_types)
@@ -252,7 +252,7 @@ class CircularBufferTest(PrettyPrinterTest):
     def test_full(self):
         string, children, display_hint = self.get_printer_result('full')
         self.assertTrue(string.endswith('of length 3/3'))
-        self.assertEqual(children, [1,2,3])
+        self.assertEqual(children, [1, 2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_overwrite(self):
@@ -266,6 +266,7 @@ class CircularBufferTest(PrettyPrinterTest):
         self.assertTrue(string.endswith('of length 2/3'))
         self.assertEqual(children, [3, 4])
         self.assertEqual(display_hint, 'array')
+
 
 class ArrayTest(PrettyPrinterTest):
     @classmethod
@@ -449,6 +450,7 @@ class FlatMapTest(PrettyPrinterTest):
         self.assertEqual(int(children[0]["second"]), 20)
         self.assertEqual(display_hint, None)
 
+
 class IntrusiveBaseSetTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
@@ -519,6 +521,7 @@ class IntrusiveMemberSetTest(PrettyPrinterTest):
         self.assertEqual(string, None)
         self.assertEqual(children, [2])
         self.assertEqual(display_hint, None)
+
 
 class IntrusiveBaseListTest(PrettyPrinterTest):
     @classmethod
@@ -674,6 +677,7 @@ class IntrusiveMemberSlistTest(PrettyPrinterTest):
         self.assertEqual(string, None)
         self.assertEqual(children, [2])
         self.assertEqual(display_hint, None)
+
 
 # TODO: More intrusive tests:
 # 1. avltree, splaytree, sgtree

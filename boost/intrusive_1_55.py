@@ -233,14 +233,15 @@ class List_Printer:
         self.v.value_traits_t = self.v.list_impl_t.template_argument(0)
         self.v.node_traits_t = get_inner_type(self.v.list_impl_t, 'node_traits')
 
-    def to_string (self):
+    def to_string(self):
         return None
 
-    def children (self):
+    def children(self):
         return self.Iterator(self.v)
 
     def display_hint(self):
         return 'array'
+
 
 @add_printer
 class Tree_Printer:
@@ -335,11 +336,11 @@ class Tree_Printer:
         self.v.value_traits_t = self.v.bstree_impl_t.template_argument(0)
         self.v.node_traits_t = get_inner_type(self.v.bstree_impl_t, 'node_traits')
 
-    def to_string (self):
+    def to_string(self):
         # Print size?
         return None
 
-    def children (self):
+    def children(self):
         return self.Iterator(self.v)
 
     def display_hint(self):
