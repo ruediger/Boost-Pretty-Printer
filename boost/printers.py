@@ -60,8 +60,8 @@ from .utils import *
 class BoostIteratorRange:
     "Pretty Printer for boost::iterator_range (Boost.Range)"
     printer_name = 'boost::iterator_range'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
+    min_supported_version = (1, 40, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::iterator_range'
 
     class _iterator:
@@ -104,8 +104,8 @@ class BoostIteratorRange:
 class BoostOptional:
     "Pretty Printer for boost::optional (Boost.Optional)"
     printer_name = 'boost::optional'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
+    min_supported_version = (1, 40, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::optional'
     regex = re.compile('^boost::optional<(.*)>$')
 
@@ -155,8 +155,8 @@ class BoostOptional:
 class BoostReferenceWrapper:
     "Pretty Printer for boost::reference_wrapper (Boost.Ref)"
     printer_name = 'boost::reference_wrapper'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
+    min_supported_version = (1, 40, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::reference_wrapper'
 
     def __init__(self, value):
@@ -170,8 +170,8 @@ class BoostReferenceWrapper:
 class BoostTribool:
     "Pretty Printer for boost::logic::tribool (Boost.Tribool)"
     printer_name = 'boost::logic::tribool'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
+    min_supported_version = (1, 40, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::logic::tribool'
 
     def __init__(self, value):
@@ -191,7 +191,7 @@ class BoostTribool:
 class BoostScopedPtr:
     "Pretty Printer for boost::scoped_ptr and boost::intrusive_ptr (Boost.SmartPtr)"
     printer_name = 'boost::scoped/intrusive_ptr'
-    min_supported_version = (1, 50, 0)
+    min_supported_version = (1, 40, 0)
     max_supported_version = last_supported_boost_version
     template_name = ['boost::intrusive_ptr', 'boost::scoped_ptr']
 
@@ -210,7 +210,7 @@ class BoostScopedPtr:
 class BoostScopedArray:
     "Pretty Printer for boost::scoped_array (Boost.SmartPtr)"
     printer_name = 'boost::scoped_array'
-    min_supported_version = (1, 50, 0)
+    min_supported_version = (1, 40, 0)
     max_supported_version = last_supported_boost_version
     template_name = ['boost::scoped_array']
 
@@ -234,7 +234,7 @@ def read_atomic_counter(counter):
 class BoostSharedPtr:
     """Pretty Printer for boost::shared_ptr and boost::weak_ptr (Boost.SmartPtr)"""
     printer_name = 'boost::shared/weak_ptr'
-    min_supported_version = (1, 50, 0)
+    min_supported_version = (1, 40, 0)
     max_supported_version = last_supported_boost_version
     template_name = ['boost::shared_ptr', 'boost::weak_ptr']
 
@@ -259,7 +259,7 @@ class BoostSharedPtr:
 class BoostSharedArray:
     """Pretty Printer for boost::shared_array and boost::weak_array (Boost.SmartPtr)"""
     printer_name = 'boost::shared/weak_array'
-    min_supported_version = (1, 50, 0)
+    min_supported_version = (1, 40, 0)
     max_supported_version = last_supported_boost_version
     template_name = ['boost::shared_array', 'boost::weak_array']
 
@@ -282,8 +282,8 @@ class BoostSharedArray:
 class BoostCircular:
     "Pretty Printer for boost::circular_buffer (Boost.Circular)"
     printer_name = 'boost::circular_buffer'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
+    min_supported_version = (1, 40, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::circular_buffer'
 
     class _iterator:
@@ -331,7 +331,7 @@ class BoostCircular:
 class BoostArray:
     "Pretty Printer for boost::array (Boost.Array)"
     printer_name = 'boost::array'
-    min_supported_version = (1, 50, 0)
+    min_supported_version = (1, 40, 0)
     max_supported_version = last_supported_boost_version
     template_name = 'boost::array'
 
@@ -353,7 +353,7 @@ class BoostArray:
 class BoostVariant:
     "Pretty Printer for boost::variant (Boost.Variant)"
     printer_name = 'boost::variant'
-    min_supported_version = (1, 50, 0)
+    min_supported_version = (1, 40, 0)
     max_supported_version = last_supported_boost_version
     template_name = 'boost::variant'
     regex = re.compile('^boost::variant<(.*)>$')
@@ -385,8 +385,8 @@ class BoostVariant:
 class BoostUuid:
     "Pretty Printer for boost::uuids::uuid (Boost.Uuid)"
     printer_name = 'boost::uuids::uuid'
-    min_supported_version = (1, 40)
-    max_supported_version = (1, 60)
+    min_supported_version = (1, 42, 0)
+    max_supported_version = last_supported_boost_version
     template_name = 'boost::uuids::uuid'
 
     def __init__(self, value):
@@ -438,7 +438,7 @@ class BoostGregorianDate:
 class BoostPosixTimePTime:
     "Pretty Printer for boost::posix_time::ptime"
     printer_name = 'boost::posix_time::ptime'
-    min_supported_version = (1, 50, 0)
+    min_supported_version = (1, 40, 0)
     max_supported_version = last_supported_boost_version
     template_name = 'boost::posix_time::ptime'
 
