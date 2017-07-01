@@ -474,3 +474,44 @@ class BoostPosixTimePTime:
         unix_epoch_time = (n - 210866803200000000) / 1000000.0
         time_string = datetime.datetime.utcfromtimestamp(unix_epoch_time).isoformat(' ')
         return '(%s) %sZ' % (self.typename, time_string)
+
+
+@add_printer
+class BoostUnorderedMapPrinter:
+    "Pretty Printer for boost::unordered_map (Boost.Unordered)"
+    printer_name = 'boost::unordered_map'
+    min_supported_version = (1, 58, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = 'boost::unordered::unordered_map'
+
+    def __init__(self, val):
+        self.val = val
+        val_type = val.type.strip_typedefs()
+        self.key_type = val_type.template_argument(0)
+        self.value_type = val_type.template_argument(1)
+
+    def children(self):
+        pair_type = get_inner_type(self.val.type, 'value_type')
+        pair_pointer = pair_type.pointer()
+        node_pointer = gdb.lookup_type("boost::unordered::detail::ptr_node< {} >".format(pair_type)).pointer()
+
+        buckets = self.val['table_']['buckets_']
+        if not buckets:
+            return
+
+        bucket_count = self.val['table_']['bucket_count_']
+        node = buckets[bucket_count]['next_']
+        item_number = 0
+        while node:
+            iterator = node.cast(node_pointer).dereference()['value_base_'].address.cast(pair_pointer).dereference()
+            yield 'key[{}]'.format(item_number), iterator['first']
+            yield 'value[{}]'.format(item_number), iterator['second']
+            node = node['next_']
+            item_number += 1
+
+    def to_string(self):
+        size = self.val['table_']['size_']
+        return "boost::unordered_map<%s, %s> size = %d" % (self.key_type, self.value_type, size)
+
+    def display_hint(self):
+        return 'map'
