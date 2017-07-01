@@ -13,6 +13,7 @@
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/slist.hpp>
+#include <boost/unordered_map.hpp>
 
 #include <boost/smart_ptr.hpp>
 #if BOOST_VERSION >= 105500
@@ -502,6 +503,23 @@ break_here:
 	;
 }
 
+void test_unordered_map()
+{
+	boost::unordered_map<int, char const*> empty_map;
+	boost::unordered_map<int, char const*> map = {{30, "thirty"}, {20, "twenty"}, {10, "ten"}};
+
+	boost::unordered_map<int, int> big_map;
+	for (int i = 0; i < 100000; ++i)
+	{
+	    big_map.emplace(i, i);
+	}
+
+	boost::unordered_map<int, char const*>::iterator uninitialized_iter;
+	auto iter = map.begin();
+break_here:
+	;
+}
+
 int main()
 {
 	test_iterator_range();
@@ -509,6 +527,7 @@ int main()
 	test_array();
 	test_flat_set();
 	test_flat_map();
+	test_unordered_map();
 
 	test_intrusive_set_base();
 	test_intrusive_set_member();

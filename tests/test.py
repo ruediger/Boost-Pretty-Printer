@@ -754,6 +754,48 @@ class IntrusiveMemberSlistTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 
+@unittest.skipIf(boost_version < (1, 58), 'Printer was implemented for boost 1.55 and later versions')
+class UnorderedMapTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_unordered_map')
+
+    def test_empty_map(self):
+        string, children, display_hint = self.get_printer_result('empty_map')
+        self.assertEqual(string, 'boost::unordered_map<int, const char *> size = 0')
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'map')
+
+    def test_map(self):
+        string, children, display_hint = self.get_printer_result('map')
+        self.assertEqual('boost::unordered_map<int, const char *> size = 3', string)
+        self.assertEqual(
+            as_map(children),
+            {10: 'ten', 20: 'twenty', 30: 'thirty'})
+        self.assertEqual('map', display_hint)
+
+    def test_big_map(self):
+        string, children, display_hint = self.get_printer_result('big_map')
+        self.assertEqual('boost::unordered_map<int, int> size = 100000', string)
+        actual_children = as_map(children)
+        expected_children = {i: i for i in range(100000)}
+        self.assertEqual(expected_children, actual_children)
+        self.assertEqual('map', display_hint)
+
+    def test_uninitialized_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_iter')
+        self.assertEqual(string, 'uninitialized')
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_iter(self):
+        string, children, display_hint = self.get_printer_result('iter')
+        self.assertEqual(string, None)
+        self.assertIn(
+            as_struct(children),
+            [{'key': 10, 'value': 'ten'}, {'key': 20, 'value': 'twenty'}, {'key': 30, 'value': 'thirty'}])
+        self.assertEqual(display_hint, None)
+
 # TODO: More intrusive tests:
 # 1. avltree, splaytree, sgtree
 # 2. Multiset, unordered_set

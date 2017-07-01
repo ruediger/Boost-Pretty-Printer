@@ -492,8 +492,8 @@ class BoostUnorderedMapPrinter:
 
     def children(self):
         pair_type = get_inner_type(self.val.type, 'value_type')
-        pair_pointer = pair_type.pointer()
-        node_pointer = gdb.lookup_type("boost::unordered::detail::ptr_node< {} >".format(pair_type)).pointer()
+        pair_pointer_type = pair_type.pointer()
+        node_pointer_type = gdb.lookup_type("boost::unordered::detail::ptr_node< {} >".format(pair_type)).pointer()
 
         buckets = self.val['table_']['buckets_']
         if not buckets:
@@ -503,7 +503,7 @@ class BoostUnorderedMapPrinter:
         node = buckets[bucket_count]['next_']
         item_number = 0
         while node:
-            iterator = node.cast(node_pointer).dereference()['value_base_'].address.cast(pair_pointer).dereference()
+            iterator = node.cast(node_pointer_type).dereference()['value_base_'].address.cast(pair_pointer_type).dereference()
             yield 'key[{}]'.format(item_number), iterator['first']
             yield 'value[{}]'.format(item_number), iterator['second']
             node = node['next_']
@@ -515,3 +515,28 @@ class BoostUnorderedMapPrinter:
 
     def display_hint(self):
         return 'map'
+
+
+@add_printer
+class BoostUnorderedMapIterator:
+    "Pretty Printer for boost::unordered_map iterator (Boost.Unordered)"
+    printer_name = 'boost::container::container_detail::vec_iterator'
+    min_supported_version = (1, 58, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = 'boost::unordered::iterator_detail::iterator'
+
+    def __init__(self, value):
+        self.val = value
+
+    def to_string(self):
+        return None if self.val['node_'] else 'uninitialized'
+
+    def children(self):
+        pair_type = get_inner_type(self.val.type, 'value_type')
+        pair_pointer = pair_type.pointer()
+
+        node_pointer = self.val["node_"]
+        if node_pointer:
+            iterator = node_pointer.dereference()['value_base_'].address.cast(pair_pointer).dereference()
+            yield 'key', iterator['first']
+            yield 'value', iterator['second']
