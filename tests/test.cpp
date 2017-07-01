@@ -140,7 +140,6 @@ break_here:
 struct VariantA
 {
     int a_;
-    double x_[100000];
 };
 struct VariantB
 {
@@ -150,7 +149,7 @@ struct VariantB
 void test_variant()
 {
     using Variant = boost::variant<VariantA, VariantB>;
-    Variant variant_a(VariantA{42, {}});
+    Variant variant_a(VariantA{42});
     Variant variant_b(VariantB{24});
 break_here:
 	;
@@ -392,9 +391,9 @@ void test_intrusive_list_member()
 	namespace bi = boost::intrusive;
 	struct IntListElement
 	{
-		IntListElement(int ii) : i(ii) {}
+		IntListElement(int i) : int_(i) {}
 
-		int i;
+		int int_;
 		bi::list_member_hook<> member_hook_1;
 		bi::list_member_hook<> member_hook_2;
 	};

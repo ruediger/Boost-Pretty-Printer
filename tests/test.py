@@ -7,7 +7,6 @@ import re
 import inspect
 import unittest
 import datetime
-import time
 import gdb
 import boost
 import boost.detect_version
@@ -19,10 +18,6 @@ if sys.version_info.major > 2:
 else:
     text_type = unicode
     string_types = basestring
-
-# Boost version defined in test.cpp
-boost_version = boost.detect_version.unpack_boost_version(int(gdb.parse_and_eval('boost_version')))
-
 
 def execute_cpp_function(function_name):
     """Run until the end of a specified C++ function (assuming the function has a label 'break_here' at the end)
@@ -38,9 +33,48 @@ def execute_cpp_function(function_name):
     bp.delete()
 
 
+def to_python_value(value):
+    """Convert a gdb.Value to its python equivalent"""
+    type = value.type
+    is_string = type.code in (gdb.TYPE_CODE_ARRAY, gdb.TYPE_CODE_PTR) \
+        and type.target().code == gdb.TYPE_CODE_INT and type.target().sizeof == 1
+    if is_string:
+        return value.string('utf-8')
+    if type.code == gdb.TYPE_CODE_INT:
+        return int(value)
+    if type.code == gdb.TYPE_CODE_FLT:
+        return float(value)
+    if type.code == gdb.TYPE_CODE_BOOL:
+        return bool(value)
+    if type.code == gdb.TYPE_CODE_REF:
+        return to_python_value(value.referenced_value())
+    if type.code == gdb.TYPE_CODE_ARRAY:
+        return [to_python_value(value[idx]) for idx in range(*type.range())]
+    if type.code == gdb.TYPE_CODE_STRUCT:
+        return {name: to_python_value(value[field]) for name, field in gdb.types.deep_items(type)}
+    return value
+
+
+def as_struct(children_values):
+    """Convert children values conforming to gdb pretty-printer 'struct' protocol to a dict"""
+    return {text: to_python_value(value) for text, value in children_values}
+
+
+def as_array(children_values, convert_func=to_python_value):
+    """Convert children values conforming to gdb pretty-printer 'array' protocol to a list"""
+    return [convert_func(value) for text, value in children_values]
+
+
+def as_map(children_values, key_func=to_python_value, value_func=to_python_value):
+    """Convert children values conforming to gdb pretty-printer 'map' protocol to a dict"""
+    assert len(children_values) % 2 == 0
+    it = iter(children_values)
+    return {key_func(key): value_func(value) for ((key_text, key), (value_text, value)) in zip(it, it)}
+
+
 class PrettyPrinterTest(unittest.TestCase):
     """Base class for all printer tests"""
-    def get_printer_result(self, c_variable_name, children_type=lambda x: x):
+    def get_printer_result(self, c_variable_name):
         """Get pretty-printer output for C variable with a specified name
 
         :param c_variable_name: Name of a C variable
@@ -55,9 +89,7 @@ class PrettyPrinterTest(unittest.TestCase):
         if string is not None:
             string = text_type(string)
 
-        children = [children_type(value) for index, value in pretty_printer.children()] \
-            if hasattr(pretty_printer, 'children') \
-            else None
+        children = list(pretty_printer.children()) if hasattr(pretty_printer, 'children') else None
 
         if hasattr(pretty_printer, 'display_hint'):
             self.assertIsInstance(pretty_printer.display_hint(), string_types)
@@ -69,6 +101,25 @@ class PrettyPrinterTest(unittest.TestCase):
 
     def __str__(self):
         return '{}.{}'.format(self.__class__.__name__, self._testMethodName)
+
+
+def run_printer_tests(module_contents):
+    """Scan through module_contents (Iterable[Any]) and run unit tests from all PrettyPrinterTest subclasses
+        matching to environment variable TEST_REGEX"""
+    test_re_str = os.environ.get('TEST_REGEX', '.*')
+    test_re = re.compile(test_re_str)
+    test_cases = [obj for obj in module_contents
+                  if inspect.isclass(obj)
+                  and issubclass(obj, PrettyPrinterTest)
+                  and obj is not PrettyPrinterTest
+                  and test_re.search(obj.__name__)]
+    test_cases.sort(key=lambda case: case.__name__)
+    test_suite = unittest.TestSuite(unittest.TestLoader().loadTestsFromTestCase(test_case) for test_case in test_cases)
+    unittest.TextTestRunner(verbosity=2).run(test_suite)
+
+
+# Boost version defined in test.cpp
+boost_version = boost.detect_version.unpack_boost_version(int(gdb.parse_and_eval('boost_version')))
 
 
 class IteratorRangeTest(PrettyPrinterTest):
@@ -83,10 +134,11 @@ class IteratorRangeTest(PrettyPrinterTest):
         self.assertEqual(children, [])
 
     def test_char_range(self):
-        string, children, display_hint = self.get_printer_result('char_range', lambda v: chr(int(v)))
+        string, children, display_hint = self.get_printer_result('char_range')
         self.assertTrue(string.endswith('of length 13'))
         self.assertEqual(display_hint, 'array')
-        self.assertEqual(children, ['h', 'e', 'l', 'l', 'o', ' ', 'd', 'o', 'l', 'l', 'y', '!', '\0'])
+        self.assertEqual(as_array(children, lambda v: chr(int(v))),
+                         ['h', 'e', 'l', 'l', 'o', ' ', 'd', 'o', 'l', 'l', 'y', '!', '\0'])
 
 
 class OptionalTest(PrettyPrinterTest):
@@ -101,9 +153,9 @@ class OptionalTest(PrettyPrinterTest):
         self.assertIsNone(display_hint)
 
     def test_initialized(self):
-        string, children, display_hint = self.get_printer_result('ten', int)
+        string, children, display_hint = self.get_printer_result('ten')
         self.assertTrue(string.endswith('is initialized'))
-        self.assertEqual(children, [10])
+        self.assertEqual(as_struct(children), {'value': 10})
         self.assertIsNone(display_hint, None)
 
 
@@ -156,9 +208,9 @@ class ScopedPtrTest(PrettyPrinterTest):
         self.assertIsNone(display_hint)
 
     def test_scoped_ptr(self):
-        string, children, display_hint = self.get_printer_result('scoped_ptr', int)
+        string, children, display_hint = self.get_printer_result('scoped_ptr')
         self.assertNotEqual(string, 'uninitialized')
-        self.assertEqual(children, [42])
+        self.assertEqual(as_struct(children), {'value': 42})
         self.assertIsNone(display_hint)
 
     def test_scoped_array_empty(self):
@@ -190,8 +242,9 @@ class IntrusivePtrTest(PrettyPrinterTest):
     def test_intrusive(self):
         string, children, display_hint = self.get_printer_result('intrusive')
         self.assertNotEqual(string, 'uninitialized')
-        self.assertEqual(len(children), 1)
-        self.assertEqual(int(children[0]['i']), 42)
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['i'], 42)
         self.assertIsNone(display_hint)
 
 
@@ -208,15 +261,15 @@ class SharedPtrTest(PrettyPrinterTest):
         self.assertIsNone(display_hint)
 
     def test_shared_ptr(self):
-        string, children, display_hint = self.get_printer_result('shared_ptr', int)
+        string, children, display_hint = self.get_printer_result('shared_ptr')
         self.assertEqual(string, 'count 1, weak count 2')
-        self.assertEqual(children, [9])
+        self.assertEqual(as_struct(children), {'value': 9})
         self.assertIsNone(display_hint)
 
     def test_weak_ptr(self):
         string, children, display_hint = self.get_printer_result('weak_ptr')
         self.assertEqual(string, 'count 1, weak count 2')
-        self.assertEqual(children, [9])
+        self.assertEqual(as_struct(children), {'value': 9})
         self.assertIsNone(display_hint)
 
     def test_empty_shared_array(self):
@@ -244,27 +297,27 @@ class CircularBufferTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_single_element(self):
-        string, children, display_hint = self.get_printer_result('single_element', int)
+        string, children, display_hint = self.get_printer_result('single_element')
         self.assertTrue(string.endswith('of length 1/3'))
-        self.assertEqual(children, [1])
+        self.assertEqual(as_array(children), [1])
         self.assertEqual(display_hint, 'array')
 
     def test_full(self):
         string, children, display_hint = self.get_printer_result('full')
         self.assertTrue(string.endswith('of length 3/3'))
-        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(as_array(children), [1, 2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_overwrite(self):
         string, children, display_hint = self.get_printer_result('overwrite')
         self.assertTrue(string.endswith('of length 3/3'))
-        self.assertEqual(children, [2, 3, 4])
+        self.assertEqual(as_array(children), [2, 3, 4])
         self.assertEqual(display_hint, 'array')
 
     def test_reduced_size(self):
         string, children, display_hint = self.get_printer_result('reduced_size')
         self.assertTrue(string.endswith('of length 2/3'))
-        self.assertEqual(children, [3, 4])
+        self.assertEqual(as_array(children), [3, 4])
         self.assertEqual(display_hint, 'array')
 
 
@@ -280,9 +333,9 @@ class ArrayTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_three_elements(self):
-        string, children, display_hint = self.get_printer_result('three_elements', int)
+        string, children, display_hint = self.get_printer_result('three_elements')
         self.assertEqual(string, None)
-        self.assertEqual(children, [10, 20, 30])
+        self.assertEqual(as_array(children), [10, 20, 30])
         self.assertEqual(display_hint, 'array')
 
 
@@ -292,15 +345,15 @@ class VariantTest(PrettyPrinterTest):
         execute_cpp_function('test_variant')
 
     def test_variant_a(self):
-        string, children, display_hint = self.get_printer_result('variant_a', lambda val: int(val['a_']))
+        string, children, display_hint = self.get_printer_result('variant_a')
         self.assertEqual(string, '(boost::variant<...>) type = VariantA')
-        self.assertEqual(children, [42])
+        self.assertEqual(as_struct(children), {'value': {'a_': 42}})
         self.assertIsNone(display_hint)
 
     def test_variant_b(self):
-        string, children, display_hint = self.get_printer_result('variant_b', lambda val: int(val['b_']))
+        string, children, display_hint = self.get_printer_result('variant_b')
         self.assertEqual(string, '(boost::variant<...>) type = VariantB')
-        self.assertEqual(children, [24])
+        self.assertEqual(as_struct(children), {'value': {'b_': 24}})
         self.assertIsNone(display_hint)
 
 
@@ -388,9 +441,9 @@ class FlatSetTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_full_set(self):
-        string, children, display_hint = self.get_printer_result('fset', int)
+        string, children, display_hint = self.get_printer_result('fset')
         self.assertEqual(string, 'boost::container::flat_set<int> size=2 capacity=4')
-        self.assertEqual(children, [1, 2])
+        self.assertEqual(as_array(children), [1, 2])
         self.assertEqual(display_hint, 'array')
 
     def test_empty_iter(self):
@@ -406,9 +459,9 @@ class FlatSetTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
     def test_iter(self):
-        string, children, display_hint = self.get_printer_result('itr', int)
+        string, children, display_hint = self.get_printer_result('itr')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2])
+        self.assertEqual(as_struct(children), {'value': 2})
         self.assertEqual(display_hint, None)
 
 
@@ -425,9 +478,9 @@ class FlatMapTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'map')
 
     def test_map_full(self):
-        string, children, display_hint = self.get_printer_result('fmap', int)
+        string, children, display_hint = self.get_printer_result('fmap')
         self.assertEqual(string, 'boost::container::flat_map<int, int> size=2 capacity=4')
-        self.assertEqual(children, [1, 10, 2, 20])
+        self.assertEqual(as_map(children), {1: 10, 2: 20})
         self.assertEqual(display_hint, 'map')
 
     def test_empty_iter(self):
@@ -445,9 +498,7 @@ class FlatMapTest(PrettyPrinterTest):
     def test_iter(self):
         string, children, display_hint = self.get_printer_result('itr')
         self.assertEqual(string, None)
-        self.assertEqual(len(children), 1)
-        self.assertEqual(int(children[0]["first"]), 2)
-        self.assertEqual(int(children[0]["second"]), 20)
+        self.assertEqual(as_struct(children), {'value': {'first': 2, 'second': 20}})
         self.assertEqual(display_hint, None)
 
 
@@ -463,27 +514,31 @@ class IntrusiveBaseSetTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_base_set_1(self):
-        string, children, display_hint = self.get_printer_result('bset_1', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('bset_1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [1, 2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_base_set_2(self):
-        string, children, display_hint = self.get_printer_result('bset_2', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('bset_2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_base_set_iter_1(self):
-        string, children, display_hint = self.get_printer_result('iter_1', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter_1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 2)
         self.assertEqual(display_hint, None)
 
     def test_base_set_iter_2(self):
-        string, children, display_hint = self.get_printer_result('iter_2', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter_2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [3])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 3)
         self.assertEqual(display_hint, None)
 
 
@@ -499,27 +554,31 @@ class IntrusiveMemberSetTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_member_set_1(self):
-        string, children, display_hint = self.get_printer_result('member_set_1', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('member_set_1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [1, 2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_member_set_2(self):
-        string, children, display_hint = self.get_printer_result('member_set_2', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('member_set_2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_member_set_iter1(self):
-        string, children, display_hint = self.get_printer_result('iter1', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 1)
         self.assertEqual(display_hint, None)
 
     def test_member_set_iter2(self):
-        string, children, display_hint = self.get_printer_result('iter2', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 2)
         self.assertEqual(display_hint, None)
 
 
@@ -535,27 +594,31 @@ class IntrusiveBaseListTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_base_list_1(self):
-        string, children, display_hint = self.get_printer_result('base_list_1', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('base_list_1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [1, 2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_base_list_2(self):
-        string, children, display_hint = self.get_printer_result('base_list_2', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('base_list_2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [1, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_base_list_iter_1(self):
-        string, children, display_hint = self.get_printer_result('iter_1', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter_1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 2)
         self.assertEqual(display_hint, None)
 
     def test_base_list_iter_2(self):
-        string, children, display_hint = self.get_printer_result('iter_2', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter_2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [3])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 3)
         self.assertEqual(display_hint, None)
 
 
@@ -571,15 +634,17 @@ class IntrusiveBaseListDefaultTagTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_base_list(self):
-        string, children, display_hint = self.get_printer_result('base_list', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('base_list')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [1, 2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_base_list_iter(self):
-        string, children, display_hint = self.get_printer_result('iter', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 2)
         self.assertEqual(display_hint, None)
 
 
@@ -595,27 +660,31 @@ class IntrusiveMemberListTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_member_list_1(self):
-        string, children, display_hint = self.get_printer_result('member_list_1', lambda val: int(val['i']))
+        string, children, display_hint = self.get_printer_result('member_list_1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [1, 2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_member_list_2(self):
-        string, children, display_hint = self.get_printer_result('member_list_2', lambda val: int(val['i']))
+        string, children, display_hint = self.get_printer_result('member_list_2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [3, 2, 1])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [3, 2, 1])
         self.assertEqual(display_hint, 'array')
 
     def test_member_list_iter_1(self):
-        string, children, display_hint = self.get_printer_result('iter_1', lambda val: int(val['i']))
+        string, children, display_hint = self.get_printer_result('iter_1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 1)
         self.assertEqual(display_hint, None)
 
     def test_member_list_iter_2(self):
-        string, children, display_hint = self.get_printer_result('iter_2', lambda val: int(val['i']))
+        string, children, display_hint = self.get_printer_result('iter_2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [3])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 3)
         self.assertEqual(display_hint, None)
 
 
@@ -631,27 +700,31 @@ class IntrusiveBaseSlistTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_list_1(self):
-        string, children, display_hint = self.get_printer_result('list_1', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('list_1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [1, 2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_list_2(self):
-        string, children, display_hint = self.get_printer_result('list_2', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('list_2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_iter_1(self):
-        string, children, display_hint = self.get_printer_result('iter_1', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter_1')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 2)
         self.assertEqual(display_hint, None)
 
     def test_iter_2(self):
-        string, children, display_hint = self.get_printer_result('iter_2', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter_2')
         self.assertEqual(string, None)
-        self.assertEqual(children, [3])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 3)
         self.assertEqual(display_hint, None)
 
 
@@ -667,15 +740,17 @@ class IntrusiveMemberSlistTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
     def test_member_list(self):
-        string, children, display_hint = self.get_printer_result('list', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('list')
         self.assertEqual(string, None)
-        self.assertEqual(children, [1, 2, 3])
+        self.assertEqual(as_array(children, lambda val: int(val['int_'])), [1, 2, 3])
         self.assertEqual(display_hint, 'array')
 
     def test_member_list_iter(self):
-        string, children, display_hint = self.get_printer_result('iter', lambda val: int(val['int_']))
+        string, children, display_hint = self.get_printer_result('iter')
         self.assertEqual(string, None)
-        self.assertEqual(children, [2])
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['int_'], 2)
         self.assertEqual(display_hint, None)
 
 
@@ -688,16 +763,5 @@ class IntrusiveMemberSlistTest(PrettyPrinterTest):
 print('*** GDB version:', gdb.VERSION)
 print('*** Python version: {}.{}.{}'.format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))
 print('*** Boost version: {}.{}.{}'.format(*boost_version))
-
 boost.register_printers(boost_version=boost_version)
-
-test_re_str = os.environ.get('TEST_REGEX', '.*')
-test_re = re.compile(test_re_str)
-test_cases = [obj for obj in globals().values()
-              if inspect.isclass(obj)
-              and issubclass(obj, PrettyPrinterTest)
-              and obj is not PrettyPrinterTest
-              and test_re.search(obj.__name__)]
-test_cases.sort(key=lambda case: case.__name__)
-test_suite = unittest.TestSuite(unittest.TestLoader().loadTestsFromTestCase(test_case) for test_case in test_cases)
-unittest.TextTestRunner(verbosity=2).run(test_suite)
+run_printer_tests(globals().values())

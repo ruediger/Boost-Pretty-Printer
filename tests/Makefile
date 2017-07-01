@@ -12,6 +12,7 @@ GDB ?= gdb
 BIN = test
 SRC = test.cpp
 TESTSUITE = test.py
+INTERACTIVE_COMMANDS = interactive.py
 
 .PHONY: check interactive clean
 
@@ -19,7 +20,7 @@ check: ${BIN}
 	PYTHONPATH="$$PWD/.." ${GDB} --nx --batch -x ${TESTSUITE} ${BIN}
 
 interactive: ${BIN}
-	PYTHONPATH="$$PWD/.." ${GDB} --nx ${BIN}
+	PYTHONPATH="$$PWD/.." ${GDB} --nx -x ${INTERACTIVE_COMMANDS} ${BIN}
 
 ${BIN}: ${SRC}
 	$(CXX) -o $@ -std=c++11 -O0 -g3 -ggdb -fno-eliminate-unused-debug-types -Wall -Wextra -Wno-unused-label -Wno-unused-variable -Wno-unused-but-set-variable -pedantic -DBOOST_INTRUSIVE_VARIADIC_TEMPLATES $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $^
