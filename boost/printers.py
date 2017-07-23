@@ -230,8 +230,12 @@ def read_atomic_counter(counter):
     """Read atomic counter used in control blocks of boost::shared_ptr and boost::shared_array"""
     # If std library is not libstdc++ or implementation of std::atomic changes, this method will break.
     # Unfortunately, libstdc++ does not provide a printer for std::atomic.
-    is_std_atomic = get_basic_type(counter.type).name.startswith('std::atomic')
-    return int(counter['_M_i'] if is_std_atomic else counter)
+    type = get_basic_type(counter.type)
+    if type.code == gdb.TYPE_CODE_INT:
+        return int(counter)
+    if type.code == gdb.TYPE_CODE_STRUCT and gdb.types.has_field(type, '_M_i'):
+        return int(counter['_M_i'])
+    return '?'
 
 
 @add_printer

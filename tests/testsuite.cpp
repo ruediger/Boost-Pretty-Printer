@@ -32,13 +32,17 @@
 
 unsigned const boost_version = BOOST_VERSION;
 
+void dummy_function()
+{
+}
+
 void test_iterator_range()
 {
 	char const text[] = "hello dolly!";
 	boost::iterator_range<char const*> empty_range;
 	boost::iterator_range<char const*> char_range(std::begin(text), std::end(text));
 break_here:
-	;
+	dummy_function();
 }
 
 void test_optional()
@@ -49,7 +53,7 @@ void test_optional()
 	//char const text[] = "hello dolly!";
 	//boost::optional<char const*> dolly(text);
 break_here:
-	;
+	dummy_function();
 }
 
 void test_reference_wrapper()
@@ -57,7 +61,7 @@ void test_reference_wrapper()
 	int x = 42;
 	boost::reference_wrapper<int> int_wrapper(x);
 break_here:
-	;
+	dummy_function();
 }
 
 void test_tribool()
@@ -66,7 +70,7 @@ void test_tribool()
 	boost::logic::tribool val_true(true);
 	boost::logic::tribool val_indeterminate(boost::logic::indeterminate);
 break_here:
-	;
+	dummy_function();
 }
 
 void test_scoped_ptr()
@@ -78,7 +82,7 @@ void test_scoped_ptr()
 	boost::scoped_array<int> scoped_array(new int[1]);
 	scoped_array[0] = 42;
 break_here:
-	;
+	dummy_function();
 }
 
 void test_intrusive_ptr()
@@ -94,7 +98,7 @@ void test_intrusive_ptr()
 	intrusive->i = 42;
 #endif
 break_here:
-	;
+	dummy_function();
 }
 
 
@@ -107,7 +111,7 @@ void test_shared_ptr()
 	boost::shared_array<int> empty_shared_array;
 	boost::shared_array<int> shared_array(new int[1]);
 break_here:
-	;
+	dummy_function();
 }
 
 void test_circular_buffer()
@@ -127,7 +131,7 @@ void test_circular_buffer()
 	auto reduced_size = overwrite;
 	reduced_size.pop_front();
 break_here:
-	;
+	dummy_function();
 }
 
 void test_array()
@@ -135,7 +139,7 @@ void test_array()
 	boost::array<int, 0> empty;
 	boost::array<int, 3> three_elements = { 10, 20, 30 };
 break_here:
-	;
+	dummy_function();
 }
 
 struct VariantA
@@ -153,7 +157,7 @@ void test_variant()
     Variant variant_a(VariantA{42});
     Variant variant_b(VariantB{24});
 break_here:
-	;
+	dummy_function();
 }
 
 void test_uuid()
@@ -164,7 +168,7 @@ void test_uuid()
 		0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
 #endif
 break_here:
-	;
+	dummy_function();
 }
 
 void test_date_time()
@@ -181,7 +185,7 @@ void test_date_time()
 	ptime einstein_time(einstein);
 	ptime ligo(date(2016, Feb, 11), hours(9) + minutes(50) + seconds(45));
 break_here:
-	;
+	dummy_function();
 }
 
 void test_flat_set()
@@ -200,7 +204,7 @@ void test_flat_set()
 	auto itr = fset.find(2);
 #endif
 break_here:
-	;
+	dummy_function();
 }
 
 void test_flat_map()
@@ -218,7 +222,7 @@ void test_flat_map()
 	auto itr = fmap.find(2);
 #endif
 break_here:
-	;
+	dummy_function();
 }
 
 void test_intrusive_set_base()
@@ -353,7 +357,7 @@ void test_intrusive_list_base()
 	auto iter_1 = std::next(base_list_1.begin());
 	auto iter_2 = std::next(base_list_2.begin());
 break_here:
-	;
+	dummy_function();
 }
 
 void test_intrusive_list_base_default_tag()
@@ -384,7 +388,7 @@ void test_intrusive_list_base_default_tag()
 	//BaseList::iterator base_list_null_iter;
 	auto iter = std::next(base_list.begin());
 break_here:
-	;
+	dummy_function();
 }
 
 void test_intrusive_list_member()
@@ -425,7 +429,7 @@ void test_intrusive_list_member()
 	auto iter_1 = member_list_1.begin();
 	auto iter_2 = member_list_2.begin();
 break_here:
-	;
+	dummy_function();
 }
 
 void test_intrusive_slist_base()
@@ -469,7 +473,7 @@ void test_intrusive_slist_base()
 	auto iter_1 = std::next(list_1.begin());
 	auto iter_2 = std::next(list_2.begin());
 break_here:
-	;
+	dummy_function();
 }
 
 void test_intrusive_slist_member()
@@ -500,7 +504,7 @@ void test_intrusive_slist_member()
 
 	auto iter = std::next(list.begin());
 break_here:
-	;
+	dummy_function();
 }
 
 void test_unordered_map()
@@ -517,7 +521,7 @@ void test_unordered_map()
 	boost::unordered_map<int, char const*>::iterator uninitialized_iter;
 	auto iter = map.begin();
 break_here:
-	;
+	dummy_function();
 }
 
 int main()
