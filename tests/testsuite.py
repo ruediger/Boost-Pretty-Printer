@@ -115,7 +115,7 @@ def run_printer_tests(module_contents):
                   and test_re.search(obj.__name__)]
     test_cases.sort(key=lambda case: case.__name__)
     test_suite = unittest.TestSuite(unittest.TestLoader().loadTestsFromTestCase(test_case) for test_case in test_cases)
-    unittest.TextTestRunner(verbosity=2).run(test_suite)
+    return unittest.TextTestRunner(verbosity=2).run(test_suite)
 
 
 # Boost version defined in test.cpp
@@ -806,4 +806,5 @@ print('*** GDB version:', gdb.VERSION)
 print('*** Python version: {}.{}.{}'.format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))
 print('*** Boost version: {}.{}.{}'.format(*boost_version))
 boost.register_printers(boost_version=boost_version)
-run_printer_tests(globals().values())
+test_result = run_printer_tests(globals().values())
+sys.exit(0 if test_result.wasSuccessful() else 1)

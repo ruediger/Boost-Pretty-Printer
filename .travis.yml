@@ -1,0 +1,17 @@
+language: generic
+dist: trusty
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - gdb
+    - g++
+
+env:
+  matrix:
+    - BOOST_VER=1.55
+    - BOOST_VER=1.58
+    - BOOST_VER=1.64
+
+script: tests/run --force-clean --boost-version $BOOST_VER

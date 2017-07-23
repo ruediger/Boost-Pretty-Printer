@@ -432,6 +432,6 @@ If you are interested in adding new printers to this package, please organize th
 
 - Edit =__init__.py= and import new file to register printers.
 
-- Write unit tests for your new printer (see =tests/test.py= and =tests/test.cpp=) and run them with both Python2 and Python 3 enabled gdb.
+- Write unit tests for your new printer (see =tests/testsuite.py= and =tests/testsuite.cpp=) and run them with both Python2 and Python 3 enabled gdb.
 
 - Update [[SUPPORTED.org]].
