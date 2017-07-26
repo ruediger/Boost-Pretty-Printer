@@ -1,17 +1,17 @@
 language: generic
 dist: trusty
-sudo: false
+sudo: true
 
-addons:
-  apt:
-    packages:
-    - gdb
-    - g++
+before_install:
+  - tests/install-gdb.sh $GDB_PYTHON2
 
 env:
   matrix:
     - BOOST_VER=1.55
     - BOOST_VER=1.58
     - BOOST_VER=1.64
+    - BOOST_VER=1.55 GDB_PYTHON2=yes
+    - BOOST_VER=1.58 GDB_PYTHON2=yes
+    - BOOST_VER=1.64 GDB_PYTHON2=yes
 
 script: tests/run --force-clean --boost-version $BOOST_VER
