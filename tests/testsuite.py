@@ -754,7 +754,7 @@ class IntrusiveMemberSlistTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 
-@unittest.skipIf(boost_version < (1, 58), 'Printer was implemented for boost 1.55 and later versions')
+@unittest.skipIf(boost_version < (1, 58), 'Printer was implemented for boost 1.58 and later versions')
 class UnorderedMapTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
