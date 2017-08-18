@@ -19,6 +19,7 @@ else:
     text_type = unicode
     string_types = basestring
 
+
 def execute_cpp_function(function_name):
     """Run until the end of a specified C++ function (assuming the function has a label 'break_here' at the end)
 
@@ -542,11 +543,7 @@ class IntrusiveBaseSetTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 
-class IntrusiveMemberSetTest(PrettyPrinterTest):
-    @classmethod
-    def setUpClass(cls):
-        execute_cpp_function('test_intrusive_set_member')
-
+class IntrusiveMemberSetCommon:
     def test_empty_member_set(self):
         string, children, display_hint = self.get_printer_result('empty_member_set')
         self.assertEqual(string, None)
@@ -580,6 +577,30 @@ class IntrusiveMemberSetTest(PrettyPrinterTest):
         self.assertEqual(set(children_as_struct), {'value'})
         self.assertEqual(children_as_struct['value']['int_'], 2)
         self.assertEqual(display_hint, None)
+
+
+class IntrusiveMemberRbtreeSetTest(PrettyPrinterTest, IntrusiveMemberSetCommon):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_rbtree_set_member')
+
+
+class IntrusiveMemberAvlTreeSetTest(PrettyPrinterTest, IntrusiveMemberSetCommon):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_avl_set_member')
+
+
+class IntrusiveMemberSplayTreeSetTest(PrettyPrinterTest, IntrusiveMemberSetCommon):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_splay_set_member')
+
+
+class IntrusiveMemberSgTreeSetTest(PrettyPrinterTest, IntrusiveMemberSetCommon):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_intrusive_sg_set_member')
 
 
 class IntrusiveBaseListTest(PrettyPrinterTest):
@@ -797,10 +818,11 @@ class UnorderedMapTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 # TODO: More intrusive tests:
-# 1. avltree, splaytree, sgtree
-# 2. Multiset, unordered_set
-# 3. Non-raw pointers
-# 4. Custom node traits
+# 1. Non-raw pointers
+# 2. Custom node traits
+# More printers:
+# 1. Unordered_multimap, unordered_set, unordered_multiset
+# 2. Pointer containers
 
 print('*** GDB version:', gdb.VERSION)
 print('*** Python version: {}.{}.{}'.format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))

@@ -13,6 +13,9 @@
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/slist.hpp>
+#include <boost/intrusive/avl_set.hpp>
+#include <boost/intrusive/splay_set.hpp>
+#include <boost/intrusive/sg_set.hpp>
 #include <boost/unordered_map.hpp>
 
 #include <boost/smart_ptr.hpp>
@@ -31,6 +34,8 @@
 #include <boost/logic/tribool.hpp>
 
 unsigned const boost_version = BOOST_VERSION;
+
+namespace bi = boost::intrusive;
 
 void dummy_function()
 {
@@ -271,7 +276,55 @@ break_here:
 	bset_2.clear();
 }
 
-void test_intrusive_set_member()
+/* It is possible to write a single template function for all intrusive tree types, but gcc optimizes out
+some types in that case. I was unable to make compiler stop doing it (@mbalabin).
+
+template<template<class E, class H> class SetType, class HookType>
+void test_intrusive_member_set()
+{
+	struct IntSetElement
+	{
+		IntSetElement(int i) : int_(i) {}
+
+		bool operator<(IntSetElement const& rhs) const { return int_ < rhs.int_; }
+		int int_;
+		HookType member_hook_1;
+		HookType member_hook_2;
+	};
+
+	IntSetElement elem1(1);
+	IntSetElement elem2(2);
+	IntSetElement elem3(3);
+
+	using MemberSet1 = SetType<
+	    IntSetElement,
+	    bi::member_hook<IntSetElement, HookType, &IntSetElement::member_hook_1>>;
+    using MemberSet2 = SetType<
+        IntSetElement,
+        bi::member_hook<IntSetElement, HookType, &IntSetElement::member_hook_2>>;
+
+	MemberSet1 empty_member_set;
+
+	MemberSet1 member_set_1;
+	member_set_1.insert(elem3);
+	member_set_1.insert(elem2);
+	member_set_1.insert(elem1);
+
+	MemberSet2 member_set_2;
+	member_set_2.insert(elem3);
+	member_set_2.insert(elem2);
+
+	auto iter1 = member_set_1.begin();
+	auto iter2 = member_set_2.begin();
+
+break_here:
+	member_set_1.clear();
+	member_set_2.clear();
+}
+*/
+
+// Intrusive set: red-black tree, member hooks
+void test_intrusive_rbtree_set_member()
 {
     namespace bi = boost::intrusive;
 	struct IntSetElement
@@ -294,6 +347,135 @@ void test_intrusive_set_member()
     using MemberSet2 = bi::set<
         IntSetElement,
         bi::member_hook<IntSetElement, bi::set_member_hook<>, &IntSetElement::member_hook_2>>;
+
+	MemberSet1 empty_member_set;
+
+	MemberSet1 member_set_1;
+	member_set_1.insert(elem3);
+	member_set_1.insert(elem2);
+	member_set_1.insert(elem1);
+
+	MemberSet2 member_set_2;
+	member_set_2.insert(elem3);
+	member_set_2.insert(elem2);
+
+	auto iter1 = member_set_1.begin();
+	auto iter2 = member_set_2.begin();
+break_here:
+	member_set_1.clear();
+	member_set_2.clear();
+}
+
+// Intrusive set: avl tree, member hooks
+void test_intrusive_avl_set_member()
+{
+    namespace bi = boost::intrusive;
+	struct IntSetElement
+	{
+		IntSetElement(int i) : int_(i) {}
+
+		bool operator<(IntSetElement const& rhs) const { return int_ < rhs.int_; }
+		int int_;
+		bi::avl_set_member_hook<> member_hook_1;
+		bi::avl_set_member_hook<> member_hook_2;
+	};
+
+	IntSetElement elem1(1);
+	IntSetElement elem2(2);
+	IntSetElement elem3(3);
+
+	using MemberSet1 = bi::avl_set<
+	    IntSetElement,
+	    bi::member_hook<IntSetElement, bi::avl_set_member_hook<>, &IntSetElement::member_hook_1>>;
+    using MemberSet2 = bi::avl_set<
+        IntSetElement,
+        bi::member_hook<IntSetElement, bi::avl_set_member_hook<>, &IntSetElement::member_hook_2>>;
+
+	MemberSet1 empty_member_set;
+
+	MemberSet1 member_set_1;
+	member_set_1.insert(elem3);
+	member_set_1.insert(elem2);
+	member_set_1.insert(elem1);
+
+	MemberSet2 member_set_2;
+	member_set_2.insert(elem3);
+	member_set_2.insert(elem2);
+
+	auto iter1 = member_set_1.begin();
+	auto iter2 = member_set_2.begin();
+break_here:
+	member_set_1.clear();
+	member_set_2.clear();
+}
+
+// Intrusive set: splay tree, member hooks
+void test_intrusive_splay_set_member()
+{
+    namespace bi = boost::intrusive;
+	struct IntSetElement
+	{
+		IntSetElement(int i) : int_(i) {}
+
+		bool operator<(IntSetElement const& rhs) const { return int_ < rhs.int_; }
+		int int_;
+		bi::bs_set_member_hook<> member_hook_1;
+		bi::bs_set_member_hook<> member_hook_2;
+	};
+
+	IntSetElement elem1(1);
+	IntSetElement elem2(2);
+	IntSetElement elem3(3);
+
+	using MemberSet1 = bi::splay_set<
+	    IntSetElement,
+	    bi::member_hook<IntSetElement, bi::bs_set_member_hook<>, &IntSetElement::member_hook_1>>;
+    using MemberSet2 = bi::splay_set<
+        IntSetElement,
+        bi::member_hook<IntSetElement, bi::bs_set_member_hook<>, &IntSetElement::member_hook_2>>;
+
+	MemberSet1 empty_member_set;
+
+	MemberSet1 member_set_1;
+	member_set_1.insert(elem3);
+	member_set_1.insert(elem2);
+	member_set_1.insert(elem1);
+
+	MemberSet2 member_set_2;
+	member_set_2.insert(elem3);
+	member_set_2.insert(elem2);
+
+	auto iter1 = member_set_1.begin();
+	auto iter2 = member_set_2.begin();
+break_here:
+	member_set_1.clear();
+	member_set_2.clear();
+}
+
+// Intrusive set: scapegoat tree, member hooks
+void test_intrusive_sg_set_member()
+{
+    namespace bi = boost::intrusive;
+	struct IntSetElement
+	{
+		IntSetElement(int i) : int_(i) {}
+
+		bool operator<(IntSetElement const& rhs) const { return int_ < rhs.int_; }
+		int int_;
+		bi::bs_set_member_hook<> member_hook_1;
+		bi::bs_set_member_hook<> member_hook_2;
+	};
+
+	IntSetElement elem1(1);
+	IntSetElement elem2(2);
+	IntSetElement elem3(3);
+
+	using MemberSet1 = bi::sg_set<
+	    IntSetElement,
+	    bi::member_hook<IntSetElement, bi::bs_set_member_hook<>, &IntSetElement::member_hook_1>>;
+    using MemberSet2 = bi::sg_set<
+        IntSetElement,
+        bi::member_hook<IntSetElement, bi::bs_set_member_hook<>, &IntSetElement::member_hook_2>>;
 
 	MemberSet1 empty_member_set;
 
@@ -534,7 +716,11 @@ int main()
 	test_unordered_map();
 
 	test_intrusive_set_base();
-	test_intrusive_set_member();
+	test_intrusive_rbtree_set_member();
+	test_intrusive_avl_set_member();
+	test_intrusive_splay_set_member();
+	test_intrusive_sg_set_member();
+
 	test_intrusive_list_base();
 	test_intrusive_list_base_default_tag();
 	test_intrusive_list_member();
