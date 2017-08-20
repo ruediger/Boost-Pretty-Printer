@@ -70,7 +70,7 @@ def as_map(children_values, key_func=to_python_value, value_func=to_python_value
     """Convert children values conforming to gdb pretty-printer 'map' protocol to a dict"""
     assert len(children_values) % 2 == 0
     it = iter(children_values)
-    return {key_func(key): value_func(value) for ((key_text, key), (value_text, value)) in zip(it, it)}
+    return [(key_func(key), value_func(value)) for ((key_text, key), (value_text, value)) in zip(it, it)]
 
 
 class PrettyPrinterTest(unittest.TestCase):
@@ -79,7 +79,6 @@ class PrettyPrinterTest(unittest.TestCase):
         """Get pretty-printer output for C variable with a specified name
 
         :param c_variable_name: Name of a C variable
-        :param children_type: Function to typecast all the children
         :return: (string, [children], display_hint)
         """
         value = gdb.parse_and_eval(c_variable_name)
@@ -90,7 +89,12 @@ class PrettyPrinterTest(unittest.TestCase):
         if string is not None:
             string = text_type(string)
 
-        children = list(pretty_printer.children()) if hasattr(pretty_printer, 'children') else None
+        if hasattr(pretty_printer, 'children'):
+            children = list(pretty_printer.children())
+            for child_text, _ in children:
+                self.assertIsInstance(child_text, string_types)
+        else:
+            children = None
 
         if hasattr(pretty_printer, 'display_hint'):
             self.assertIsInstance(pretty_printer.display_hint(), string_types)
@@ -481,7 +485,7 @@ class FlatMapTest(PrettyPrinterTest):
     def test_map_full(self):
         string, children, display_hint = self.get_printer_result('fmap')
         self.assertEqual(string, 'boost::container::flat_map<int, int> size=2 capacity=4')
-        self.assertEqual(as_map(children), {1: 10, 2: 20})
+        self.assertEqual(as_map(children), [(1, 10), (2, 20)])
         self.assertEqual(display_hint, 'map')
 
     def test_empty_iter(self):
@@ -781,25 +785,27 @@ class UnorderedMapTest(PrettyPrinterTest):
     def setUpClass(cls):
         execute_cpp_function('test_unordered_map')
 
+    expected_content = [(10, 'ten'), (20, 'twenty'), (30, 'thirty')]
+
     def test_empty_map(self):
         string, children, display_hint = self.get_printer_result('empty_map')
-        self.assertEqual(string, 'boost::unordered_map<int, const char *> size = 0')
+        self.assertEqual(string, 'boost::unordered::unordered_map<int, const char *> size = 0')
         self.assertEqual(children, [])
         self.assertEqual(display_hint, 'map')
 
     def test_map(self):
         string, children, display_hint = self.get_printer_result('map')
-        self.assertEqual('boost::unordered_map<int, const char *> size = 3', string)
+        self.assertEqual('boost::unordered::unordered_map<int, const char *> size = 3', string)
         self.assertEqual(
-            as_map(children),
-            {10: 'ten', 20: 'twenty', 30: 'thirty'})
+            sorted(as_map(children)),
+            self.expected_content)
         self.assertEqual('map', display_hint)
 
     def test_big_map(self):
         string, children, display_hint = self.get_printer_result('big_map')
-        self.assertEqual('boost::unordered_map<int, int> size = 100000', string)
-        actual_children = as_map(children)
-        expected_children = {i: i for i in range(100000)}
+        self.assertEqual('boost::unordered::unordered_map<int, int> size = 100000', string)
+        actual_children = sorted(as_map(children))
+        expected_children = [(i, i) for i in range(100000)]
         self.assertEqual(expected_children, actual_children)
         self.assertEqual('map', display_hint)
 
@@ -812,17 +818,127 @@ class UnorderedMapTest(PrettyPrinterTest):
     def test_iter(self):
         string, children, display_hint = self.get_printer_result('iter')
         self.assertEqual(string, None)
-        self.assertIn(
-            as_struct(children),
-            [{'key': 10, 'value': 'ten'}, {'key': 20, 'value': 'twenty'}, {'key': 30, 'value': 'thirty'}])
+        possible_values = [{'value': {'first': key, 'second': value}} for key, value in self.expected_content]
+        self.assertIn(as_struct(children), possible_values)
+        self.assertEqual(display_hint, None)
+
+
+@unittest.skipIf(boost_version < (1, 58), 'Printer was implemented for boost 1.58 and later versions')
+class UnorderedMultimapTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_unordered_multimap')
+
+    expected_content = [(10, 'dieci'), (10, 'ten'), (20, 'twenty'), (20, 'venti'), (30, 'thirty'), (30, 'trenta')]
+
+    def test_empty_multimap(self):
+        string, children, display_hint = self.get_printer_result('empty_map')
+        self.assertEqual(string, 'boost::unordered::unordered_multimap<int, const char *> size = 0')
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'map')
+
+    def test_multimap(self):
+        string, children, display_hint = self.get_printer_result('map')
+        self.assertEqual('boost::unordered::unordered_multimap<int, const char *> size = 6', string)
+        self.assertEqual(
+            sorted(as_map(children)),
+            self.expected_content)
+        self.assertEqual('map', display_hint)
+
+    def test_uninitialized_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_iter')
+        self.assertEqual(string, 'uninitialized')
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_iter(self):
+        string, children, display_hint = self.get_printer_result('iter')
+        self.assertEqual(string, None)
+        possible_values = [{'value': {'first': key, 'second': value}} for key, value in self.expected_content]
+        self.assertIn(as_struct(children), possible_values)
+        self.assertEqual(display_hint, None)
+
+
+@unittest.skipIf(boost_version < (1, 58), 'Printer was implemented for boost 1.58 and later versions')
+class UnorderedSetTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_unordered_set')
+
+    expected_content = ['Democritus', 'Pythagoras', 'Thales']
+
+    def test_empty_set(self):
+        string, children, display_hint = self.get_printer_result('empty_set')
+        self.assertEqual(string, 'boost::unordered::unordered_set<const char *> size = 0')
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_set(self):
+        string, children, display_hint = self.get_printer_result('set')
+        self.assertEqual('boost::unordered::unordered_set<const char *> size = 3', string)
+        self.assertEqual(
+            sorted(as_array(children)),
+            self.expected_content)
+        self.assertEqual('array', display_hint)
+
+    def test_uninitialized_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_iter')
+        self.assertEqual(string, 'uninitialized')
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_iter(self):
+        string, children, display_hint = self.get_printer_result('iter')
+        self.assertEqual(string, None)
+        possible_values = [{'value': item} for item in self.expected_content]
+        self.assertIn(as_struct(children), possible_values)
+        self.assertEqual(display_hint, None)
+
+
+@unittest.skipIf(boost_version < (1, 58), 'Printer was implemented for boost 1.58 and later versions')
+class UnorderedMultisetTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_unordered_multiset')
+
+    expected_content = ['Bruegel', 'Bruegel', 'Plinius', 'Plinius']
+
+    def test_empty_multiset(self):
+        string, children, display_hint = self.get_printer_result('empty_multiset')
+        self.assertEqual(string, 'boost::unordered::unordered_multiset<const char *> size = 0')
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_multiset(self):
+        string, children, display_hint = self.get_printer_result('multiset')
+        self.assertEqual('boost::unordered::unordered_multiset<const char *> size = 4', string)
+        self.assertEqual(
+            sorted(as_array(children)),
+            self.expected_content)
+        self.assertEqual('array', display_hint)
+
+    def test_uninitialized_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_iter')
+        self.assertEqual(string, 'uninitialized')
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_iter(self):
+        string, children, display_hint = self.get_printer_result('iter')
+        self.assertEqual(string, None)
+        possible_values = [{'value': item} for item in self.expected_content]
+        self.assertIn(as_struct(children), possible_values)
         self.assertEqual(display_hint, None)
 
 # TODO: More intrusive tests:
 # 1. Non-raw pointers
 # 2. Custom node traits
-# More printers:
-# 1. Unordered_multimap, unordered_set, unordered_multiset
-# 2. Pointer containers
+
+# TODO: More printers:
+# 1. Pointer containers
+# 2. boost 1.65: poly_collection, atomic_shared_ptr, local_shared_ptr
+# 3. Boost.Lockfree ?
+# 4. Rest of Boost.Containers?
 
 print('*** GDB version:', gdb.VERSION)
 print('*** Python version: {}.{}.{}'.format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))

@@ -17,6 +17,7 @@
 #include <boost/intrusive/splay_set.hpp>
 #include <boost/intrusive/sg_set.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 
 #include <boost/smart_ptr.hpp>
 #if BOOST_VERSION >= 105500
@@ -689,6 +690,7 @@ break_here:
 	dummy_function();
 }
 
+// boost::unordered_map and its iterator
 void test_unordered_map()
 {
 	boost::unordered_map<int, char const*> empty_map;
@@ -706,6 +708,43 @@ break_here:
 	dummy_function();
 }
 
+// boost::unordered_multimap and its iterator
+void test_unordered_multimap()
+{
+	boost::unordered_multimap<int, char const*>
+		empty_map,
+		map = {{30, "thirty"}, {20, "twenty"}, {10, "ten"}, {10, "dieci"}, {20, "venti"}, {30, "trenta"}};
+
+	boost::unordered_multimap<int, char const*>::iterator uninitialized_iter;
+	auto iter = map.begin();
+break_here:
+	dummy_function();
+}
+
+// boost::unordered_set and its iterator
+void test_unordered_set()
+{
+	boost::unordered_set<char const*> empty_set;
+	boost::unordered_set<char const*> set = {"Thales", "Pythagoras", "Democritus"};
+
+	boost::unordered_set<char const*>::iterator uninitialized_iter;
+	auto iter = set.begin();
+break_here:
+	dummy_function();
+}
+
+// boost::unordered_multiset and its iterator
+void test_unordered_multiset()
+{
+	boost::unordered_multiset<char const*> empty_multiset;
+	boost::unordered_multiset<char const*> multiset = {"Plinius", "Plinius", "Bruegel", "Bruegel"};
+
+	boost::unordered_multiset<char const*>::iterator uninitialized_iter;
+	auto iter = multiset.begin();
+break_here:
+	dummy_function();
+}
+
 int main()
 {
 	test_iterator_range();
@@ -714,6 +753,9 @@ int main()
 	test_flat_set();
 	test_flat_map();
 	test_unordered_map();
+	test_unordered_multimap();
+	test_unordered_set();
+	test_unordered_multiset();
 
 	test_intrusive_set_base();
 	test_intrusive_rbtree_set_member();

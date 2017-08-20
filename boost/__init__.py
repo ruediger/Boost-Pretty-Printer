@@ -36,6 +36,7 @@
 from __future__ import print_function, unicode_literals, absolute_import, division
 from . import printers
 from . import flat_containers
+from . import unordered_containers
 from . import intrusive_1_55
 from . import intrusive_1_40
 from . import multi_index_1_42
