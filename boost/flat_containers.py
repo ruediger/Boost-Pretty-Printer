@@ -28,7 +28,7 @@ from .utils import *
 
 
 class FlatSetBase:
-    "Pretty Printer for boost::container::flat_set"
+    """Pretty Printer for boost::container::flat_set"""
     printer_name = 'boost::container::flat_set'
     template_name = 'boost::container::flat_set'
 
@@ -49,7 +49,7 @@ class FlatSetBase:
 
 
 class FlatMapBase:
-    "Pretty Printer for boost::container::flat_map"
+    """Pretty Printer for boost::container::flat_map"""
     printer_name = 'boost::container::flat_map'
     template_name = 'boost::container::flat_map'
 
@@ -153,7 +153,7 @@ class FlatMap154Printer(FlatMapBase, FlatTree154):
 # Iterator used for flat_set/flat_map
 @add_printer
 class BoostContainerVectorIterator:
-    "Pretty Printer for boost::container::container_detail::vector_iterator (Boost.Container)"
+    """Pretty Printer for boost::container::container_detail::vector_iterator (Boost.Container)"""
     printer_name = 'boost::container::container_detail::vec_iterator'
     min_supported_version = (1, 50, 0)
     max_supported_version = last_supported_boost_version

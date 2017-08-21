@@ -231,6 +231,7 @@ break_here:
 	dummy_function();
 }
 
+// Intrusive set: red-black tree, base hook
 void test_intrusive_set_base()
 {
     namespace bi = boost::intrusive;
@@ -496,6 +497,7 @@ break_here:
 	member_set_2.clear();
 }
 
+// Intrusive double-linked list, base hook
 void test_intrusive_list_base()
 {
     namespace bi = boost::intrusive;
@@ -543,6 +545,7 @@ break_here:
 	dummy_function();
 }
 
+// Intrusive double-linked list, base hook, default tag
 void test_intrusive_list_base_default_tag()
 {
     namespace bi = boost::intrusive;
@@ -574,6 +577,7 @@ break_here:
 	dummy_function();
 }
 
+// Intrusive double-linked list, member hooks
 void test_intrusive_list_member()
 {
 	namespace bi = boost::intrusive;
@@ -615,6 +619,7 @@ break_here:
 	dummy_function();
 }
 
+// Intrusive single-linked list, base hooks
 void test_intrusive_slist_base()
 {
     namespace bi = boost::intrusive;
@@ -659,6 +664,7 @@ break_here:
 	dummy_function();
 }
 
+// Intrusive single-linked list, member hooks
 void test_intrusive_slist_member()
 {
 	struct IntListElement

@@ -9,7 +9,7 @@ from .utils import *
 
 @add_printer
 class Hook_Printer:
-    "Pretty Printer for boost::intrusive::*_(base|member)_hook"
+    """Pretty Printer for boost::intrusive::*_(base|member)_hook"""
     printer_name = 'boost::intrusive::hook'
     min_supported_version = (1, 55, 0)
     max_supported_version = last_supported_boost_version
@@ -169,7 +169,7 @@ def f(ntt, node_rptr):
 
 @add_printer
 class Iterator_Printer:
-    "Pretty Printer for boost::intrusive::(list|slist|tree)_iterator"
+    """Pretty Printer for boost::intrusive::(list|slist|tree)_iterator"""
     printer_name = 'boost::intrusive::iterator'
     min_supported_version = (1, 55, 0)
     max_supported_version = last_supported_boost_version
@@ -192,7 +192,7 @@ class Iterator_Printer:
 
 @add_printer
 class List_Printer:
-    "Pretty Printer for boost::intrusive list and slist"
+    """Pretty Printer for boost::intrusive list and slist"""
     printer_name = 'boost::intrusive::list'
     min_supported_version = (1, 55, 0)
     max_supported_version = last_supported_boost_version
@@ -245,7 +245,7 @@ class List_Printer:
 
 @add_printer
 class Tree_Printer:
-    "Pretty Printer for boost::intrusive ordered sets"
+    """Pretty Printer for boost::intrusive ordered sets"""
     printer_name = 'boost::intrusive::set'
     min_supported_version = (1, 55, 0)
     max_supported_version = last_supported_boost_version
