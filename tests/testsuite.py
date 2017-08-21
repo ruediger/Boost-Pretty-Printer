@@ -507,6 +507,7 @@ class FlatMapTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveBaseSetTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
@@ -583,30 +584,35 @@ class IntrusiveMemberSetCommon:
         self.assertEqual(display_hint, None)
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveMemberRbtreeSetTest(PrettyPrinterTest, IntrusiveMemberSetCommon):
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_intrusive_rbtree_set_member')
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveMemberAvlTreeSetTest(PrettyPrinterTest, IntrusiveMemberSetCommon):
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_intrusive_avl_set_member')
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveMemberSplayTreeSetTest(PrettyPrinterTest, IntrusiveMemberSetCommon):
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_intrusive_splay_set_member')
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveMemberSgTreeSetTest(PrettyPrinterTest, IntrusiveMemberSetCommon):
     @classmethod
     def setUpClass(cls):
         execute_cpp_function('test_intrusive_sg_set_member')
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveBaseListTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
@@ -647,6 +653,7 @@ class IntrusiveBaseListTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveBaseListDefaultTagTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
@@ -673,6 +680,7 @@ class IntrusiveBaseListDefaultTagTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveMemberListTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
@@ -713,6 +721,7 @@ class IntrusiveMemberListTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveBaseSlistTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
@@ -753,6 +762,7 @@ class IntrusiveBaseSlistTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 
+@unittest.skipIf(boost_version < (1, 55), 'Tests for intrusive containers are not supported for boost < 1.55')
 class IntrusiveMemberSlistTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):

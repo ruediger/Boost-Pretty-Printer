@@ -2,16 +2,22 @@ language: generic
 dist: trusty
 sudo: true
 
-before_install:
-  - tests/install-gdb.sh $GDB_PYTHON2
-
 env:
   matrix:
+    - BOOST_VER=1.50
+    - BOOST_VER=1.53
+    - BOOST_VER=1.54
     - BOOST_VER=1.55
     - BOOST_VER=1.58
     - BOOST_VER=1.64
+    - BOOST_VER=1.50 GDB_PYTHON2=yes
+    - BOOST_VER=1.53 GDB_PYTHON2=yes
+    - BOOST_VER=1.54 GDB_PYTHON2=yes
     - BOOST_VER=1.55 GDB_PYTHON2=yes
     - BOOST_VER=1.58 GDB_PYTHON2=yes
     - BOOST_VER=1.64 GDB_PYTHON2=yes
+
+before_install:
+  - tests/install-gdb.sh $GDB_PYTHON2
 
 script: tests/run --force-clean --boost-version $BOOST_VER
