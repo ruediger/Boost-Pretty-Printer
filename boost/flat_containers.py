@@ -126,10 +126,28 @@ class FlatSet154Printer(FlatSetBase, FlatTree154):
 @add_printer
 class FlatSet158Printer(FlatSetBase, FlatTree158):
     min_supported_version = (1, 58, 0)
+    max_supported_version = (1, 64, 0)
+
+    def __init__(self, value):
+        FlatSetBase.__init__(self, value)
+
+
+@add_printer
+class FlatSet165Printer(FlatSetBase):
+    min_supported_version = (1, 65, 0)
     max_supported_version = last_supported_boost_version
 
     def __init__(self, value):
         FlatSetBase.__init__(self, value)
+
+    def get_pointer(self):
+        return self.val["m_data"]["m_seq"]["m_holder"]["m_start"]
+
+    def get_size(self):
+        return int(self.val["m_data"]["m_seq"]["m_holder"]["m_size"])
+
+    def get_capacity(self):
+        return int(self.val["m_data"]["m_seq"]["m_holder"]["m_capacity"])
 
 
 @add_printer
@@ -144,10 +162,28 @@ class FlatMap152Printer(FlatMapBase, FlatTree152):
 @add_printer
 class FlatMap154Printer(FlatMapBase, FlatTree154):
     min_supported_version = (1, 54, 0)
+    max_supported_version = (1, 64, 0)
+
+    def __init__(self, value):
+        FlatMapBase.__init__(self, value)
+
+
+@add_printer
+class FlatMap165Printer(FlatMapBase):
+    min_supported_version = (1, 65, 0)
     max_supported_version = last_supported_boost_version
 
     def __init__(self, value):
         FlatMapBase.__init__(self, value)
+
+    def get_pointer(self):
+        return self.val["m_flat_tree"]["m_data"]["m_seq"]["m_holder"]["m_start"]
+
+    def get_size(self):
+        return int(self.val["m_flat_tree"]["m_data"]["m_seq"]["m_holder"]["m_size"])
+
+    def get_capacity(self):
+        return int(self.val["m_flat_tree"]["m_data"]["m_seq"]["m_holder"]["m_capacity"])
 
 
 # Iterator used for flat_set/flat_map
