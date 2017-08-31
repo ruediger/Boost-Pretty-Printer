@@ -1,0 +1,25 @@
+GDB_VERSION=7_6_2
+PYTHON_VERSION=2_7_6
+BOOST_VERSION=1_55
++py sys.path.insert(0, "..")
++py import boost.latest
++py boost.register_printers()
++b done
++r
++p s
+$1 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=0] = {[0x60a250] = 1, [0x60a340] = 5, [0x60a3a0] = 17, [0x60a400] = 4, [0x60a460] = 14, [0x60a4c0] = 3, [0x60a520] = 9}
++py if sys.version_info[0] == 3: long = int
++py v = gdb.parse_and_eval('s')
++py boost.multi_index_selector[long(v.address)] = 1
++p s
+$2 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=1] = {[0x60a250] = 1, [0x60a4c0] = 3, [0x60a400] = 4, [0x60a340] = 5, [0x60a520] = 9, [0x60a460] = 14, [0x60a3a0] = 17}
++py boost.multi_index_selector[long(v.address)] = 2
++p s
+$3 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=2] = {boost::multi_index::random_access = printer not implemented}
++py boost.multi_index_selector[long(v.address)] = 3
++p s
+$4 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=3] = {[0x60a3a0] = 17, [0x60a460] = 14, [0x60a520] = 9, [0x60a340] = 5, [0x60a400] = 4, [0x60a4c0] = 3, [0x60a250] = 1}
++py boost.multi_index_selector[long(v.address)] = 4
++p s
+$5 = boost::multi_index_container<int, indexed_by<sequenced<>, ordered_unique<identity<int>>, random_access<>, ordered_non_unique<global_fun<int, int, negative>>, hashed_non_unique<identity<int>>>>[idx=4] = {boost::multi_index::hashed_non_unique = printer not implemented}
++q

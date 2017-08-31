@@ -1,0 +1,29 @@
+# -*- mode:org; mode:visual-line; coding:utf-8; -*-
+** Pretty Printer Examples
+The tests in this folder are rudimentary, in the sense that we do not compare the output with an expected output. This would be non-trivial to do because, e.g., pointers will be different from run to run, and a smart output comparison should take that fact into account. Instead, the tests are simply compiled and run through gdb for visual inspection of their output.
+
+Each test consists of 2 files: a C++ source file, and a =gdb= commands file (e.g., [[test-other.cpp]] and [[test-other.gdb]]). The [[Makefile]] detects the =gdb= version, the =python= version (i.e., the one used internally by =gdb=), and the Boost library version. Each C++ source file is compiled, currently with a generic compilation command. Next, each executable is run through =gdb= with the associated =gdb= commands file.
+
+*** Compilation
+A generic command is currently being used, which works fine for tests of header-only Boost libraries.
+
+Use =CPPFLAGS= to specify which Boost library to include. E.g.,
+#+BEGIN_EXAMPLE
+make CPPFLAGS="-isystem /tmp/boost_1_57_0/include"
+#+END_EXAMPLE
+
+To add a test for a non-header-only Boost library (one that needs to be linked), a non-generic compilation rule could be used, and it would override the generic one. E.g.:
+
+#+BEGIN_EXAMPLE
+test-iostreams.boost-${BOOST_VERSION}: test-iostreams.cpp
+        $(CXX) -o $@ -O0 -g3 -ggdb -std=c++11 -Wall -Wextra -pedantic $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $^ $(LOADLIBES) $(LDLIBS) -lboost_iostreams
+#+END_EXAMPLE
+
+*** GDB Run
+The =gdb= program is started without loading initialization files. This avoids loading printers from =~/.gdbinit= in case you have some there. Then, the printers to be tested are loaded from the folder =..=. Finally, control is passed to the =gdb= file associated with that test. The =gdb= file should end with the quit command, =q=.
+
+Use =GDB= to specify which =gdb= executable to run. E.g.,
+#+BEGIN_EXAMPLE
+make GDB=/tmp/gdb-7.9/gdb/gdb
+#+END_EXAMPLE
+

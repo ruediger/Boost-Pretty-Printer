@@ -1,0 +1,34 @@
+# -*- mode:org; mode:visual-line; coding:utf-8; -*-
+*** Supported Boost Types
+
+| Main Type                               | Version | Module             | Latest | Contributor(s)                  | Notes                          |
+|-----------------------------------------+---------+--------------------+--------+---------------------------------+--------------------------------|
+| =boost::iterator_range=                 | 1.40    | =printers=         | yes    | Rüdiger Sonderfeld (ruediger) ? |                                |
+| =boost::logic::tribool=                 | "       | "                  |        |                                 |                                |
+| =boost::reference_wrapper=              | "       | "                  |        |                                 |                                |
+| =boost::optional=                       | "       | "                  |        |                                 |                                |
+| =boost::(scoped/intrusive)_(ptr/array)= | "       | "                  |        |                                 |                                |
+| =boost::(shared/weak)_(ptr/array)=      | "       | "                  |        |                                 |                                |
+| =boost::array=                          | "       | "                  |        |                                 |                                |
+| =boost::variant=                        | "       | "                  |        |                                 |                                |
+| =boost::uuids::uuid=                    | "       | "                  |        | Ivan Tarasov (ivant)            |                                |
+| =boost::gregorian::date=                | "       | "                  |        | Brian O'Kennedy (brokenn)       |                                |
+| =boost::posix_time::ptime=              | "       | "                  |        | "                               |                                |
+| =boost::circular_buffer=                | "       | "                  |        | Luc Hermitte                    |                                |
+| =boost::container::flat_set=            | 1.52    | "                  |        |                                 |                                |
+| =boost::container::flat_map=            | "       | "                  |        |                                 |                                |
+| =boost::intrusive::list=                | 1.40    | =intrusive_1_40=   | no     | Johan Sternerup (johanst)       |                                |
+| =boost::intrusive::*set=                | "       | "                  |        | "                               |                                |
+| =boost::multi_index_container=          | 1.42    | =multi_index_1_42= | yes    | Matei David (mateidavid)        | only ordered&sequenced indexes |
+| =boost::intrusive::*list=               | 1.55    | =intrusive_1_55=   | yes    | "                               | works with 1.57                |
+| =boost::intrusive::*set=                | "       | "                  |        | "                               |                                |
+
+***** Notes
+
+- The list includes only the "main" types that are supported. Some related types might also be supported, notably, iterators over supported containers.
+
+- Unfortunately, a version of "1.55" does not automatically mean that the printer will or will not work for other (earlier or later) Boost versions. It only means, or suggests :), the printer worked for that particular Boost version.
+
+- The "Module" column lists where each printer is found, and the "Latest" column lists whether that module is loaded by =import boost.latest=. To import a specific module, use, e.g., =import boost.intrusive_1_40=. To import them all, use =import boost.all=. *NOTE*: When 2 or more printers supporting the same type are registered with and enabled with =gdb=, there is no easy way to control which one of them ends up being used. The best thing to do in such a situation is to disable (or not load) the one you don't need.
+
+Patches/Pull Requests are welcome!

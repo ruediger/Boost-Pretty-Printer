@@ -29,7 +29,7 @@ void test_flat_map() {
   break_here();
 }
 
-int main(int argc, char* argv[])
+int main()
 {
   test_flat_set();
   test_flat_map();

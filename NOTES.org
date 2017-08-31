@@ -1,0 +1,52 @@
+# -*- mode:org; mode:visual-line; coding:utf-8; -*-
+*** Notes
+
+**** Multi-Index Containers
+The printer included here can only print ordered (unique or non-unique) and sequenced indexes. Hashed and random-access indexes are not currently supported, though with the default settings, the printer will capture them and display an appropriate message.
+
+It is possible to specify which index to use for printing a specific container dynamically, from inside GDB. See [[examples/test-multi-index.gdb]].
+
+**** Trivial Printers
+This package provides a convenient way to define trivial printers from inside =gdb=. The trivial printers are great when the value you want to print can be easily described (in =python=) as a function of the value that would otherwise be printed. Two specific examples of this are:
+1. =Some_Struct= contains a field =height=; we want to print that field instead of the whole struct.
+2. =Some_Class= has =Some_Base_Class= as 2nd base class; we want to cast objects into that base class before printing.
+Here is the syntax:
+
+#+BEGIN_EXAMPLE
+##### e.g. 1
+py boost.add_trivial_printer("Some_Struct", lambda v: v['height'])
+##### e.g. 2
+py boost.add_trivial_printer("Some_Object", lambda v: v.cast(v.type.fields()[1].type))
+##### check trivial printers are registered
+info pretty-print global trivial
+##### disable trivial printers
+disable pretty-print global trivial;Some_Type
+#+END_EXAMPLE
+
+NOTE: the command prefixed by =py= uses =python= syntax, not =gdb= syntax, e.g., =v['height']= instead of =v.height=. For a glossary of the syntax, see [[HACKING.org#getting-started][Getting Started in HACKING.org]].
+
+For other examples, see [[examples/test-intrusive-advanced.cpp]] and [[examples/test-intrusive-advanced.gdb]].
+
+**** At Function
+The package provides a =gdb= convenience function =$at()= for printing a specific element inside a container. This should work with any container, including the ones in the Standard Library (provided you have installed the =libstdc++= package that contains pretty printers for them). For example:
+
+#+BEGIN_EXAMPLE
+cat <<"EOF" >a.cpp
+#include <list>
+std::list< int > l = { 1, 5, 17, 42 };
+void done() {}
+int main() { done(); }
+EOF
+cat <<"EOF" >a.gdb
+break done
+run
+print l
+print $at(l, 2)
+quit
+EOF
+g++ -O0 -g3 -ggdb -std=c++11 -Wall -Wextra -pedantic -o a a.cpp
+gdb a -x a.gdb |& grep '^\$'
+$1 = std::list = {[0] = 1, [1] = 5, [2] = 17, [3] = 42}
+$2 = "17"
+#+END_EXAMPLE
+

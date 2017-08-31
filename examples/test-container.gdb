@@ -1,16 +1,3 @@
-set pagination off
-
-python
-import sys
-sys.path.insert(0, "..")
-try:
-    reload (sys.modules["boost.printers"])
-except:
-    pass
-from boost.printers import register_printer_gen
-register_printer_gen(None)
-end
-
 b break_here
 #flat_set
 r

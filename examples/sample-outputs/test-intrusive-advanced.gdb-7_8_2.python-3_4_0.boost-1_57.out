@@ -1,0 +1,117 @@
+GDB_VERSION=7_8_2
+PYTHON_VERSION=3_4_0
+BOOST_VERSION=1_57
++py sys.path.insert(0, "..")
++py import boost.latest
++py boost.register_printers()
++py boost.add_trivial_printer("List_Obj", lambda v: v['_val'])
++py boost.add_trivial_printer("SList_Obj", lambda v: v['_val'])
++py boost.add_trivial_printer("Set_Obj", lambda v: v['_val'])
++info pretty-print global boost
++info pretty-print global trivial
++b done
++r
++p bh1_list_0
+$1 = 
++p bh1_list_1
+$2 = {[0 @0x625078] = 1, [1 @0x625010] = 0}
++p $at(bh1_list_1, 0)
+$3 = "1"
++p $at(bh1_list_1, 1)
+$4 = "0"
++p bh2_list_0
+$5 = 
++p bh2_list_1
+$6 = {[0 @0x6250e0] = 2, [1 @0x625010] = 0}
++p mh1_list_0
+$7 = 
++p mh1_list_1
+$8 = {[0 @0x625148] = 3, [1 @0x625010] = 0}
++p mh2_list_0
+$9 = 
++p mh2_list_1
+$10 = {[0 @0x6251b0] = 4, [1 @0x625010] = 0}
++p good_tvt_list_0
+$11 = 
++p good_tvt_list_1
+$12 = {[0 @0x625218] = 5, [1 @0x625010] = 0}
++py boost.static_method[('TVT_Bad_List_Node_Traits', 'get_next')] = lambda n: n['_next_2']
++p bad_tvt_list_0
+$13 = 
++p bad_tvt_list_1
+$14 = {[0 @0x625280] = 6, [1 @0x625010] = 0}
++p list_it_0
+$15 = 0x0 -> N/A
++p list_it_1
+$16 = 0x625078 -> 1
++p bh1_slist_0
+$17 = 
++p bh1_slist_1
+$18 = {[0 @0x625468] = 1, [1 @0x625430] = 0}
++p bh2_slist_0
+$19 = 
++p bh2_slist_1
+$20 = {[0 @0x6254a0] = 2, [1 @0x625430] = 0}
++p mh1_slist_0
+$21 = 
++p mh1_slist_1
+$22 = {[0 @0x6254d8] = 3, [1 @0x625430] = 0}
++p mh2_slist_0
+$23 = 
++p mh2_slist_1
+$24 = {[0 @0x625510] = 4, [1 @0x625430] = 0}
++p good_tvt_slist_0
+$25 = 
++p good_tvt_slist_1
+$26 = {[0 @0x625548] = 5, [1 @0x625430] = 0}
++py boost.static_method[('TVT_Bad_SList_Node_Traits', 'get_next')] = lambda n: n['_next_2']
++p bad_tvt_slist_0
+$27 = 
++p bad_tvt_slist_1
+$28 = {[0 @0x625580] = 6, [1 @0x625430] = 0}
++p slist_it_0
+$29 = 0x0 -> N/A
++p slist_it_1
+$30 = 0x625468 -> 1
++p bh1_set_0
+$31 = 
++p bh1_set_1
+$32 = {[0 @0x625670] = 0, [1 @0x625738] = 1, [2 @0x6258c8] = 3, [3 @0x625a58] = 5, [4 @0x625be8] = 7, [5 @0x625d78] = 9}
++p bh2_set_0
+$33 = 
++p bh2_set_1
+$34 = {[0 @0x625670] = 0, [1 @0x625800] = 2, [2 @0x625990] = 4, [3 @0x625b20] = 6, [4 @0x625cb0] = 8}
++p $at(bh2_set_1, 0)
+$35 = "0"
++p $at(bh2_set_1, 1)
+$36 = "2"
++p $at(bh2_set_1, 2)
+$37 = "4"
++p $at(bh2_set_1, 3)
+$38 = "6"
++p $at(bh2_set_1, 4)
+$39 = "8"
++p mh1_set_0
+$40 = 
++p mh1_set_1
+$41 = {[0 @0x625670] = 0, [1 @0x6258c8] = 3}
++p mh2_set_0
+$42 = 
++p mh2_set_1
+$43 = {[0 @0x625670] = 0, [1 @0x625990] = 4}
++p good_tvt_set_0
+$44 = 
++p good_tvt_set_1
+$45 = {[0 @0x625670] = 0, [1 @0x625a58] = 5}
++py boost.static_method[('TVT_Bad_Set_Node_Traits', 'get_parent')] = lambda n: n['_parent_2']
++py boost.static_method[('TVT_Bad_Set_Node_Traits', 'get_left')] = lambda n: n['_left_2']
++py boost.static_method[('TVT_Bad_Set_Node_Traits', 'get_right')] = lambda n: n['_right_2']
++p bad_tvt_set_0
+$46 = 
++p bad_tvt_set_1
+$47 = {[0 @0x625670] = 0, [1 @0x625b20] = 6}
++p set_it_0
+$48 = 0x0 -> N/A
++p set_it_1
+$49 = 0x625670 -> 0
++q

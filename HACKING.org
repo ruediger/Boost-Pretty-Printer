@@ -1,0 +1,437 @@
+# -*- mode:org; mode:visual-line; coding:utf-8; -*-
+*** Hacking Boost Printers
+This file contains a mishmash of information related to =gdb=, its =python= API, its pretty printer API, Boost printers, and the organization of the printers inside this package. The same information exists in various other places, but it was gathered here for quick reference.
+
+**** Volatility of Printers
+Here is an explanation of why are =gdb= pretty printers so "volatile". C++ programs using the Boost library will rarely stop working when Boost is updated. It is definitely possible, but very unlikely, at least as long as the subset of the Boost API used by the program remains unchanged. So one might ask, why is it so difficult to maintain the pretty printers in this package across Boost updates? The reason is that pretty printers cannot rely only on the library API. Because of the limitations of the debugging process, they must instead rely on implementation details, and those are much more prone to change with every update, even while the API remains relatively constant. To understand the limitations of the debugging process, one has to talk about the various types of values available to a pretty printer.
+
+***** Types of Values
+Broadly speaking: the executable =a.out= is started, =gdb= runs on top of it, and =python= runs on top of =gdb=. The pretty printers are interpreted by =python=, so we are mainly concerned with what is seen by =python=. There program-related values that the =python= API manipulates are of type =gdb.Value=. Each =gdb.Value= has one of 3 conceptual types:
+
+- A value =v= that resides in the memory of =a.out= is called an /inferior value/. For these values, and only for these, =v.address= is not =None=, and it contains the address of the inferior value inside the memory space of =a.out=.
+
+- A value =v= that resides in the memory of =gdb= is called a /convenience value/ (or variable). Their =gdb= names start with =$=. To create such a value from inside =gdb=, write, e.g., =set $a=42=. You usually don't deal with such values when writing a printer, except for one situation: when you want to apply an inferior function (a function from =a.out=) to a non-inferior value. The only way to achieve that is to create a convenience value, and use =gdb= (not =python=) to invoke the function on it. Even so, as explained later, this will not always work.
+
+- A value =v= that is neither an inferior value nor a convenince value is only known to =python=, so we call it a /python value/.
+
+***** References Are Evil For Debugging
+Suppose the API of a data structure we want to visualize in =gdb= provides the usual =begin()= and =end()= methods that yield iterators, but that for whatever reason, iterators must be incremented by calling a function with the signature =void advance(iterator&)=. This works just fine if used in the C++ program. Now, consider what happens when we try to print this data structure naively from a pretty printer. First, =a.out= is stopped at the moment the printer runs. Next, the printer invokes =begin()=. Assuming that works, the returned value cannot possibly be an inferior value, because the function call occured inside =gdb= or =python=, but not inside =a.out=! Thus, /the iterator is stored in a python value/, not an inferior value. As such, it has no address inside the memory space of =a.out=. Now, if we want to call =advance()=, we have a big problem: its argument is a reference, meaning a pointer, but the iterator value we hold has no address. So the call to =advance()= will fail with a semi-cryptic error message of the form "no address". Usually, the problem is more widespread than just a single function. Printing a container using the library API might involve calling under the hood 10 other functions, operators, constructors, assignment operators, and so on, many of which take their arguments by reference.
+
+The only way to pretty print this data structure is to write some python code that simulates what =advance()= is doing. The problem, of course, is that the python code usually ends up using implementation details of the container, such as private data members, which are prone to change under the hood with every update.
+
+**** Multiple Printer Versions
+Because printers are volatile, if several versions exist for a given printer, it is desirable to keep all of them around. For instance, the package currently has printers for intrusive containers (such as =boost::intrusive::list=) for Boost versions 1.40 and 1.55. It is recommended to specify boost version when you import printers. If you do not pass boost version to register_printers() then your boost version is detected automatically by compiling a test program with your default compiler.
+
+Here is how printers are registered and enabled.
+
+- Packages can be imported by =python= in several ways: by =~/.gdbinit=, by =gdb= command files such as =a.out-gdb.gdb=, or by =gdb= command lines (e.g. =(gdb) python import sys=)
+
+- Whenever the package =boost= or a specific module (such as =boost.intrusive_1.40=) is imported, the special module =boost.utils= is also automatically imported. This module defines the top-level printer generator (as a =python= value).
+
+- The top-level printer generator must be registered by calling =boost.register_printers()=. Then, the top-level printer will be known to =gdb= as =boost=. To see it, use:
+#+BEGIN_EXAMPLE
+(gdb) info pretty-printer global boost
+global pretty-printers:
+  boost
+    boost::array
+    boost::circular_buffer
+    ...
+#+END_EXAMPLE
+
+- To enable and disable specific printers, use:
+#+BEGIN_EXAMPLE
+(gdb) disable pretty-printer global boost;boost::.*array
+3 printers disabled
+152 of 155 printers enabled
+(gdb) info pretty-printer global boost
+global pretty-printers:
+  boost
+    boost::array [disabled]
+    boost::circular_buffer
+    ...
+(gdb) enable pretty-printer global boost;boost::array
+1 printer enabled
+153 of 155 printers enabled
+#+END_EXAMPLE
+
+**** Python Versions
+Since =gdb= verion 7.6 or so, the =python= interpreter used by =gdb= can be either =python2= or =python3=. The =gdb= version bundled with Ubuntu has =python3=. When compiling =gdb= from source, the =configure= scripts will by default use the version that an unqualified =python= resolves to, which is usually =python2=. This can be changed by running =configure --with-python=python3=, but not everyone does that. Long story short, it would be good to have the printers in this package work with both =python2= and =python3=. This doesn't seem to be too hard to do. Here are some specific notes in this sense.
+
+***** Log Messages
+Both Py2 & Py3 contain the function =print()=, but in Py2 it only accepts one string argument, and only prints to stdout. To print messages to stderr, use =message()= (defined in [[boost/utils.py]]).
+
+***** Integer Types and Pointers
+In Py2, =int= and =long= are different types. In Py3, only =int= exists. So, try to use =int= whenever integers are needed. One notable complication is the destination for converting string addresses (such as =0xFF=). For some reason, this must be =long= in Py2 and =int= in Py3. To work around this, use the =intptr= typedef (defined in [[boost/utils.py]]).
+
+***** Range and XRange
+Py3 doesn't normally know about =xrange()=, but a typedef in [[boost/utils.py]] fixes that.
+
+***** Iterators
+In Py2, objects must provide the method =next()= to support the iterator protocol. In Py3, they must provide =__next__()=. To make the code work in both Py2 and Py3, make one of them an alias of the other:
+#+BEGIN_EXAMPLE
+def __next__(self):
+    ...
+def next(self):
+    return self.__next__()
+#+END_EXAMPLE
+***** Other
+Avoid other constructs which are version specific, such as =map()=. See, e.g., [[http://python3porting.com/differences.html]].
+
+If all fails, register the printer with, e.g.:
+#+BEGIN_EXAMPLE
+@cond_add_printer(have_python_2, 'needs python 2')
+#+END_EXAMPLE
+
+**** Contributing
+This section is meant as a starting point for contributing new printers, fixing old ones, or just getting more information. It is meant as a complement, not replacement, of reading the source code and the [[https://sourceware.org/gdb/onlinedocs/gdb/Python.html][GDB documentation]].
+
+***** Getting Started
+Here are some quick examples of the general =python= API.
+
+Executing =python= code in =gdb=:
+#+BEGIN_EXAMPLE
+##### "py": execute one python command
+(gdb) py print(sys.version_info)
+sys.version_info(major=3, minor=4, micro=0, releaselevel='final', serial=0)
+(gdb)
+##### "pi": enter python interative mode
+(gdb) pi
+>>>
+##### usual python mode; Ctrl-D to exit
+>>> print(sys.version)
+3.4.0 (default, Apr 11 2014, 13:08:40)
+[GCC 4.8.2]
+>>> [Ctrl-D]
+(gdb)
+#+END_EXAMPLE
+
+Create a sample program, compile it, and run in =gdb=:
+#+BEGIN_EXAMPLE
+cat <<"EOF" >a.cpp
+#include <list>
+struct A {
+  A(int val = 0) : _val(val), _internal(0) {}
+  int _val;
+  int _internal;
+};
+A a_obj(17);
+typedef std::list< A > list_type;
+list_type a_list = { 1, 5, 42 };
+const list_type& b_list = a_list;
+void done() {}
+# the bogus calls to begin() and end() are needed to force the compiler to generate code for them
+# as we will see later in Examples, they turn out to be not useful after all
+int main() { (void)++a_list.begin(); (void)a_list.end(); done(); }
+EOF
+g++ -O0 -g3 -ggdb -std=c++11 -Wall -Wextra -pedantic -o a.out a.cpp
+gdb -q -n a.out -ex 'b done' -ex 'r'
+#+END_EXAMPLE
+
+Accessing inferior, convenience, and python values:
+#+BEGIN_EXAMPLE
+##### print a_obj from the gdb CL
+(gdb) p a_obj
+$10 = {_val = 17, _internal = 0}
+
+##### print struct field in gdb
+(gdb) p a_obj._val
+$11 = 17
+
+##### "parse_and_eval": fetch gdb value in python
+(gdb) pi
+>>> v = gdb.parse_and_eval('a_obj')
+>>> type(v)
+<class 'gdb.Value'>
+>>> str(v)
+'{_val = 17, _internal = 0}'
+
+##### print struct field in python
+>>> str(v['_val'])
+'17'
+
+##### check "v" is an inferior value
+>>> str(v.address)
+'0x601fa0 <a_obj>'
+
+##### create a python value
+>>> b = gdb.Value(13)
+>>> str(b.address)
+'None'
+
+##### check the type of "v"
+>>> type(v.type)
+<class 'gdb.Type'>
+>>> str(v.type)
+'A'
+
+##### "execute": run gdb commands from python
+##### create a gdb convenience value from inside python
+>>> gdb.execute('set $c = a_obj')
+>>> [Ctrl-D]
+(gdb) p $c
+$11 = {_val = 17, _internal = 0}
+
+##### fetch convenience variable in python
+(gdb) pi
+>>> c = gdb.parse_and_eval('$c')
+>>> str(c)
+'{_val = 17, _internal = 0}'
+>>> str(c.address)
+'None'
+#+END_EXAMPLE
+
+Manipulating types, subtypes, and template arguments:
+#+BEGIN_EXAMPLE
+>>> l = gdb.parse_and_eval('a_list')
+>>> cr_l = gdb.parse_and_eval('b_list')
+>>> str(l.type)
+'list_type'
+>>> str(cr_l.type)
+'const list_type &'
+
+##### "strip_typedefs": gdb.Type method that removes typedef aliases, but not any qualifiers
+>>> str(l.type.strip_typedefs())
+'std::list<A, std::allocator<A> >'
+>>> str(cr_l.type.strip_typedefs())
+'const list_type &'
+
+##### "get_basic_type": strip typedefs and remove qualifiers
+>>> str(gdb.types.get_basic_type(cr_l.type))
+'std::list<A, std::allocator<A> >'
+
+##### "template_argument": gdb.Type method for accessing template arguments
+>>> str(l.type.template_argument(0))
+'A'
+
+##### "fields": gdb.Type method for accessing base types
+>>> str(l.type.fields()[0].type)
+'std::_List_base<A, std::allocator<A> >'
+
+##### "lookup_type": get gdb.Type object corresponding to a given type
+>>> void_t = gdb.lookup_type('void')
+>>> type(void_t)
+<class 'gdb.Type'>
+>>> str(void_t)
+'void'
+#+END_EXAMPLE
+***** Utilities Included This Package
+The module [[boost/utils.py]] contains various utilities, and it's imported automatically before any other modules in the package. The utilities are then brought into the top-level package namespace (=boost=). Several common functions are also aliased into this namespace, namely: =get_basic_type=, =lookup_type=, and =parse_and_eval=. Some other general purpose utilities include:
+#+BEGIN_EXAMPLE
+>>> sys.path.insert(0, '[PATH_TO_REPO]')
+>>> import boost.utils
+
+##### "get_type_qualifiers": get type qualifiers as a string
+>>> boost.get_type_qualifiers(void_t)
+''
+>>> boost.get_type_qualifiers(cr_l.type)
+'c&'
+
+##### "template_name": get the template name as a string
+>>> boost.template_name(l.type)
+'std::list'
+>>> boost.template_name(void_t)
+'void'
+
+##### "save_value_as_variable": save a python value as a convenience value
+##### Note: the implementation is a hack, and it is the only place currently using gdb.execute()
+>>> b = gdb.Value(19)
+>>> str(b)
+'19'
+>>> str(b.type)
+'long long'
+>>> boost.save_value_as_variable(b, '$b')
+>>> [Ctrl-D]
+(gdb) p $b
+$1 = 19
+#+END_EXAMPLE
+***** Inner Type and Static Method Errors
+Certain containers (notably, intrusive) are heavily customized using traits classes, and without access to those, one cannot print the containers reliably. The compiler (=gcc=) usually eliminates typedefs unused at compile time from being included in object files, so =gdb= cannot find those typedefs at runtime. E.g., with "usual" compilation flags, the =node_traits= typedef is regularly missing from inside various =value_traits= classes. To force the compiler to include unused typedefs as debug symbols, use =-fno-eliminate-unused-debug-types=. As of this writing, it seems that =clang-3.5= is silently ignoring this flag. Alternatively, to work around this limitation, the package provides a way to bypass the inner type resolution from inside =gdb= by using the variable =boost.inner_type=.
+
+Another complication is due to the fact that several builtin value- and node-traits classes are poorly suited to work with variables living in =gdb= memory, but not in program memory (i.e., non-inferior values). A function taking a reference parameter (even const reference) can only work with inferior values.  This package also provides a way to bypass (rewrite) certain functions from inside =gdb=, using the variable =boost.static_method=.
+
+For more information, see the source code in [[boost/utils.py]] and a usage example in [[examples/test-intrusive-advanced.gdb]].
+***** Top-Level Printer Generator
+The top-level printer generator is a single =python= object that serves 2 main purposes:
+1. To print values: When =gdb= must print a value, it will call the printer generator, whose job is to select a printer for that value (if one is available). See below how this is currently implemented.
+2. To allow =enable pretty-print= and =disable pretty-print= commands to function in =gdb=: The printers must be stored inside the printer generator in a standard way, and have certain standard attributes.
+The top-level printer generator called =boost= must be registered with =gdb= by calling =boost.register_printers()=. The package provides a secondary printer generator called =trivial= that can be used, e.g., to easily customize struct printing: see [[NOTES.org]].
+Individual printers are =python= classes. They get registered with the top-level printer generator by calling its =add()= function, or by using the decorators =add_printer= or =cond_add_printer=.
+***** Individual Printers
+The following attributes of individual printers are relevant for interatcion with the top-level printer generator:
+- The string attribute =printer_name= is required.
+- String attributes =min_supported_version= and =max_supported_version= are required and contain tuples with minimal and maximal boost versions which are supported by the printer.
+- The list-of-strings (or single string) attribute =template_name= is optional, but recommended. It specifies a list of template names that this printer works for. The printer will never be called on an object with a template name not in this list. The only situation where this attribute might not exist is if the list of template names is too long, or perhaps not fixed a priori. E.g., the printer might decide to print an object if it has a certain base type. Then, it would be impossible to filter by the template name of the super type.
+- The class method =supports()= is optional. If present, it will be called with a value as argument to determine if the printer supports printing that value. This occurs after filtering by =template_name=.
+- At least one (or both) of =template_name= and =supports= must exist. The =template_name= filtering is recommended for efficiency purposes.
+
+In addition to the attributes described above related to the interaction with the printer generator, the following attributes are relevant for individual printers:
+- The =__init__()= method takes a single argument, a value to be printed. This is invoked by the printer generator if the =template_name= and/or =supports()= filters passed.
+- The =to_string()= method takes no arguments. It is expected to produce a string representation of the value. However, it can return =None=, e.g., when printing a container that has a =children()= method.
+- The =children()= methods takes no arguments, and it returns an object implementing the iterator protocol that can be used to iterate through the values to be printed. (See the note about iterators in the [[#python-versions][Python Versions]] section.) The method =children()= is usually used to print containers. The values produced by the iterator's =__next__()= method (=next()= in Py2) should be tuples of the form (label, value).
+***** Examples
+Here's a trivial printer for the =struct A= in the example above, that prints only its =_val= member:
+#+BEGIN_EXAMPLE
+# file boost/a_1.py
+from boost import *
+@add_printer
+class A_Printer:
+    printer_name = 'A'
+    version = '1'
+    template_name = 'A'
+    def __init__(self, v):
+        self.v = v
+    def to_string(self):
+        return str(v['_val'])
+#+END_EXAMPLE
+
+To use it:
+#+BEGIN_EXAMPLE
+gdb -q -n a.out -ex 'b done' -ex 'r'
+(gdb) pi
+>>> sys.path.insert(0, '[PATH_TO_REPO]')
+>>> import boost.a_1
+>>> boost.register_printers()
+>>> [Ctrl-D]
+(gdb) p a_obj
+$1 = 17
+#+END_EXAMPLE
+
+As a side note, with =boost= printers loaded and registered, this can be achieved with a one-liner using the =trivial= top-level printer generator:
+#+BEGIN_EXAMPLE
+gdb -q a.out -ex 'b done' -ex 'r'
+(gdb) py boost.add_trivial_printer('A', lambda v: v['_val'])
+(gdb) info pretty-printer global trivial
+global pretty-printers:
+  trivial
+    A
+(gdb) p a_obj
+$1 = 17
+#+END_EXAMPLE
+
+As a more complicated example, we try to print a =std::list= from the sample program used earlier. (There already exists a printer for it in the =libstdc++= package, this is just an example.)
+#+BEGIN_EXAMPLE
+gdb -q -n a.out -ex 'b done' -ex 'r'
+(gdb) p a_list
+$1 = {<std::_List_base<A, std::allocator<A> >> = {
+    _M_impl = {<std::allocator<std::_List_node<A> >> = {<__gnu_cxx::new_allocator<std::_List_node<A> >> = {<No data fields>}, <No data fields>}, _M_node = {_M_next = 0x602010,
+        _M_prev = 0x602050}}}, <No data fields>}
+##### UGH!
+#+END_EXAMPLE
+
+Try =begin()= and =end()=:
+#+BEGIN_EXAMPLE
+(gdb) set $it = a_list.begin()
+(gdb) p $it
+$2 = {_M_node = 0x602010}
+##### promising, but...
+(gdb) p *$it
+Attempt to take address of value not located in memory.
+(gdb) p $it.operator++()
+Attempt to take address of value not located in memory.
+#+END_EXAMPLE
+
+Figure out non-API implementation structure of the list. This takes some practice and common sense.
+#+BEGIN_EXAMPLE
+(gdb) ptype /mtr a_list._M_impl._M_node
+type = struct std::__detail::_List_node_base {
+    std::__detail::_List_node_base *_M_next;
+    std::__detail::_List_node_base *_M_prev;
+}
+(gdb) p a_list._M_impl._M_node
+$5 = {_M_next = 0x602010, _M_prev = 0x602050}
+(gdb) p &a_list._M_impl._M_node
+$17 = (std::__detail::_List_node_base *) 0x601d80 <a_list>
+(gdb) p a_list._M_impl._M_node._M_next
+$6 = (std::__detail::_List_node_base *) 0x602010
+(gdb) p * a_list._M_impl._M_node._M_next
+$7 = {_M_next = 0x602030, _M_prev = 0x601d80 <a_list>}
+(gdb) p * a_list._M_impl._M_node._M_next->_M_next
+$8 = {_M_next = 0x602050, _M_prev = 0x602010}
+(gdb) p * a_list._M_impl._M_node._M_next->_M_next->_M_next
+$9 = {_M_next = 0x601d80 <a_list>, _M_prev = 0x602030}
+#+END_EXAMPLE
+
+It looks like we can traverse the list by following =_M_next= pointers starting and returning at a special header node. But where are the elements themselves? Find the source code with, e.g.:
+#+BEGIN_EXAMPLE
+$ grep -Rl _List_node_base /usr/include/c++/4.8.2
+/usr/include/c++/4.8.2/bits/stl_list.h
+$ grep -C3 _List_node_base /usr/include/c++/4.8.2/bits/stl_list.h
+...
+  /// An actual node in the %list.
+  template<typename _Tp>
+    struct _List_node : public __detail::_List_node_base
+    {
+      ///< User's data.
+      _Tp _M_data;
+...
+#+END_EXAMPLE
+
+It takes a bit of practice to find the relevant bits. But now, it looks like =_List_node_base= is a base type of =_List_node=, which holds the list elements in =_M_data=. To confirm:
+#+BEGIN_EXAMPLE
+(gdb) p ((std::_List_node<A>*)a_list._M_impl._M_node._M_next)->_M_data
+$14 = {_val = 1, _internal = 0}
+(gdb) p ((std::_List_node<A>*)a_list._M_impl._M_node._M_next->_M_next)->_M_data
+$15 = {_val = 5, _internal = 0}
+(gdb) p ((std::_List_node<A>*)a_list._M_impl._M_node._M_next->_M_next->_M_next)->_M_data
+$16 = {_val = 42, _internal = 0}
+#+END_EXAMPLE
+
+With this information, here is a full printer:
+#+BEGIN_EXAMPLE
+# file: boost/list_1.py
+from boost import *
+@add_printer
+class List_Printer:
+    printer_name = 'std::list'
+    version = '1'
+    template_name = 'std::list'
+    class List_Iterator:
+        def __init__(self, v):
+            self.v = v
+            self.list_node_t = lookup_type('std::_List_node<' + str(v.type.template_argument(0)) + '>')
+            self.header_ptr = v['_M_impl']['_M_node'].address
+        def __iter__(self):
+            self.count = 0
+            self.node_ptr = self.v['_M_impl']['_M_node']['_M_next']
+            return self
+        def __next__(self):
+            if self.node_ptr == self.header_ptr:
+                raise StopIteration
+            result = ('[%d]' % self.count, str(self.node_ptr.cast(self.list_node_t.pointer())['_M_data']))
+            self.count += 1
+            self.node_ptr = self.node_ptr['_M_next']
+            return result
+        def next(self):
+            return self.__next__()
+    def __init__(self, v):
+        self.v = v
+    def to_string(self):
+        return None
+    def children(self):
+        return self.List_Iterator(self.v)
+#+END_EXAMPLE
+
+To see it in action:
+#+BEGIN_EXAMPLE
+(gdb) import boost.list_1
+(gdb) p a_list
+$1 = {[0] = {_val = 1, _internal = 0}, [1] = {_val = 5, _internal = 0}, [2] = {_val = 42, _internal = 0}}
+(gdb) p $at(a_list, 2)
+$2 = "{_val = 42, _internal = 0}"
+#+END_EXAMPLE
+**** Adding New Printers
+If you are interested in adding new printers to this package, please organize the files in a way that allows users to control which versions get loaded in the way described above. In previous versions of this package, all printers were bundled into one big file, and that made it less convenient to select which ones get loaded automatically. Concretely, the suggestion is to:
+
+- Put new printers in a new file with a descriptive name, e.g. =some_library_1_62.py=.
+
+- Write the code in such a way that it works with both Py2 and Py3. See [[#python-versions][Python Versions]] section.
+
+- At the top of your file, use =from .utils import *=. This will pull in all names from =utils.py=.
+
+- If you have convenience functions of general interest, add them to =utils.py=. Otherwise, put functions in your new file.
+
+- Edit =__init__.py= and import new file to register printers.
+
+- Write unit tests for your new printer (see =tests/testsuite.py= and =tests/testsuite.cpp=) and run them with both Python2 and Python 3 enabled gdb.
+
+- Update [[SUPPORTED.org]].
