@@ -8,12 +8,12 @@ env:
     - BOOST_VER=1.54
     - BOOST_VER=1.55
     - BOOST_VER=1.58
-    - BOOST_VER=1.65
+    - BOOST_VER=1.65.1
     - BOOST_VER=1.50 GDB_PYTHON2=yes
     - BOOST_VER=1.54 GDB_PYTHON2=yes
     - BOOST_VER=1.55 GDB_PYTHON2=yes
     - BOOST_VER=1.58 GDB_PYTHON2=yes
-    - BOOST_VER=1.65 GDB_PYTHON2=yes
+    - BOOST_VER=1.65.1 GDB_PYTHON2=yes
 
 before_install:
   - tests/install-gdb.sh $GDB_PYTHON2
