@@ -28,10 +28,6 @@ from .utils import *
 import itertools
 
 
-def reinterpret_cast(value, target_type):
-    return value.address.cast(target_type.pointer()).dereference()
-
-
 class BoostUnorderedCommon:
     """Common base for boost unordered containers"""
     def __init__(self, val):

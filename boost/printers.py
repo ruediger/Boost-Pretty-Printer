@@ -108,49 +108,26 @@ class BoostOptional:
     min_supported_version = (1, 40, 0)
     max_supported_version = last_supported_boost_version
     template_name = 'boost::optional'
-    regex = re.compile('^boost::optional<(.*)>$')
 
     def __init__(self, value):
-        self.typename = value.type_name
         self.value = value
-
-    class _iterator:
-        def __init__(self, member, empty):
-            self.member = member
-            self.done = empty
-
-        def __iter__(self):
-            return self
-
-        def __next__(self):
-            if(self.done):
-                raise StopIteration
-            self.done = True
-            return ('value', self.member.dereference())
-
-        def next(self):
-            return self.__next__()
 
     def children(self):
         initialized = self.value['m_initialized']
-        if(not initialized):
-            return self._iterator('', True)
-        else:
-            match = BoostOptional.regex.search(self.typename)
-            if match:
-                try:
-                    membertype = lookup_type(match.group(1)).pointer()
-                    member = self.value['m_storage']['dummy_']['data'].address.cast(membertype)
-                    return self._iterator(member, False)
-                except:
-                    return self._iterator('', True)
+        if initialized:
+            stored_type = get_basic_type(self.value.basic_type.template_argument(0))
+            m_storage = self.value['m_storage']
+            stored_value = m_storage \
+                if get_basic_type(m_storage.type) == stored_type \
+                else reinterpret_cast(m_storage['dummy_']['data'], stored_type)
+            yield 'value', stored_value
 
     def to_string(self):
         initialized = self.value['m_initialized']
-        if(not initialized):
-            return "%s is not initialized" % self.typename
+        if initialized:
+            return '{} is initialized'.format(self.value.type_name)
         else:
-            return "%s is initialized" % self.typename
+            return '{} is not initialized'.format(self.value.type_name)
 
 
 @add_printer
@@ -375,7 +352,7 @@ class BoostVariant:
     def __init__(self, value):
         self.typename = value.type_name
         self.value = value
-        # Due to some mysterious reason, self.value.type template_name(which) does not work unless variadic templates
+        # Due to some mysterious reason, self.value.type.template_name(which) does not work unless variadic templates
         # are disabled using BOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES.
         # It might be https://sourceware.org/bugzilla/show_bug.cgi?id=17311
         m = BoostVariant.regex.search(self.typename)

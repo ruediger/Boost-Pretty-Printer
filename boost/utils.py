@@ -506,6 +506,10 @@ def unwind_references(value):
     return value
 
 
+def reinterpret_cast(value, target_type):
+    return value.address.cast(target_type.pointer()).dereference()
+
+
 #
 # GDB_Value_Wrapper: Wrapper class for gdb.Value
 #
@@ -795,4 +799,4 @@ multi_index_selector = dict()
 options = {'hide_intrusive_hooks': True}
 
 # Latest boost currently supported by printers
-last_supported_boost_version = (1, 65, 1)
+last_supported_boost_version = (1, 66, 0)
