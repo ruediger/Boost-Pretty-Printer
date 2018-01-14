@@ -25,7 +25,6 @@ class BoostPosixTimePTime:
             if ticks < 0:
                 neg = True
                 ticks *= -1
-            # return dir(self.value)
             ticks_per_second = 1000000
             num_fractional_digits = 6
             hours = ticks / (3600*ticks_per_second)
