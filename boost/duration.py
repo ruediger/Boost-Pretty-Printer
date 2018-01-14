@@ -26,7 +26,6 @@ class BoostPosixTimePTime:
                 neg = True
                 ticks *= -1
             ticks_per_second = 1000000
-            num_fractional_digits = 6
             hours = ticks / (3600*ticks_per_second)
             if hours > 0:
                 rt += str(hours) + 'h'
