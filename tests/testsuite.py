@@ -940,6 +940,47 @@ class UnorderedMultisetTest(PrettyPrinterTest):
         self.assertIn(as_struct(children), possible_values)
         self.assertEqual(display_hint, None)
 
+class DurationTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_duration')
+
+    def test_empty(self):
+        string, children, display_hint = self.get_printer_result('empty_duration')
+        self.assertEqual(string,'(boost::posix_time::time_duration) 0')
+        self.assertEqual(children, None)
+        self.assertEqual(display_hint, None)
+
+    def test_duration_130(self):
+        string, children, display_hint = self.get_printer_result('duration_130')
+        self.assertEqual(string,'(boost::posix_time::time_duration) 2m10s')
+        self.assertEqual(children, None)
+        self.assertEqual(display_hint, None)
+
+    def test_duration_neg_130(self):
+        string, children, display_hint = self.get_printer_result('duration_neg_130')
+        self.assertEqual(string,'(boost::posix_time::time_duration) -2m10s')
+        self.assertEqual(children, None)
+        self.assertEqual(display_hint, None)
+
+    def test_duration_with_ms(self):
+        string, children, display_hint = self.get_printer_result('duration_with_ms')
+        self.assertEqual(string,'(boost::posix_time::time_duration) 1m1.010000s')
+        self.assertEqual(children, None)
+        self.assertEqual(display_hint, None)
+
+    def test_duration_not_a_time(self):
+        string, children, display_hint = self.get_printer_result('duration_not_a_time')
+        self.assertEqual(string,'(boost::posix_time::time_duration) not a date time')
+        self.assertEqual(children, None)
+        self.assertEqual(display_hint, None)
+
+    def test_duration_3600(self):
+        string, children, display_hint = self.get_printer_result('duration_3600')
+        self.assertEqual(string,'(boost::posix_time::time_duration) 1h')
+        self.assertEqual(children, None)
+        self.assertEqual(display_hint, None)
+
 # TODO: More intrusive tests:
 # 1. Non-raw pointers
 # 2. Custom node traits

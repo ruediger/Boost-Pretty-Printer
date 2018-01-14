@@ -751,6 +751,18 @@ break_here:
 	dummy_function();
 }
 
+void test_duration()
+{
+    boost::posix_time::time_duration empty_duration;
+    boost::posix_time::time_duration duration_130 = boost::posix_time::seconds(130);
+    boost::posix_time::time_duration duration_3600 = boost::posix_time::seconds(3600);
+    boost::posix_time::time_duration duration_neg_130 = boost::posix_time::seconds(-130);
+    boost::posix_time::time_duration duration_with_ms = boost::posix_time::seconds(61) + boost::posix_time::millisec(10);
+    boost::posix_time::time_duration duration_not_a_time(boost::posix_time::not_a_date_time);
+break_here:
+    dummy_function();
+}
+
 int main()
 {
 	test_iterator_range();
@@ -785,6 +797,7 @@ int main()
 	test_uuid();
 	test_date_time();
 	test_tribool();
+	test_duration();
 
 	return EXIT_SUCCESS;
 }
