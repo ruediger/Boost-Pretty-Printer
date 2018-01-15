@@ -29,13 +29,13 @@ class BoostPosixTimeDuration:
                 neg = True
                 ticks *= -1
             ticks_per_second = 1000000
-            hours = math.floor(ticks / (3600*ticks_per_second))
+            hours = int(math.floor(ticks / (3600*ticks_per_second)))
             if hours > 0:
                 rt += str(hours) + 'h '
-            min = math.floor(ticks / (60*ticks_per_second)) % 60
+            min = int(math.floor(ticks / (60*ticks_per_second)) % 60)
             if min > 0:
                 rt += str(min) + 'm '
-            sec = math.floor((ticks / ticks_per_second)) % 60
+            sec = int(math.floor((ticks / ticks_per_second)) % 60)
             if sec > 0:
                 rt += str(sec)
                 if ticks % ticks_per_second > 0:
