@@ -953,19 +953,19 @@ class DurationTest(PrettyPrinterTest):
 
     def test_duration_130(self):
         string, children, display_hint = self.get_printer_result('duration_130')
-        self.assertEqual(string,'(boost::posix_time::time_duration) 2m10s')
+        self.assertEqual(string,'(boost::posix_time::time_duration) 2m 10s')
         self.assertEqual(children, None)
         self.assertEqual(display_hint, None)
 
     def test_duration_neg_130(self):
         string, children, display_hint = self.get_printer_result('duration_neg_130')
-        self.assertEqual(string,'(boost::posix_time::time_duration) -2m10s')
+        self.assertEqual(string,'(boost::posix_time::time_duration) -2m 10s')
         self.assertEqual(children, None)
         self.assertEqual(display_hint, None)
 
     def test_duration_with_ms(self):
         string, children, display_hint = self.get_printer_result('duration_with_ms')
-        self.assertEqual(string,'(boost::posix_time::time_duration) 1m1.010000s')
+        self.assertEqual(string,'(boost::posix_time::time_duration) 1m 1.010000s')
         self.assertEqual(children, None)
         self.assertEqual(display_hint, None)
 

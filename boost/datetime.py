@@ -1,6 +1,7 @@
 from .utils import *
+import math
 @add_printer
-class BoostPosixTimePTime:
+class BoostPosixTimeDuration:
     "Pretty Printer for boost::posix_time::time_duration"
     printer_name = 'boost::posix_time::time_duration'
     min_supported_version = (1, 40, 0)
@@ -14,7 +15,7 @@ class BoostPosixTimePTime:
     def to_string(self):
         rt = ""
         neg = False
-        ticks = call_object_method(self.value,"ticks")
+        ticks = int(self.value['ticks_']['value_'])
         if ticks == 2**63 - 1:
             rt = 'positive infinity'
         elif ticks == -2**63:
@@ -26,13 +27,13 @@ class BoostPosixTimePTime:
                 neg = True
                 ticks *= -1
             ticks_per_second = 1000000
-            hours = ticks / (3600*ticks_per_second)
+            hours = math.floor(ticks / (3600*ticks_per_second))
             if hours > 0:
-                rt += str(hours) + 'h'
-            min = (ticks / (60*ticks_per_second)) % 60
+                rt += str(hours) + 'h '
+            min = math.floor(ticks / (60*ticks_per_second)) % 60
             if min > 0:
-                rt += str(min) + 'm'
-            sec = (ticks / ticks_per_second) % 60
+                rt += str(min) + 'm '
+            sec = math.floor((ticks / ticks_per_second)) % 60
             if sec > 0:
                 rt += str(sec)
                 if ticks % ticks_per_second > 0:
@@ -42,4 +43,4 @@ class BoostPosixTimePTime:
                 rt = "0"
             if neg:
                 rt = "-" + rt
-        return ('(%s) ' % self.typename) + rt
+        return '(%s) %s' % (self.typename, rt.strip())
