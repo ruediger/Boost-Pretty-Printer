@@ -14,6 +14,7 @@
 | =boost::uuids::uuid=                    | "       | "                  |        | Ivan Tarasov (ivant)            |                                |
 | =boost::gregorian::date=                | "       | "                  |        | Brian O'Kennedy (brokenn)       |                                |
 | =boost::posix_time::ptime=              | "       | "                  |        | "                               |                                |
+| =boost::posix_time::time_duration=      | "       | "                  |        | David van Laatum                |                                |
 | =boost::circular_buffer=                | "       | "                  |        | Luc Hermitte                    |                                |
 | =boost::container::flat_set=            | 1.52    | "                  |        |                                 |                                |
 | =boost::container::flat_map=            | "       | "                  |        |                                 |                                |
