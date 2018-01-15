@@ -1,6 +1,6 @@
-from .utils import *
-import math
 import datetime
+import math
+from .utils import *
 
 @add_printer
 class BoostPosixTimeDuration:
