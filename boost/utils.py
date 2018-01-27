@@ -5,6 +5,7 @@ import gdb.types
 import gdb.printing
 from gdb import lookup_type
 import sys
+import collections
 
 from .detect_version import detect_boost_version
 
@@ -510,30 +511,18 @@ def reinterpret_cast(value, target_type):
     return value.address.cast(target_type.pointer()).dereference()
 
 
-#
-# GDB_Value_Wrapper: Wrapper class for gdb.Value
-#
-# Its sole purpose is to provide a __dict__, which allows setting custom attributes.
-#
-if have_python_3:
-    # simply deriving from gdb.Value will generate a __dict__ attribute
-    class GDB_Value_Wrapper(gdb.Value):
-        """
-        Wrapper class for gdb.Value.
-        Its sole purpose is to provide a __dict__, which allows setting custom attributes.
-        """
-        pass
-elif have_python_2:
-    # we add a __dict__ attribute explicitly
-    class GDB_Value_Wrapper(gdb.Value):
-        """
-        Wrapper class for gdb.Value.
-        Its sole purpose is to provide a __dict__, which allows setting custom attributes.
-        """
-
-        def __init__(self, value):
-            super(GDB_Value_Wrapper, self).__init__(value)
+class GDB_Value_Wrapper(gdb.Value):
+    """Wrapper class for gdb.Value"""
+    def __init__(self, value):
+        # In Python 3 simply deriving from gdb.Value will generate a __dict__ attribute.
+        # In Python 2 we add a __dict__ attribute explicitly.
+        if have_python_2:
             self.__dict__ = {}
+        gdb.Value.__init__(value)
+        self.qualifiers = get_type_qualifiers(value.type)
+        self.basic_type = get_basic_type(value.type)
+        self.type_name = str(self.basic_type)
+        self.template_name = template_name(self.basic_type)
 
 
 class Printer_Gen(object):
@@ -574,7 +563,7 @@ class Printer_Gen(object):
         self.name = name
         self.enabled = True
         self.subprinters = list()
-        self.template_name_dict = dict()
+        self.template_name_dict = collections.defaultdict(list)
         self.no_template_name_list = list()
 
     def add(self, Printer, tn=str()):
@@ -583,13 +572,13 @@ class Printer_Gen(object):
             return
         # get list of template names
         if tn != '':
-            l = [tn]
+            name_list = [tn]
         elif not hasattr(Printer, 'template_name'):
-            l = list()
+            name_list = list()
         elif type(Printer.template_name) == str:
-            l = [Printer.template_name]
+            name_list = [Printer.template_name]
         elif type(Printer.template_name) == list:
-            l = Printer.template_name
+            name_list = Printer.template_name
         else:
             message('cannot import printer [' + Printer.printer_name + ']: template_name has type=' + str(type(Printer.template_name)))
             return
@@ -598,26 +587,16 @@ class Printer_Gen(object):
         # add it to subprinters
         self.subprinters.append(p)
         # add it to template_name_dict
-        if len(l) > 0:
-            for n in l:
-                if n not in self.template_name_dict:
-                    self.template_name_dict[n] = list()
-                self.template_name_dict[n].append(p)
+        if name_list:
+            for template_name in name_list:
+                self.template_name_dict[template_name].append(p)
         else:
             self.no_template_name_list.append(p)
 
     def __call__(self, value):
-        qualifiers = get_type_qualifiers(value.type)
-        v = GDB_Value_Wrapper(value.cast(get_basic_type(value.type)))
-        v.qualifiers = qualifiers
-        v.basic_type = v.type
-        v.type_name = str(v.basic_type)
-        v.template_name = template_name(v.basic_type)
-        if v.template_name not in self.template_name_dict:
-            l = self.no_template_name_list
-        else:
-            l = self.template_name_dict[v.template_name]
-        for subprinter_gen in l:
+        v = GDB_Value_Wrapper(value)
+        subprinter_generators = self.template_name_dict.get(v.template_name, self.no_template_name_list)
+        for subprinter_gen in subprinter_generators:
             printer = subprinter_gen(v)
             if printer is not None:
                 return printer

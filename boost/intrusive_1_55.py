@@ -273,7 +273,7 @@ class Tree_Printer:
 
     @staticmethod
     def supports(v):
-        return Tree_Printer.get_bstree_impl_base(v.type) != None
+        return Tree_Printer.get_bstree_impl_base(v.basic_type) != None
 
     class Iterator:
         def __init__(self, v):
@@ -331,7 +331,7 @@ class Tree_Printer:
 
     def __init__(self, v):
         self.v = v
-        self.v.bstree_impl_t = self.get_bstree_impl_base(v.type)
+        self.v.bstree_impl_t = self.get_bstree_impl_base(v.basic_type)
         self.v.value_t = get_inner_type(self.v.bstree_impl_t, 'value_type')
         self.v.value_traits_t = self.v.bstree_impl_t.template_argument(0)
         self.v.node_traits_t = get_inner_type(self.v.bstree_impl_t, 'node_traits')

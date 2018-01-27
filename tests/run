@@ -13,7 +13,7 @@ tests_dir = sys.path[0]
 printers_dir = os.path.abspath(join(tests_dir, '..'))
 cpp_testsuite = join(tests_dir, 'testsuite.cpp')
 python_testsuite = join(tests_dir, 'testsuite.py')
-python_interactive = join(tests_dir, 'interactive.py')
+python_interactive = join(tests_dir, 'interactive.gdb')
 
 tmp_dir = join(tests_dir, 'tmp')
 cpp_binary = join(tmp_dir, 'a.out')
