@@ -23,6 +23,10 @@
 #if BOOST_VERSION >= 105500
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #endif
+#if BOOST_VERSION >= 106500
+#include <boost/smart_ptr/local_shared_ptr.hpp>
+#include <boost/smart_ptr/make_local_shared.hpp>
+#endif
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
@@ -33,6 +37,8 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/logic/tribool.hpp>
+
+#include <array>
 
 unsigned const boost_version = BOOST_VERSION;
 
@@ -116,6 +122,16 @@ void test_shared_ptr()
 
 	boost::shared_array<int> empty_shared_array;
 	boost::shared_array<int> shared_array(new int[1]);
+break_here:
+	dummy_function();
+}
+
+void test_local_shared_ptr()
+{
+#if BOOST_VERSION >= 106500
+	boost::local_shared_ptr<int> empty_ptr;
+	auto ptr = boost::make_local_shared<int>(42);
+#endif
 break_here:
 	dummy_function();
 }
@@ -817,6 +833,7 @@ int main()
 	test_scoped_ptr();
 	test_intrusive_ptr();
 	test_shared_ptr();
+	test_local_shared_ptr();
 
 	test_variant();
 	test_optional();
@@ -825,6 +842,8 @@ int main()
 	test_date_time();
 	test_tribool();
 	test_duration();
+
+	std::array<bool, 3> ab;
 
 	return EXIT_SUCCESS;
 }

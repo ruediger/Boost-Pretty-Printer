@@ -4,20 +4,20 @@ sudo: true
 
 env:
   matrix:
-    - BOOST_VER=1.50
-    - BOOST_VER=1.54
-    - BOOST_VER=1.55
-    - BOOST_VER=1.58
-    - BOOST_VER=1.65.1
-    - BOOST_VER=1.66
-    - BOOST_VER=1.50 GDB_PYTHON2=yes
-    - BOOST_VER=1.54 GDB_PYTHON2=yes
-    - BOOST_VER=1.55 GDB_PYTHON2=yes
-    - BOOST_VER=1.58 GDB_PYTHON2=yes
-    - BOOST_VER=1.65.1 GDB_PYTHON2=yes
-    - BOOST_VER=1.66 GDB_PYTHON2=yes
+    - boost_major=1 boost_minor=50
+    - boost_major=1 boost_minor=54
+    - boost_major=1 boost_minor=55
+    - boost_major=1 boost_minor=58
+    - boost_major=1 boost_minor=65 boost_patchlevel=1
+    - boost_major=1 boost_minor=66
+    - boost_major=1 boost_minor=50                    gdb_python2=yes
+    - boost_major=1 boost_minor=54                    gdb_python2=yes
+    - boost_major=1 boost_minor=55                    gdb_python2=yes
+    - boost_major=1 boost_minor=58                    gdb_python2=yes
+    - boost_major=1 boost_minor=65 boost_patchlevel=1 gdb_python2=yes
+    - boost_major=1 boost_minor=66                    gdb_python2=yes
 
 before_install:
-  - tests/install-gdb.sh $GDB_PYTHON2
+  - tests/install-gdb.sh $gdb_python2
 
-script: tests/run --force-clean --boost-version $BOOST_VER
+script: cmake -Dboost_major=$boost_major -Dboost_minor=$boost_minor -Dboost_patchlevel=$boost_patchlevel
