@@ -4,7 +4,7 @@
 
 from .utils import *
 
-def strip_references(typename):
+def strip_qualifiers(typename):
     """remove const/volatile qualifiers, references, and pointers of a type"""
 
     qps = []
@@ -30,7 +30,7 @@ def strip_references(typename):
     return typename, qps[::-1]
 
 
-def apply_references(t, qs):
+def apply_qualifiers(t, qs):
     """apply the given sequence of const/volatile qualifiers, references, and pointers to a gdb.Type"""
 
     for q in qs:
@@ -96,8 +96,8 @@ class BoostVariant:
     def children(self):
         which = intptr(self.value['which_'])
         assert which >= 0, 'Heap backup is not supported'
-        type,qps = strip_references(self.types[which])
-        ptrtype = apply_references(lookup_type(type), qps).pointer()
+        type,qps = strip_qualifiers(self.types[which])
+        ptrtype = apply_qualifiers(lookup_type(type), qps).pointer()
         dataptr = self.value['storage_']['data_']['buf'].address.cast(ptrtype)
         yield str(type), dataptr.dereference()
 
