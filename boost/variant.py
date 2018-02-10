@@ -11,19 +11,19 @@ def strip_qualifiers(typename):
 
     try:
         while True:
-        typename = typename.rstrip()
-        qual = next(q for q in ['&', '*', 'const', 'volatile'] if typename.endswith(q))
-        typename = typename[:-len(qual)]
-        qps.append(qual)
+            typename = typename.rstrip()
+            qual = next(q for q in ['&', '*', 'const', 'volatile'] if typename.endswith(q))
+            typename = typename[:-len(qual)]
+            qps.append(qual)
     except StopIteration:
         pass
 
     try:
         while True:
-        typename = typename.lstrip()
-        qual = next(q for q in ['const', 'volatile'] if typename.startswith(q))
-        typename = typename[len(qual):]
-        qps.append(qual)
+            typename = typename.lstrip()
+            qual = next(q for q in ['const', 'volatile'] if typename.startswith(q))
+            typename = typename[len(qual):]
+            qps.append(qual)
     except StopIteration:
         pass
 
