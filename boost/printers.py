@@ -339,6 +339,72 @@ class BoostArray:
         return 'array'
 
 
+def strip_qps(typename):
+    typename = typename.strip()
+ 
+    def startswith_const_or_volatile():
+        return typename.startswith('const') or typename.startswith('volatile')
+    def endswith_const_or_volatile():
+        return typename.endswith('const') or typename.endswith('volatile')
+    def const_or_volatile_start():
+        return 'const' if typename.startswith('const') else 'volatile'
+    def const_or_volatile_end():
+        return 'const' if typename.endswith('const') else 'volatile'
+ 
+    if typename.endswith('&') or typename.endswith('*'):
+        q = typename[-1]
+        typename = typename[:-1].strip()
+        if startswith_const_or_volatile():
+            q2 = const_or_volatile_start()
+            typename, qs= strip_qps(typename[len(q2):].strip())
+            return typename, qs+[q2, q,]
+        elif endswith_const_or_volatile():
+            q2 = const_or_volatile_end()
+            typename, qs= strip_qps(typename[:-len(q2)].strip())
+            return typename, qs+[q2, q,]
+        else:
+            typename, qs= strip_qps(typename)
+            return typename, qs+[q,]
+    elif startswith_const_or_volatile():
+        q2 = const_or_volatile_start()
+        typename, qs= strip_qps(typename[len(q2):].strip())
+        return typename, qs+[q2,]
+    elif endswith_const_or_volatile():
+        q2 = const_or_volatile_end()
+        typename, qs= strip_qps(typename[:-len(q2)].strip())
+        return typename, qs+[q2,]
+    return typename.strip(), []
+ 
+ 
+def apply_qps(t, qs):
+   for q in qs:
+      if q == '*':
+         t = t.pointer()
+      elif q == '&':
+         t = t.reference()
+      elif q == 'const':
+         t = t.const()
+      elif q == 'volatile':
+         t = t.volatile()
+   return t
+ 
+def split_variant_types(typename):
+    unmatched = 0
+    length = len(typename)
+    b = e = 0
+    while e < length:
+        c = typename[e]
+        if c == ',' and unmatched == 0:
+            yield typename[b:e].strip()
+            b = e = e + 1
+        elif c == '<':
+            unmatched += 1
+        elif c == '>':
+            unmatched -= 1
+        e += 1
+    yield typename[b:e].strip()
+ 
+ 
 @add_printer
 class BoostVariant:
     "Pretty Printer for boost::variant (Boost.Variant)"
@@ -347,7 +413,7 @@ class BoostVariant:
     max_supported_version = last_supported_boost_version
     template_name = 'boost::variant'
     regex = re.compile('^boost::variant<(.*)>$')
-
+ 
     def __init__(self, value):
         self.typename = value.type_name
         self.value = value
@@ -355,23 +421,24 @@ class BoostVariant:
         # are disabled using BOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES.
         # It might be https://sourceware.org/bugzilla/show_bug.cgi?id=17311
         m = BoostVariant.regex.search(self.typename)
-        self.types = [s.strip() for s in re.split(
-            r', (?=(?:<[^>]*?(?: [^>]*)*))|, (?=[^>,]+(?:,|$))', m.group(1))]
-
+        #self.types = [s.strip() for s in re.split(
+        #    r', (?=(?:<[^>]*?(?: [^>]*)*))|, (?=[^>,]+(?:,|$))', m.group(1))]
+        self.types = list(split_variant_types(m.group(1)))
+ 
     def to_string(self):
         which = intptr(self.value['which_'])
         assert which >= 0, 'Heap backup is not supported'
         type = self.types[which]
         return '(boost::variant<...>) type = {}'.format(type)
-
+ 
     def children(self):
         which = intptr(self.value['which_'])
         assert which >= 0, 'Heap backup is not supported'
-        type = self.types[which]
-        ptrtype = lookup_type(type).pointer()
+        type,qps = strip_qps(self.types[which])
+        ptrtype = apply_qps(lookup_type(type), qps).pointer()
         dataptr = self.value['storage_']['data_']['buf'].address.cast(ptrtype)
         yield 'value', dataptr.dereference()
-
+ 
 
 @add_printer
 class BoostUuid:
