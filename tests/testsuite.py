@@ -361,6 +361,18 @@ class VariantTest(PrettyPrinterTest):
         self.assertEqual(as_struct(children), {'value': {'b_': 24}})
         self.assertIsNone(display_hint)
 
+    def test_variant_t(self):
+        string, children, display_hint = self.get_printer_result('variant_t')
+        self.assertEqual(string, '(boost::variant<...>) type = VariantT<int>')
+        self.assertEqual(as_struct(children), {'value': {'t_': 53}})
+        self.assertIsNone(display_hint)
+
+    def test_variant_ts(self):
+        string, children, display_hint = self.get_printer_result('variant_ts')
+        self.assertEqual(string, '(boost::variant<...>) type = VariantTs<int, int, int>')
+        self.assertEqual(as_struct(children), {'value': {'t_': 35}})
+        self.assertIsNone(display_hint)
+
 
 @unittest.skipIf(boost_version < (1, 42, 0), 'implemented in boost 1.42 and later')
 class UuidTest(PrettyPrinterTest):
