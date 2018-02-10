@@ -2,6 +2,8 @@
 # Boost Variant
 #
 
+import gdb
+import re
 from .utils import *
 
 def strip_qualifiers(typename):
