@@ -352,25 +352,25 @@ class VariantTest(PrettyPrinterTest):
     def test_variant_a(self):
         string, children, display_hint = self.get_printer_result('variant_a')
         self.assertEqual(string, '(boost::variant<...>) type = VariantA')
-        self.assertEqual(as_struct(children), {'value': {'a_': 42}})
+        self.assertEqual(as_struct(children), {'VariantA': {'a_': 42}})
         self.assertIsNone(display_hint)
 
     def test_variant_b(self):
         string, children, display_hint = self.get_printer_result('variant_b')
         self.assertEqual(string, '(boost::variant<...>) type = VariantB')
-        self.assertEqual(as_struct(children), {'value': {'b_': 24}})
+        self.assertEqual(as_struct(children), {'VariantB': {'b_': 24}})
         self.assertIsNone(display_hint)
 
     def test_variant_t(self):
         string, children, display_hint = self.get_printer_result('variant_t')
         self.assertEqual(string, '(boost::variant<...>) type = VariantT<int>')
-        self.assertEqual(as_struct(children), {'value': {'t_': 53}})
+        self.assertEqual(as_struct(children), {'VariantT<int>': {'t_': 53}})
         self.assertIsNone(display_hint)
 
     def test_variant_ts(self):
         string, children, display_hint = self.get_printer_result('variant_ts')
         self.assertEqual(string, '(boost::variant<...>) type = VariantTs<int, int, int>')
-        self.assertEqual(as_struct(children), {'value': {'t_': 35}})
+        self.assertEqual(as_struct(children), {'VariantTs<int, int, int>': {'t_': 35}})
         self.assertIsNone(display_hint)
 
 
