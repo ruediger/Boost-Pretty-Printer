@@ -159,25 +159,25 @@ struct VariantB
 template < typename T >
 struct VariantT
 {
-	T t_;
+    T t_;
 };
 template < typename T, typename, typename >
 struct VariantTs
 {
-	T t_;
+    T t_;
 };
 
 void test_variant()
 {
     using Variant = boost::variant<
 		VariantA, VariantB,
-		VariantT<int>,
-		VariantTs<int, int, int>
+                VariantT<int>,
+                VariantTs<int, int, int>
 	>;
     Variant variant_a(VariantA{42});
     Variant variant_b(VariantB{24});
-	Variant variant_t(VariantT<int>{53});
-	Variant variant_ts(VariantTs<int, int, int>{35});
+    Variant variant_t(VariantT<int>{53});
+    Variant variant_ts(VariantTs<int, int, int>{35});
 break_here:
 	dummy_function();
 }
