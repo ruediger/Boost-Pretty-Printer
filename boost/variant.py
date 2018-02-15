@@ -40,10 +40,10 @@ def apply_qualifiers(t, qs):
             t = t.pointer()
         elif q == '&':
             t = t.reference()
-        elif q == 'const':
-            t = t.const()
-        elif q == 'volatile':
-            t = t.volatile()
+        #elif q == 'const':
+        #    t = t.const()
+        #elif q == 'volatile':
+        #    t = t.volatile()
     return t
 
 
@@ -101,5 +101,5 @@ class BoostVariant:
         type,qps = strip_qualifiers(self.types[which])
         ptrtype = apply_qualifiers(lookup_type(type), qps).pointer()
         dataptr = self.value['storage_']['data_']['buf'].address.cast(ptrtype)
-        yield str(type), dataptr.dereference()
+        yield self.types[which], dataptr.dereference()
 
