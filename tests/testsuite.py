@@ -10,6 +10,7 @@ import datetime
 import gdb
 import boost
 import boost.detect_version
+from boost.variant import strip_qualifiers, apply_qualifiers
 
 # Avoiding module 'six' because it might be unavailable
 if sys.version_info.major > 2:
@@ -349,18 +350,52 @@ class VariantTest(PrettyPrinterTest):
     def setUpClass(cls):
         execute_cpp_function('test_variant')
 
+    def check_type(self, var_name):
+        """Check that variable type is restored from string correctly"""
+        var = gdb.parse_and_eval(var_name)
+        base_type_name, qualifiers = strip_qualifiers(str(var.type))
+        recovered_type = apply_qualifiers(gdb.lookup_type(base_type_name), qualifiers)
+        self.assertEqual(var.type.name, recovered_type.name)
+
     def test_variant_a(self):
         string, children, display_hint = self.get_printer_result('variant_a')
         self.assertEqual(string, '(boost::variant<...>) type = VariantA')
-        self.assertEqual(as_struct(children), {'value': {'a_': 42}})
+        self.assertEqual(as_struct(children), {'VariantA': {'a_': 42}})
         self.assertIsNone(display_hint)
 
     def test_variant_b(self):
         string, children, display_hint = self.get_printer_result('variant_b')
         self.assertEqual(string, '(boost::variant<...>) type = VariantB')
-        self.assertEqual(as_struct(children), {'value': {'b_': 24}})
+        self.assertEqual(as_struct(children), {'VariantB': {'b_': 24}})
         self.assertIsNone(display_hint)
 
+    def test_variant_t(self):
+        string, children, display_hint = self.get_printer_result('variant_t')
+        self.assertEqual(string, '(boost::variant<...>) type = VariantT<int>')
+        self.assertEqual(as_struct(children), {'VariantT<int>': {'t_': 53}})
+        self.assertIsNone(display_hint)
+
+    def test_variant_ts(self):
+        string, children, display_hint = self.get_printer_result('variant_ts')
+        self.assertEqual(string, '(boost::variant<...>) type = VariantTs<int, int, int>')
+        self.assertEqual(as_struct(children), {'VariantTs<int, int, int>': {'t_': 35}})
+        self.assertIsNone(display_hint)
+
+    def test_variant_char(self):
+        string, children, display_hint = self.get_printer_result('variant_char')
+        self.assertEqual(string, '(boost::variant<...>) type = VariantChar')
+        self.assertEqual(as_struct(children), {'VariantChar': {'t_': 'hello variant!'}})
+        self.assertIsNone(display_hint)
+    
+    def test_type1(self):
+        self.check_type('var_type_1')
+
+    def test_type2(self):
+        self.check_type('var_type_2')
+
+    def test_type3(self):
+        self.check_type('var_type_3')
+        
 
 @unittest.skipIf(boost_version < (1, 42, 0), 'implemented in boost 1.42 and later')
 class UuidTest(PrettyPrinterTest):
