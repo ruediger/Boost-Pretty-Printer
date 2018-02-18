@@ -166,18 +166,29 @@ struct VariantTs
 {
     T t_;
 };
+struct VariantChar
+{
+    char const* t_;
+};
 
 void test_variant()
 {
     using Variant = boost::variant<
-		VariantA, VariantB,
-                VariantT<int>,
-                VariantTs<int, int, int>
-	>;
+		VariantA,
+		VariantB,
+		VariantT<int>,
+		VariantTs<int, int, int>,
+		VariantChar>;
     Variant variant_a(VariantA{42});
     Variant variant_b(VariantB{24});
     Variant variant_t(VariantT<int>{53});
     Variant variant_ts(VariantTs<int, int, int>{35});
+    Variant variant_char(VariantChar{"hello variant!"});
+    
+    double const ** const var_type_1{};
+    const double * * const var_type_2{};
+    const double ** const& var_type_3 = var_type_1;
+        
 break_here:
 	dummy_function();
 }

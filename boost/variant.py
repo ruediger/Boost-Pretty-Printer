@@ -1,14 +1,15 @@
-#
-# Boost Variant
-#
-
+# encoding: utf-8
+from __future__ import print_function, absolute_import, division
 import gdb
 import re
 from .utils import *
 
-def strip_qualifiers(typename):
-    """remove const/volatile qualifiers, references, and pointers of a type"""
+#
+# Boost Variant
+#
 
+def strip_qualifiers(typename):
+    """Remove const/volatile qualifiers, references, and pointers of a type"""
     qps = []
 
     try:
@@ -33,28 +34,22 @@ def strip_qualifiers(typename):
 
 
 def apply_qualifiers(t, qs):
-    """apply the given sequence of const/volatile qualifiers, references, and pointers to a gdb.Type"""
-
+    """Apply the given sequence of references, and pointers to a gdb.Type.
+       const and volatile qualifiers are not applied cince they do not affect
+       printing. Also it is not possible to make a const+volatile qualified
+       type in gdb."""
     for q in qs:
         if q == '*':
             t = t.pointer()
         elif q == '&':
             t = t.reference()
-        #elif q == 'const':
-        #    t = t.const()
-        #elif q == 'volatile':
-        #    t = t.volatile()
+        elif q == 'const':
+            t = t.const()
     return t
 
 
 def split_parameter_pack(typename):
-    """
-    Split a string represending a comma-separated c++ parameter pack
-    into a list of stings of element types.
-    This is a workaround to issues likely related to
-    https://sourceware.org/bugzilla/show_bug.cgi?id=17311.
-    """
-
+    """Split a string represending a comma-separated c++ parameter pack into a list of stings of element types"""
     unmatched = 0
     length = len(typename)
     b = e = 0
@@ -81,25 +76,28 @@ class BoostVariant:
     regex = re.compile('^boost::variant<(.*)>$')
 
     def __init__(self, value):
-        self.typename = value.type_name
         self.value = value
-        # Due to some mysterious reason, self.value.type.template_name(which) does not work unless variadic templates
-        # are disabled using BOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES.
-        # It might be https://sourceware.org/bugzilla/show_bug.cgi?id=17311
-        m = BoostVariant.regex.search(self.typename)
-        self.types = list(split_parameter_pack(m.group(1)))
 
     def to_string(self):
-        which = intptr(self.value['which_'])
-        assert which >= 0, 'Heap backup is not supported'
-        type = self.types[which]
-        return '(boost::variant<...>) type = {}'.format(type)
+        stored_type, stored_type_name = self.get_variant_type()
+        return '(boost::variant<...>) type = {}'.format(stored_type_name)
 
     def children(self):
-        which = intptr(self.value['which_'])
-        assert which >= 0, 'Heap backup is not supported'
-        type,qps = strip_qualifiers(self.types[which])
-        ptrtype = apply_qualifiers(lookup_type(type), qps).pointer()
-        dataptr = self.value['storage_']['data_']['buf'].address.cast(ptrtype)
-        yield self.types[which], dataptr.dereference()
+        stored_type, stored_type_name = self.get_variant_type()
+        stored_value = reinterpret_cast(self.value['storage_']['data_']['buf'], stored_type)
+        yield stored_type_name, stored_value
 
+    def get_variant_type(self):
+        """Get a gdb.Type of a template argument"""
+        type_index = intptr(self.value['which_'])
+        assert type_index >= 0, 'Heap backup is not supported'
+        
+        # This is a workaround for a GDB issue
+        # https://sourceware.org/bugzilla/show_bug.cgi?id=17311. 
+        # gdb.Type.template_argument() method does not work unless variadic templates
+        # are disabled using BOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES.
+        m = BoostVariant.regex.search(self.value.type_name)
+        type_names = list(split_parameter_pack(m.group(1)))
+        stored_type_name = type_names[type_index]
+        base_type_name, qualifiers = strip_qualifiers(stored_type_name)
+        return apply_qualifiers(lookup_type(base_type_name), qualifiers), stored_type_name
