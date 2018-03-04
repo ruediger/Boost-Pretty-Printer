@@ -4,24 +4,23 @@ sudo: true
 
 env:
   matrix:
-    - boost_major=1 boost_minor=50
-    - boost_major=1 boost_minor=54
-    - boost_major=1 boost_minor=55
-    - boost_major=1 boost_minor=58
-    - boost_major=1 boost_minor=65 boost_patchlevel=1
-    - boost_major=1 boost_minor=66
-    - boost_major=1 boost_minor=50                    gdb_python2=yes
-    - boost_major=1 boost_minor=54                    gdb_python2=yes
-    - boost_major=1 boost_minor=55                    gdb_python2=yes
-    - boost_major=1 boost_minor=58                    gdb_python2=yes
-    - boost_major=1 boost_minor=65 boost_patchlevel=1 gdb_python2=yes
-    - boost_major=1 boost_minor=66                    gdb_python2=yes
+    - boost_version=1.50.0
+    - boost_version=1.54.0
+    - boost_version=1.55.0
+    - boost_version=1.58.0
+    - boost_version=1.65.1
+    - boost_version=1.66.0
+    - boost_version=1.50.0 gdb_python2=yes
+    - boost_version=1.54.0 gdb_python2=yes
+    - boost_version=1.55.0 gdb_python2=yes
+    - boost_version=1.58.0 gdb_python2=yes
+    - boost_version=1.65.1 gdb_python2=yes
+    - boost_version=1.66.0 gdb_python2=yes
 
 install: tests/install-gdb.sh $gdb_python2
 
 script:
     - mkdir build
     - cd build
-    - cmake -Dboost_major=$boost_major -Dboost_minor=$boost_minor -Dboost_patchlevel=$boost_patchlevel ..
+    - cmake -D boost_version=$boost_version ..
     - cmake --build .
-

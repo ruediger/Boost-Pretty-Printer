@@ -1,29 +1,19 @@
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 include(ExternalProject)
-
 project(Boost-Pretty-Printer LANGUAGES CXX)
 
-# Parameters passed to cmake via -D:
-# boost_major, boost_minor, boost_patchlevel - boost version
-# gdb - custom gdb path
-
-if (NOT DEFINED gdb)
-    set(gdb gdb)
-endif(NOT DEFINED gdb)
-set(python_testuite "${CMAKE_SOURCE_DIR}/tests/testsuite.py")
-set(python_interactive_source "${CMAKE_SOURCE_DIR}/tests/interactive.gdb")
-set(python_interactive_target "${CMAKE_BINARY_DIR}/interactive.gdb")
+# Script parameters
+set(gdb gdb CACHE FILEPATH "Path to gdb")
+set(boost_version CACHE STRING "Boost version as major.minor.patchlevel")
+if (NOT boost_version)
+    message(FATAL_ERROR "boost_version must be set")
+endif()
+string(REPLACE "." ";" boost_version_list ${boost_version})
+list(GET boost_version_list 0 boost_major)
+list(GET boost_version_list 1 boost_minor)
+list(GET boost_version_list 2 boost_patchlevel)
 
 # Download boost library sources
-if (NOT DEFINED boost_major)
-    message(FATAL_ERROR "You must set boost_major environment variable")
-endif()
-if (NOT DEFINED boost_minor)
-    message(FATAL_ERROR "You must set boost_minor environment variable")
-endif()
-if (NOT DEFINED boost_patchlevel)
-    set(boost_patchlevel 0)
-endif()
 set(boost_url "http://sourceforge.net/projects/boost/files/boost/${boost_major}.${boost_minor}.${boost_patchlevel}/boost_${boost_major}_${boost_minor}_${boost_patchlevel}.tar.bz2/download")
 set(boost_prefix "${CMAKE_BINARY_DIR}/boost-${boost_major}.${boost_minor}.${boost_patchlevel}")
 ExternalProject_Add(boost
@@ -42,6 +32,11 @@ add_compile_options(
 add_definitions(-DBOOST_INTRUSIVE_VARIADIC_TEMPLATES)
 add_executable(bin tests/testsuite.cpp)
 add_dependencies(bin boost)
+
+# Python testsuite part
+set(python_testuite "${CMAKE_SOURCE_DIR}/tests/testsuite.py")
+set(python_interactive_source "${CMAKE_SOURCE_DIR}/tests/interactive.gdb")
+set(python_interactive_target "${CMAKE_BINARY_DIR}/interactive.gdb")
 
 add_custom_target(check ALL
         ${CMAKE_COMMAND} -E env "PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}"
