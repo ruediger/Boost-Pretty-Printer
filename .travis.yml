@@ -17,7 +17,11 @@ env:
     - boost_major=1 boost_minor=65 boost_patchlevel=1 gdb_python2=yes
     - boost_major=1 boost_minor=66                    gdb_python2=yes
 
-before_install:
-  - tests/install-gdb.sh $gdb_python2
+install: tests/install-gdb.sh $gdb_python2
 
-script: cmake -Dboost_major=$boost_major -Dboost_minor=$boost_minor -Dboost_patchlevel=$boost_patchlevel
+script:
+    - mkdir build
+    - cd build
+    - cmake -Dboost_major=$boost_major -Dboost_minor=$boost_minor -Dboost_patchlevel=$boost_patchlevel ..
+    - cmake --build .
+

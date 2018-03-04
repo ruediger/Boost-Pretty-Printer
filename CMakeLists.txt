@@ -43,7 +43,7 @@ add_definitions(-DBOOST_INTRUSIVE_VARIADIC_TEMPLATES)
 add_executable(bin tests/testsuite.cpp)
 add_dependencies(bin boost)
 
-add_custom_target(check
+add_custom_target(check ALL
         ${CMAKE_COMMAND} -E env "PYTHONPATH=$ENV{PYTHONPATH}:${CMAKE_SOURCE_DIR}"
             "${gdb}" --nx --batch -x "${python_testuite}" "$<TARGET_FILE:bin>"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
