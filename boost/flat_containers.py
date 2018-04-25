@@ -197,8 +197,10 @@ class BoostContainerVectorIterator:
         # 1.50 − 1.54
         'boost::container::container_detail::vector_iterator',
         'boost::container::container_detail::vector_const_iterator',
-        # 1.55+
-        'boost::container::container_detail::vec_iterator']
+        # 1.55-1.66
+        'boost::container::container_detail::vec_iterator',
+        # 1.67+
+        'boost::container::vec_iterator']
 
     def __init__(self, value):
         self.val = value
