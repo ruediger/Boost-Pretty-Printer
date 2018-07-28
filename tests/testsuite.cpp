@@ -34,6 +34,13 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/logic/tribool.hpp>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/member.hpp>
+
 unsigned const boost_version = BOOST_VERSION;
 
 namespace bi = boost::intrusive;
@@ -790,6 +797,88 @@ break_here:
     dummy_function();
 }
 
+// boost::multi_index
+
+namespace mi = boost::multi_index;
+
+struct mi_tag_sequenced {};
+struct mi_tag_ordered {};
+struct mi_tag_hashed {};
+
+using sequenced_first =  mi::multi_index_container<
+	int,
+	mi::indexed_by<
+		mi::sequenced<
+			mi::tag<mi_tag_sequenced>
+		>,
+		mi::ordered_unique<
+			mi::tag<mi_tag_ordered>,
+			mi::identity<int>
+		>,
+		mi::hashed_unique<
+			mi::tag<mi_tag_hashed>,
+			mi::identity<int>
+		>
+	>
+>;
+
+using ordered_first = mi::multi_index_container<
+	int,
+	mi::indexed_by<
+		mi::ordered_unique<
+			mi::tag<mi_tag_ordered>,
+			mi::identity<int>
+		>,
+		mi::hashed_unique<
+			mi::tag<mi_tag_hashed>,
+			mi::identity<int>
+		>,
+		mi::sequenced<
+			mi::tag<mi_tag_sequenced>
+		>
+	>
+>;
+
+using hashed_first = mi::multi_index_container<
+	int,
+	mi::indexed_by<
+		mi::hashed_unique<
+			mi::tag<mi_tag_hashed>,
+			mi::identity<int>
+		>,
+		mi::sequenced<
+			mi::tag<mi_tag_sequenced>
+		>,
+		mi::ordered_unique<
+			mi::tag<mi_tag_ordered>,
+			mi::identity<int>
+		>
+	>
+>;
+
+
+void test_multi_index()
+{
+	sequenced_first sf_empty;
+	ordered_first of_empty;
+	hashed_first hf_empty;
+
+	sequenced_first sf_two;
+	sf_two.push_back(1);
+	sf_two.push_back(2);
+
+	ordered_first of_two;
+	of_two.insert(1);
+	of_two.insert(2);
+
+	hashed_first hf_two;
+	hf_two.insert(1);
+	hf_two.insert(2);
+
+break_here:
+    dummy_function();
+}
+
 int main()
 {
 	test_iterator_range();
@@ -825,6 +914,8 @@ int main()
 	test_date_time();
 	test_tribool();
 	test_duration();
+
+	test_multi_index();
 
 	return EXIT_SUCCESS;
 }

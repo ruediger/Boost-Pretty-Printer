@@ -149,6 +149,8 @@ class Boost_Multi_Index:
         return (self_type.print_not_supported
                 or v.indexes[v.idx] == 'boost::multi_index::ordered_unique'
                 or v.indexes[v.idx] == 'boost::multi_index::ordered_non_unique'
+                or v.indexes[v.idx] == 'boost::multi_index::hashed_unique'
+                or v.indexes[v.idx] == 'boost::multi_index::hashed_non_unique'
                 or v.indexes[v.idx] == 'boost::multi_index::sequenced')
 
     @staticmethod
@@ -217,6 +219,10 @@ class Boost_Multi_Index:
 
         self.head_index_ptr = intptr(head_node.address) + self.index_offset
         #message('head_index_ptr: ' + hex(self.head_index_ptr))
+
+        # offset for hashed_index
+        self.index_offset_for_hash = head_node.type.sizeof - (v.idx + 1) * ptr_size * 2
+        self.head_index_ptr_for_hash = intptr(head_node.address) + self.index_offset_for_hash
 
     def empty_cont(self):
         return self.node_count == 0
@@ -302,6 +308,36 @@ class Boost_Multi_Index:
         def next(self):
             return self.__next__()
 
+    class hashed_iterator:
+        @staticmethod
+        def get_prev_ptr(node_ptr):
+            return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16)
+
+        def __init__(self, elem_type, index_offset, begin, end):
+            self.elem_type = elem_type
+            self.index_offset = index_offset
+            self.crt = begin
+            self.end = end
+            self.count = 0
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            if self.crt == self.end:
+                raise StopIteration
+            crt = self.crt
+            self.crt = self.get_prev_ptr(self.crt)
+            count = self.count
+            self.count = self.count + 1
+            val_ptr = Boost_Multi_Index.get_val_ptr(crt, self.index_offset)
+            return ('[%s]' % hex(int(val_ptr)),
+                    str(parse_and_eval('*(' + str(self.elem_type) + '*)'
+                                       + str(val_ptr))))
+
+        def next(self):
+            return self.__next__()
+
     class sequenced_iterator:
         @staticmethod
         def get_prev_ptr(node_ptr):
@@ -346,6 +382,13 @@ class Boost_Multi_Index:
                 self.index_offset,
                 self.ordered_iterator.get_left_ptr(self.head_index_ptr),
                 self.ordered_iterator.get_right_ptr(self.head_index_ptr))
+        elif (self.index_type == 'boost::multi_index::hashed_unique'
+            or self.index_type == 'boost::multi_index::hashed_non_unique'):
+            return self.hashed_iterator(
+                self.elem_type,
+                self.index_offset_for_hash,
+                self.hashed_iterator.get_prev_ptr(self.head_index_ptr_for_hash),
+                self.head_index_ptr_for_hash)
         elif self.index_type == 'boost::multi_index::sequenced':
             return self.sequenced_iterator(
                 self.elem_type,
