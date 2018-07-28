@@ -805,7 +805,7 @@ struct mi_tag_sequenced {};
 struct mi_tag_ordered {};
 struct mi_tag_hashed {};
 
-typedef mi::multi_index_container<
+using sequenced_first =  mi::multi_index_container<
 	int,
 	mi::indexed_by<
 		mi::sequenced<
@@ -820,9 +820,9 @@ typedef mi::multi_index_container<
 			mi::identity<int>
 		>
 	>
-> sequenced_first;
+>;
 
-typedef mi::multi_index_container<
+using ordered_first = mi::multi_index_container<
 	int,
 	mi::indexed_by<
 		mi::ordered_unique<
@@ -837,9 +837,9 @@ typedef mi::multi_index_container<
 			mi::tag<mi_tag_sequenced>
 		>
 	>
-> ordered_first;
+>;
 
-typedef mi::multi_index_container<
+using hashed_first = mi::multi_index_container<
 	int,
 	mi::indexed_by<
 		mi::hashed_unique<
@@ -854,7 +854,7 @@ typedef mi::multi_index_container<
 			mi::identity<int>
 		>
 	>
-> hashed_first;
+>;
 
 
 void test_multi_index()

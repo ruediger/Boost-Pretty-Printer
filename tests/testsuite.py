@@ -73,11 +73,6 @@ def as_map(children_values, key_func=to_python_value, value_func=to_python_value
     it = iter(children_values)
     return [(key_func(key), value_func(value)) for ((key_text, key), (value_text, value)) in zip(it, it)]
 
-def as_multi_index(children_values):
-    """Convert children values conforming to gdb pretty-printer 'array' protocol to a list"""
-    return [int(value) for text, value in children_values]
-
-
 class PrettyPrinterTest(unittest.TestCase):
     """Base class for all printer tests"""
     def get_printer_result(self, c_variable_name):
@@ -1029,34 +1024,34 @@ class MultiIndexTest(PrettyPrinterTest):
     def test_sequened_first_empty(self):
         string, children, display_hint = self.get_printer_result('sf_empty')
         self.assertTrue(string.startswith('empty'))
-        self.assertEqual(as_multi_index(children), [])
+        self.assertEqual(as_array(children, int), [])
         self.assertIsNone(display_hint)
 
     def test_ordered_first_empty(self):
         string, children, display_hint = self.get_printer_result('of_empty')
         self.assertTrue(string.startswith('empty'))
-        self.assertEqual(as_multi_index(children), [])
+        self.assertEqual(as_array(children, int), [])
         self.assertIsNone(display_hint)
 
     def test_hashed_first_empty(self):
         string, children, display_hint = self.get_printer_result('hf_empty')
         self.assertTrue(string.startswith('empty'))
-        self.assertEqual(as_multi_index(children), [])
+        self.assertEqual(as_array(children, int), [])
         self.assertIsNone(display_hint)
 
     def test_sequened_first(self):
         string, children, display_hint = self.get_printer_result('sf_two')
-        self.assertEqual(as_multi_index(children), [ 1, 2 ])
+        self.assertEqual(as_array(children, int), [ 1, 2 ])
         self.assertIsNone(display_hint)
 
     def test_ordered_first(self):
         string, children, display_hint = self.get_printer_result('of_two')
-        self.assertEqual(as_multi_index(children), [ 1, 2 ])
+        self.assertEqual(as_array(children, int), [ 1, 2 ])
         self.assertIsNone(display_hint)
 
     def test_hashed_first(self):
         string, children, display_hint = self.get_printer_result('hf_two')
-        self.assertEqual(as_multi_index(children), [ 2, 1 ]) # unordered
+        self.assertEqual(as_array(children, int), [ 2, 1 ]) # unordered
         self.assertIsNone(display_hint)
 
 
