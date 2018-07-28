@@ -221,7 +221,7 @@ class Boost_Multi_Index:
         #message('head_index_ptr: ' + hex(self.head_index_ptr))
 
         # offset for hashed_index
-        self.index_offset_for_hash = head_node.type.sizeof - (v.idx + 1) * 0x10
+        self.index_offset_for_hash = head_node.type.sizeof - (v.idx + 1) * ptr_size * 2
         self.head_index_ptr_for_hash = intptr(head_node.address) + self.index_offset_for_hash
 
     def empty_cont(self):
