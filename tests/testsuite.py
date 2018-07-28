@@ -1020,6 +1020,7 @@ class DurationTest(PrettyPrinterTest):
         self.assertEqual(children, None)
         self.assertEqual(display_hint, None)
 
+@unittest.skipIf(boost_version < (1, 56, 0), 'implemented in boost 1.56 and later')
 class MultiIndexTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
