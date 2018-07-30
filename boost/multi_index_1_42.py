@@ -313,12 +313,17 @@ class Boost_Multi_Index:
         def get_prev_ptr(node_ptr):
             return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ')')), 16)
 
+        @staticmethod
+        def get_next_ptr(node_ptr):
+            return intptr(str(parse_and_eval('*((void**)' + str(node_ptr) + ' + 1)')), 16)
+
         def __init__(self, elem_type, index_offset, begin, end):
             self.elem_type = elem_type
             self.index_offset = index_offset
             self.crt = begin
             self.end = end
             self.count = 0
+            self.trace = set()
 
         def __iter__(self):
             return self
@@ -327,7 +332,12 @@ class Boost_Multi_Index:
             if self.crt == self.end:
                 raise StopIteration
             crt = self.crt
+            self.trace.add(crt)
             self.crt = self.get_prev_ptr(self.crt)
+            if self.crt in self.trace:
+                self.trace.clear()
+                self.crt = self.get_prev_ptr(self.crt)
+                self.crt = self.get_next_ptr(self.crt)
             count = self.count
             self.count = self.count + 1
             val_ptr = Boost_Multi_Index.get_val_ptr(crt, self.index_offset)
