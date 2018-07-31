@@ -856,6 +856,23 @@ using hashed_first = mi::multi_index_container<
 	>
 >;
 
+using hashed_first_non_unique = mi::multi_index_container<
+	int,
+	mi::indexed_by<
+		mi::hashed_non_unique<
+			mi::tag<mi_tag_hashed>,
+			mi::identity<int>
+		>,
+		mi::sequenced<
+			mi::tag<mi_tag_sequenced>
+		>,
+		mi::ordered_non_unique<
+			mi::tag<mi_tag_ordered>,
+			mi::identity<int>
+		>
+	>
+>;
+
 
 void test_multi_index()
 {
@@ -875,8 +892,20 @@ void test_multi_index()
 	hf_two.insert(1);
 	hf_two.insert(2);
 
-break_here:
-    dummy_function();
+	hashed_first_non_unique hf_over_two_same_value;
+	hf_over_two_same_value.insert(1);
+	hf_over_two_same_value.insert(1);
+	hf_over_two_same_value.insert(1);
+	hf_over_two_same_value.insert(2);
+	hf_over_two_same_value.insert(2);
+	hf_over_two_same_value.insert(2);
+	hf_over_two_same_value.insert(2);
+	hf_over_two_same_value.insert(3);
+	hf_over_two_same_value.insert(3);
+	hf_over_two_same_value.insert(4);
+
+ break_here:
+	dummy_function();
 }
 
 int main()

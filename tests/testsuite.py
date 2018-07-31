@@ -1051,7 +1051,12 @@ class MultiIndexTest(PrettyPrinterTest):
 
     def test_hashed_first(self):
         string, children, display_hint = self.get_printer_result('hf_two')
-        self.assertEqual(as_array(children, int), [ 2, 1 ]) # unordered
+        self.assertEqual(sorted(as_array(children, int)), [ 1, 2 ]) # unordered
+        self.assertIsNone(display_hint)
+
+    def test_hashed_first_over2_same_value(self):
+        string, children, display_hint = self.get_printer_result('hf_over_two_same_value')
+        self.assertEqual(sorted(as_array(children, int)), [ 1, 1, 1, 2, 2, 2, 2, 3, 3, 4]) # unordered
         self.assertIsNone(display_hint)
 
 
