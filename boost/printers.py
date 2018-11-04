@@ -393,6 +393,32 @@ class BoostSmallVectorBase:
 
 
 @add_printer
+class BoostStaticVector:
+    """Pretty Printer for boost::container::static_vector"""
+    printer_name = 'boost::container::static_vector'
+    min_supported_version = (1, 58, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = 'boost::container::static_vector'
+
+    def __init__(self, value):
+        self.value = value
+
+    def to_string(self):
+        return 'size={}'.format(self.value['m_holder']['m_size'])
+
+    def children(self):
+        element_type = self.value.type.template_argument(0)
+        data_storage = self.value['m_holder']['storage']
+        elements = data_storage.address.cast(element_type.pointer())
+        size = int(self.value['m_holder']['m_size'])
+        for idx in range(size):
+            yield '[{}]'.format(idx), elements[idx]
+
+    def display_hint(self):
+        return 'array'
+
+
+@add_printer
 class BoostUuid:
     "Pretty Printer for boost::uuids::uuid (Boost.Uuid)"
     printer_name = 'boost::uuids::uuid'

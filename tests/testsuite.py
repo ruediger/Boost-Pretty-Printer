@@ -381,6 +381,37 @@ class SmallVectorTest(PrettyPrinterTest):
         self.assertEqual(display_hint, None)
 
 
+@unittest.skipIf(boost_version < (1, 58), 'Printer was implemented for boost 1.58 and later versions')
+class StaticVectorTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_static_vector')
+
+    def test_zero_size_vector(self):
+        string, children, display_hint = self.get_printer_result('zero_size_vector')
+        self.assertEqual(string, 'size=0')
+        self.assertEqual(as_array(children), [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_static_vector(self):
+        string, children, display_hint = self.get_printer_result('static_vector')
+        self.assertEqual(string, 'size=2')
+        self.assertEqual(as_array(children), [1, 2])
+        self.assertEqual(display_hint, 'array')
+
+    def test_empty_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_iter')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_iter(self):
+        string, children, display_hint = self.get_printer_result('iter')
+        self.assertEqual(string, None)
+        self.assertEqual(as_struct(children), {'value': 1})
+        self.assertEqual(display_hint, None)
+
+
 class VariantTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):

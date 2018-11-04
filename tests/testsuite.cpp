@@ -21,6 +21,9 @@
 #if BOOST_VERSION >= 105800
 #include <boost/container/small_vector.hpp>
 #endif
+#if BOOST_VERSION >= 105400
+#include <boost/container/static_vector.hpp>
+#endif
 
 #include <boost/smart_ptr.hpp>
 #if BOOST_VERSION >= 105500
@@ -802,6 +805,19 @@ break_here:
 	dummy_function();
 }
 
+void test_static_vector()
+{
+#if BOOST_VERSION >= 105400
+	boost::container::static_vector<int, 0> zero_size_vector;
+	boost::container::static_vector<int, 3> static_vector = {1, 2};
+
+	auto iter = static_vector.begin();
+	decltype(iter) uninitialized_iter;
+#endif
+break_here:
+	dummy_function();
+}
+
 void test_duration()
 {
     boost::posix_time::time_duration empty_duration;
@@ -937,6 +953,7 @@ int main()
 	test_unordered_set();
 	test_unordered_multiset();
 	test_small_vector();
+	test_static_vector();
 
 	test_intrusive_set_base();
 	test_intrusive_rbtree_set_member();
