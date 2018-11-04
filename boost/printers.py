@@ -337,7 +337,60 @@ class BoostArray:
 
     def display_hint(self):
         return 'array'
- 
+
+
+@add_printer
+class BoostSmallVector:
+    """Pretty Printer for boost::container::small_vector"""
+    printer_name = 'boost::container::small_vector'
+    min_supported_version = (1, 58, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = 'boost::container::small_vector'
+
+    def __init__(self, value):
+        self.value = value
+
+    def to_string(self):
+        m_holder = self.value['m_holder']
+        static_storage_capacity = int(self.value.type.template_argument(1))
+        capacity = max(static_storage_capacity, int(m_holder['m_capacity']))
+        return 'size={} capacity={}'.format(m_holder['m_size'], capacity)
+
+    def children(self):
+        m_holder = self.value['m_holder']
+        size = int(m_holder['m_size'])
+        for idx in range(size):
+            yield '[{}]'.format(idx), m_holder['m_start'][idx]
+
+    def display_hint(self):
+        return 'array'
+
+
+@add_printer
+class BoostSmallVectorBase:
+    """Pretty Printer for boost::container::small_vector_base"""
+    printer_name = 'boost::container::small_vector_base'
+    min_supported_version = (1, 58, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = 'boost::container::small_vector_base'
+
+    def __init__(self, value):
+        self.value = value
+
+    def to_string(self):
+        # The size of a static storage is not known, which means the capacity can not be printed
+        m_holder = self.value['m_holder']
+        return 'size={}'.format(m_holder['m_size'])
+
+    def children(self):
+        m_holder = self.value['m_holder']
+        size = int(m_holder['m_size'])
+        for idx in range(size):
+            yield '[{}]'.format(idx), m_holder['m_start'][idx]
+
+    def display_hint(self):
+        return 'array'
+
 
 @add_printer
 class BoostUuid:

@@ -18,6 +18,9 @@
 #include <boost/intrusive/sg_set.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
+#if BOOST_VERSION >= 105800
+#include <boost/container/small_vector.hpp>
+#endif
 
 #include <boost/smart_ptr.hpp>
 #if BOOST_VERSION >= 105500
@@ -785,6 +788,20 @@ break_here:
 	dummy_function();
 }
 
+void test_small_vector()
+{
+#if BOOST_VERSION >= 105800
+	boost::container::small_vector<int, 3> small_vector_1 = {1, 2};
+	boost::container::small_vector<int, 3> small_vector_2 = {1, 2, 3, 4, 5};
+	auto& as_base_vector = static_cast<boost::container::small_vector_base<int>&>(small_vector_1);
+
+	auto iter = small_vector_1.begin();
+	decltype(iter) uninitialized_iter;
+#endif
+break_here:
+	dummy_function();
+}
+
 void test_duration()
 {
     boost::posix_time::time_duration empty_duration;
@@ -919,6 +936,7 @@ int main()
 	test_unordered_multimap();
 	test_unordered_set();
 	test_unordered_multiset();
+	test_small_vector();
 
 	test_intrusive_set_base();
 	test_intrusive_rbtree_set_member();

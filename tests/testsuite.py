@@ -344,6 +344,43 @@ class ArrayTest(PrettyPrinterTest):
         self.assertEqual(display_hint, 'array')
 
 
+@unittest.skipIf(boost_version < (1, 58), 'implemented in boost 1.58 and later')
+class SmallVectorTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_small_vector')
+
+    def test_small_vector_1(self):
+        string, children, display_hint = self.get_printer_result('small_vector_1')
+        self.assertEqual(string, 'size=2 capacity=3')
+        self.assertEqual(as_array(children), [1, 2])
+        self.assertEqual(display_hint, 'array')
+
+    def test_small_vector_2(self):
+        string, children, display_hint = self.get_printer_result('small_vector_2')
+        self.assertEqual(string, 'size=5 capacity=5')
+        self.assertEqual(as_array(children), [1, 2, 3, 4, 5])
+        self.assertEqual(display_hint, 'array')
+
+    def test_small_vector_base(self):
+        string, children, display_hint = self.get_printer_result('as_base_vector')
+        self.assertEqual(string, 'size=2')
+        self.assertEqual(as_array(children), [1, 2])
+        self.assertEqual(display_hint, 'array')
+
+    def test_empty_iter(self):
+        string, children, display_hint = self.get_printer_result('uninitialized_iter')
+        self.assertEqual(string, None)
+        self.assertEqual(children, [])
+        self.assertEqual(display_hint, None)
+
+    def test_iter(self):
+        string, children, display_hint = self.get_printer_result('iter')
+        self.assertEqual(string, None)
+        self.assertEqual(as_struct(children), {'value': 1})
+        self.assertEqual(display_hint, None)
+
+
 class VariantTest(PrettyPrinterTest):
     @classmethod
     def setUpClass(cls):
