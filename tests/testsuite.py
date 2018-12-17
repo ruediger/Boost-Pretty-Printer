@@ -37,6 +37,9 @@ def execute_cpp_function(function_name):
 
 def to_python_value(value):
     """Convert a gdb.Value to its python equivalent"""
+    if not isinstance(value, gdb.Value):
+        return value
+
     type = value.type
     is_string = type.code in (gdb.TYPE_CODE_ARRAY, gdb.TYPE_CODE_PTR) \
         and type.target().code == gdb.TYPE_CODE_INT and type.target().sizeof == 1
@@ -410,6 +413,28 @@ class StaticVectorTest(PrettyPrinterTest):
         self.assertEqual(string, None)
         self.assertEqual(as_struct(children), {'value': 1})
         self.assertEqual(display_hint, None)
+
+
+class DynamicBitsetTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_dynamic_bitset')
+
+    def test_empty_bitset(self):
+        string, children, display_hint = self.get_printer_result('empty_bitset')
+        self.assertEqual(string, 'size=0')
+        self.assertEqual(as_array(children), [])
+        self.assertEqual(display_hint, 'array')
+
+    def test_big_bitset(self):
+        string, children, display_hint = self.get_printer_result('bitset')
+        self.assertEqual(string, 'size=130')
+        expected = [0] * 130
+        expected[0] = 1
+        expected[2] = 1
+        expected[129] = 1
+        self.assertEqual(as_array(children), expected)
+        self.assertEqual(display_hint, 'array')
 
 
 class VariantTest(PrettyPrinterTest):

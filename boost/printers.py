@@ -419,6 +419,38 @@ class BoostStaticVector:
 
 
 @add_printer
+class BoostDynamicBitset:
+    printer_name = 'boost::dynamic_bitset'
+    min_supported_version = (1, 50, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = 'boost::dynamic_bitset'
+
+    def __init__(self, value):
+        self.value = value
+
+    def to_string(self):
+        return 'size={}'.format(self.value['m_num_bits'])
+
+    def children(self):
+        num_bits = int(self.value['m_num_bits'])
+        block_size = int(self.value['bits_per_block'])
+
+        data_vis = gdb.default_visualizer(self.value['m_bits'])
+        if data_vis is None:
+            return
+        data = [int(value) for index_str, value in data_vis.children()]
+
+        for block_idx, block in enumerate(data):
+            bits_in_block = num_bits % block_size if block_idx == len(data) - 1 else block_size
+            for bit_idx in range(bits_in_block):
+                bit_value = 1 if block & (1 << bit_idx) else 0
+                yield '[{}]'.format(block_idx * block_size + bit_idx), bit_value
+
+    def display_hint(self):
+        return 'array'
+
+
+@add_printer
 class BoostUuid:
     "Pretty Printer for boost::uuids::uuid (Boost.Uuid)"
     printer_name = 'boost::uuids::uuid'

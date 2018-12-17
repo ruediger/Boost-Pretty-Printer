@@ -24,6 +24,7 @@
 #if BOOST_VERSION >= 105400
 #include <boost/container/static_vector.hpp>
 #endif
+#include <boost/dynamic_bitset.hpp>
 
 #include <boost/smart_ptr.hpp>
 #if BOOST_VERSION >= 105500
@@ -818,6 +819,17 @@ break_here:
 	dummy_function();
 }
 
+void test_dynamic_bitset()
+{
+	boost::dynamic_bitset<> empty_bitset;
+	boost::dynamic_bitset<> bitset(130);
+	bitset[0] = true;
+	bitset[2] = true;
+	bitset[129] = true;
+break_here:
+	dummy_function();
+}
+
 void test_duration()
 {
     boost::posix_time::time_duration empty_duration;
@@ -954,6 +966,7 @@ int main()
 	test_unordered_multiset();
 	test_small_vector();
 	test_static_vector();
+	test_dynamic_bitset();
 
 	test_intrusive_set_base();
 	test_intrusive_rbtree_set_member();
