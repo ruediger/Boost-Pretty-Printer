@@ -34,6 +34,9 @@ def download_boost(boost_ver: tuple):
     if not os.path.exists(boost_dir):
         print('Unpacking', archive_name)
         shutil.unpack_archive(archive_name, tmp_dir)
+    print('Building')
+    build_cmd = 'cd %s;./bootstrap.sh && ./b2 headers && ./b2 --with-chrono --with-date_time --with-thread --with-filesystem --with-wave' % boost_dir
+    subprocess.call(build_cmd, shell=True)
     return boost_dir
 
 
@@ -48,7 +51,9 @@ def build_cpp(source_file: str, binary_file: str, boost_dir: str):
         flags = '''-std=c++11 -O0 -g3 -ggdb -fno-eliminate-unused-debug-types -Wall -Wextra -Wno-unused-label
                   -Wno-unused-variable -Wno-unused-but-set-variable -pedantic
                   -DBOOST_INTRUSIVE_VARIADIC_TEMPLATES {} {} {}'''.format(cppflags, cxxflags, ldflags)
-        args = [cxx] + shlex.split(flags) + ['-isystem', boost_dir, '-o', binary_file, source_file]
+        args = [cxx] + shlex.split(flags) + (
+            ['-isystem', boost_dir, '-o', binary_file, source_file] +
+            ['-L', '%s/stage/lib' % boost_dir, '-Wl,-R', '%s/stage/lib' % boost_dir] )
         subprocess.check_call(args)
 
 
