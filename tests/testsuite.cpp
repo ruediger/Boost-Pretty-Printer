@@ -48,6 +48,12 @@
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/member.hpp>
 
+#include <boost/wave.hpp>
+#include <boost/wave/token_ids.hpp>
+#include <boost/wave/cpplexer/cpp_lex_token.hpp>
+#include <boost/wave/cpplexer/cpp_lex_iterator.hpp>
+#include <boost/wave/cpplexer/re2clex/cpp_re2c_lexer.hpp>
+
 unsigned const boost_version = BOOST_VERSION;
 
 namespace bi = boost::intrusive;
@@ -959,6 +965,37 @@ void test_multi_index()
 	dummy_function();
 }
 
+void test_wave()
+{
+    // source text
+    std::string cppstr =
+        "#define OSTR \"hello world\"\n"
+        "static char const * data = OSTR;\n";
+
+    std::string::const_iterator cbeg = cppstr.begin();
+    std::string::const_iterator cend = cppstr.end();
+
+    using namespace boost::wave;
+    typedef cpplexer::lex_token<> cpplexer_token_t;
+    typedef cpplexer::lex_iterator<cpplexer_token_t> cpplexer_iterator_t;
+
+    using context_type = context<std::string::const_iterator, cpplexer_iterator_t,
+                                 iteration_context_policies::load_file_to_string>;
+
+    context_type ctx(cbeg, cend, "<Unknown>");
+
+    // consume a few tokens
+    context_type::token_type tok;
+    context_type::iterator_type tok_it = ctx.begin();
+    for (int i = 0; i < 15; ++i)
+        tok = *tok_it++;
+
+break_here:
+
+    dummy_function();
+
+}
+
 int main()
 {
 	test_iterator_range();
@@ -999,6 +1036,8 @@ int main()
 	test_duration();
 
 	test_multi_index();
+
+        test_wave();
 
 	return EXIT_SUCCESS;
 }

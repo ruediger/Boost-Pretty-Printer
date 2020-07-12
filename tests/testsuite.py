@@ -1155,6 +1155,19 @@ class MultiIndexTest(PrettyPrinterTest):
         self.assertIsNone(display_hint)
 
 
+@unittest.skipIf(boost_version < (1, 71), 'implemented in boost 1.71 and later')
+class WaveTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_wave')
+
+    def test_all(self):
+        # printing a token also tests flex_string and file_position
+        string, children, display_hint = self.get_printer_result('tok')
+        self.assertEqual(string, 'boost::wave::T_IDENTIFIER : "data" ("<Unknown>" 2:21)')
+        self.assertIsNone(children)
+        self.assertIsNone(display_hint)
+
 # TODO: More intrusive tests:
 # 1. Non-raw pointers
 # 2. Custom node traits
