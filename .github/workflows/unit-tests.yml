@@ -1,13 +1,16 @@
 name: Unit tests
 on: [push, pull_request]
+strategy:
+  matrix:
+    boost_version: [1.69.0, 1.70.0]
 jobs:
-    boost_1_70_0:
+    unit_tests:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
             - uses: actions/cache@v2
               with:
-                key: boost_1_70_0
+                key: boost-${{ matrix.boost_version }}
                 path: tests/tmp/boost_*.tar.bz2
             - run: sudo apt-get install --yes gdb
-            - run: python3 tests/run -c -b 1.70.0
+            - run: python3 tests/run -c -b ${{ matrix.boost_version }}
