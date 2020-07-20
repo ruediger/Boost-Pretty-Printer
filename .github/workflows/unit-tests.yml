@@ -1,0 +1,8 @@
+name: Unit tests
+on: [push, pull_request]
+jobs:
+    boost_1_70_0:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - run: python3 tests/run -c -b 1.70.0
