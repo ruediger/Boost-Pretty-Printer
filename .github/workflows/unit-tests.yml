@@ -5,6 +5,9 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
-            - run: |
-                sudo apt install --yes gdb
-                python3 tests/run -c -b 1.70.0
+            - uses: actions/cache@v2
+              with:
+                key: boost_1_70_0
+                path: tests/tmp/boost_*.tar.bz2
+            - run: sudo apt-get install --yes gdb
+            - run: python3 tests/run -c -b 1.70.0
