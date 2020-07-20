@@ -5,7 +5,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                boost_version: [1.50, 1.54, 1.55, 1.58, 1.65.1, 1.66, 1.69, 1.70]
+                boost_version: [1.50.0, 1.54.0, 1.55.0, 1.58.0, 1.65.1, 1.66.0, 1.69.0, 1.70.0]
         steps:
             - uses: actions/checkout@v2
             - uses: actions/cache@v2
