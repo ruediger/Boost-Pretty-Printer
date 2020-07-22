@@ -315,6 +315,7 @@ void test_intrusive_set_base()
 	auto iter_1 = std::next(bset_1.begin());
 	auto iter_2 = std::next(bset_2.begin());
 break_here:
+	dummy_function();
 	bset_1.clear();
 	bset_2.clear();
 }
@@ -361,6 +362,7 @@ void test_intrusive_member_set()
 	auto iter2 = member_set_2.begin();
 
 break_here:
+	dummy_function();
 	member_set_1.clear();
 	member_set_2.clear();
 }
@@ -405,6 +407,7 @@ void test_intrusive_rbtree_set_member()
 	auto iter1 = member_set_1.begin();
 	auto iter2 = member_set_2.begin();
 break_here:
+	dummy_function();
 	member_set_1.clear();
 	member_set_2.clear();
 }
@@ -448,6 +451,7 @@ void test_intrusive_avl_set_member()
 	auto iter1 = member_set_1.begin();
 	auto iter2 = member_set_2.begin();
 break_here:
+	dummy_function();
 	member_set_1.clear();
 	member_set_2.clear();
 }
@@ -491,6 +495,7 @@ void test_intrusive_splay_set_member()
 	auto iter1 = member_set_1.begin();
 	auto iter2 = member_set_2.begin();
 break_here:
+	dummy_function();
 	member_set_1.clear();
 	member_set_2.clear();
 }
@@ -534,6 +539,7 @@ void test_intrusive_sg_set_member()
 	auto iter1 = member_set_1.begin();
 	auto iter2 = member_set_2.begin();
 break_here:
+	dummy_function();
 	member_set_1.clear();
 	member_set_2.clear();
 }

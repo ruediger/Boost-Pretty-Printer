@@ -30,9 +30,11 @@ def execute_cpp_function(function_name):
     breakpoint_location = '{}:break_here'.format(function_name)
     bp = gdb.Breakpoint(breakpoint_location, internal=True)
     bp.silent = True
+    bp.commands = 'advance dummy_function'
     gdb.execute('run')
     assert bp.hit_count == 1
     bp.delete()
+    gdb.execute('finish')   # exit dummy_function, return to test function
 
 
 def to_python_value(value):
