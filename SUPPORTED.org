@@ -23,6 +23,9 @@
 | =boost::multi_index_container=          | 1.42    | =multi_index_1_42= | yes    | Matei David (mateidavid)        | only ordered&sequenced indexes |
 | =boost::intrusive::*list=               | 1.55    | =intrusive_1_55=   | yes    | "                               | works with 1.57                |
 | =boost::intrusive::*set=                | "       | "                  |        | "                               |                                |
+| =boost::wave::util::flex_string=        | 1.71    | =wave_1_71=        | yes    | Jeff Trull                      |                                |
+| =boost::wave::util::file_position=      | "       | "                  | yes    | "                               |                                |
+| =boost::wave::cpplexer::lex_token=      | "       | "                  | yes    | "                               |                                |
 
 ***** Notes
 

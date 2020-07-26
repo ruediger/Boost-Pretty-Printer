@@ -43,3 +43,4 @@ from . import multi_index_1_42
 from .utils import register_printers, add_trivial_printer, options, last_supported_boost_version
 from . import datetime
 from . import variant
+from . import wave_1_71
