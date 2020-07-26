@@ -982,6 +982,8 @@ void test_wave()
     using context_type = context<std::string::const_iterator, cpplexer_iterator_t,
                                  iteration_context_policies::load_file_to_string>;
 
+    boost::wave::util::flex_string<char> flex_string("flex string");
+
     context_type ctx(cbeg, cend, "<Unknown>");
 
     // consume a few tokens

@@ -1161,12 +1161,20 @@ class WaveTest(PrettyPrinterTest):
     def setUpClass(cls):
         execute_cpp_function('test_wave')
 
-    def test_all(self):
+    def test_flex_string(self):
+        # printing a token also tests flex_string and file_position
+        string, children, display_hint = self.get_printer_result('flex_string')
+        self.assertEqual(string, 'flex string')
+        self.assertIsNone(children)
+        self.assertEqual(display_hint, 'string')
+
+    def test_token(self):
         # printing a token also tests flex_string and file_position
         string, children, display_hint = self.get_printer_result('tok')
         self.assertEqual(string, 'boost::wave::T_IDENTIFIER : "data" ("<Unknown>" 2:21)')
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
+
 
 # TODO: More intrusive tests:
 # 1. Non-raw pointers
