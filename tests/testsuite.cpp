@@ -67,7 +67,7 @@ void test_iterator_range()
 	char const text[] = "hello dolly!";
 	boost::iterator_range<char const*> empty_range;
 	boost::iterator_range<char const*> char_range(std::begin(text), std::end(text));
-break_here:
+
 	dummy_function();
 }
 
@@ -78,7 +78,7 @@ void test_optional()
 	// Something is wrong?!
 	//char const text[] = "hello dolly!";
 	//boost::optional<char const*> dolly(text);
-break_here:
+
 	dummy_function();
 }
 
@@ -86,7 +86,7 @@ void test_reference_wrapper()
 {
 	int x = 42;
 	boost::reference_wrapper<int> int_wrapper(x);
-break_here:
+
 	dummy_function();
 }
 
@@ -95,7 +95,7 @@ void test_tribool()
 	boost::logic::tribool val_false;
 	boost::logic::tribool val_true(true);
 	boost::logic::tribool val_indeterminate(boost::logic::indeterminate);
-break_here:
+
 	dummy_function();
 }
 
@@ -107,7 +107,7 @@ void test_scoped_ptr()
 	boost::scoped_array<int> scoped_array_empty;
 	boost::scoped_array<int> scoped_array(new int[1]);
 	scoped_array[0] = 42;
-break_here:
+
 	dummy_function();
 }
 
@@ -123,7 +123,7 @@ void test_intrusive_ptr()
 	boost::intrusive_ptr<S> intrusive(new S);
 	intrusive->i = 42;
 #endif
-break_here:
+
 	dummy_function();
 }
 
@@ -136,7 +136,7 @@ void test_shared_ptr()
 
 	boost::shared_array<int> empty_shared_array;
 	boost::shared_array<int> shared_array(new int[1]);
-break_here:
+
 	dummy_function();
 }
 
@@ -156,7 +156,7 @@ void test_circular_buffer()
 
 	auto reduced_size = overwrite;
 	reduced_size.pop_front();
-break_here:
+
 	dummy_function();
 }
 
@@ -164,7 +164,7 @@ void test_array()
 {
 	boost::array<int, 0> empty;
 	boost::array<int, 3> three_elements = { 10, 20, 30 };
-break_here:
+
 	dummy_function();
 }
 
@@ -208,8 +208,7 @@ void test_variant()
     double const ** const var_type_1{};
     const double * * const var_type_2{};
     const double ** const& var_type_3 = var_type_1;
-        
-break_here:
+
 	dummy_function();
 }
 
@@ -220,7 +219,7 @@ void test_uuid()
 		0x01 ,0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
 		0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
 #endif
-break_here:
+
 	dummy_function();
 }
 
@@ -237,7 +236,7 @@ void test_date_time()
 	ptime unix_epoch(date(1970, 1, 1));
 	ptime einstein_time(einstein);
 	ptime ligo(date(2016, Feb, 11), hours(9) + minutes(50) + seconds(45));
-break_here:
+
 	dummy_function();
 }
 
@@ -256,7 +255,7 @@ void test_flat_set()
 	fset.insert(2);
 	auto itr = fset.find(2);
 #endif
-break_here:
+
 	dummy_function();
 }
 
@@ -274,7 +273,7 @@ void test_flat_map()
 	fmap[2] = 20;
 	auto itr = fmap.find(2);
 #endif
-break_here:
+
 	dummy_function();
 }
 
@@ -320,7 +319,7 @@ void test_intrusive_set_base()
 
 	auto iter_1 = std::next(bset_1.begin());
 	auto iter_2 = std::next(bset_2.begin());
-break_here:
+
 	dummy_function();
 	bset_1.clear();
 	bset_2.clear();
@@ -412,7 +411,7 @@ void test_intrusive_rbtree_set_member()
 
 	auto iter1 = member_set_1.begin();
 	auto iter2 = member_set_2.begin();
-break_here:
+
 	dummy_function();
 	member_set_1.clear();
 	member_set_2.clear();
@@ -456,7 +455,7 @@ void test_intrusive_avl_set_member()
 
 	auto iter1 = member_set_1.begin();
 	auto iter2 = member_set_2.begin();
-break_here:
+
 	dummy_function();
 	member_set_1.clear();
 	member_set_2.clear();
@@ -500,7 +499,7 @@ void test_intrusive_splay_set_member()
 
 	auto iter1 = member_set_1.begin();
 	auto iter2 = member_set_2.begin();
-break_here:
+
 	dummy_function();
 	member_set_1.clear();
 	member_set_2.clear();
@@ -544,7 +543,7 @@ void test_intrusive_sg_set_member()
 
 	auto iter1 = member_set_1.begin();
 	auto iter2 = member_set_2.begin();
-break_here:
+
 	dummy_function();
 	member_set_1.clear();
 	member_set_2.clear();
@@ -594,7 +593,7 @@ void test_intrusive_list_base()
 	//BaseList::iterator base_list_null_iter;
 	auto iter_1 = std::next(base_list_1.begin());
 	auto iter_2 = std::next(base_list_2.begin());
-break_here:
+
 	dummy_function();
 }
 
@@ -626,7 +625,7 @@ void test_intrusive_list_base_default_tag()
 	// to distinguish an uninitialized iterator from an initialized one, and thus it is pointless to test it.
 	//BaseList::iterator base_list_null_iter;
 	auto iter = std::next(base_list.begin());
-break_here:
+
 	dummy_function();
 }
 
@@ -668,7 +667,7 @@ void test_intrusive_list_member()
 
 	auto iter_1 = member_list_1.begin();
 	auto iter_2 = member_list_2.begin();
-break_here:
+
 	dummy_function();
 }
 
@@ -713,7 +712,7 @@ void test_intrusive_slist_base()
 
 	auto iter_1 = std::next(list_1.begin());
 	auto iter_2 = std::next(list_2.begin());
-break_here:
+
 	dummy_function();
 }
 
@@ -745,7 +744,7 @@ void test_intrusive_slist_member()
 	list.push_front(elem1);
 
 	auto iter = std::next(list.begin());
-break_here:
+
 	dummy_function();
 }
 
@@ -763,7 +762,7 @@ void test_unordered_map()
 
 	boost::unordered_map<int, char const*>::iterator uninitialized_iter;
 	auto iter = map.begin();
-break_here:
+
 	dummy_function();
 }
 
@@ -776,7 +775,7 @@ void test_unordered_multimap()
 
 	boost::unordered_multimap<int, char const*>::iterator uninitialized_iter;
 	auto iter = map.begin();
-break_here:
+
 	dummy_function();
 }
 
@@ -788,7 +787,7 @@ void test_unordered_set()
 
 	boost::unordered_set<char const*>::iterator uninitialized_iter;
 	auto iter = set.begin();
-break_here:
+
 	dummy_function();
 }
 
@@ -800,7 +799,7 @@ void test_unordered_multiset()
 
 	boost::unordered_multiset<char const*>::iterator uninitialized_iter;
 	auto iter = multiset.begin();
-break_here:
+
 	dummy_function();
 }
 
@@ -814,7 +813,7 @@ void test_small_vector()
 	auto iter = small_vector_1.begin();
 	decltype(iter) uninitialized_iter;
 #endif
-break_here:
+
 	dummy_function();
 }
 
@@ -827,7 +826,7 @@ void test_static_vector()
 	auto iter = static_vector.begin();
 	decltype(iter) uninitialized_iter;
 #endif
-break_here:
+
 	dummy_function();
 }
 
@@ -838,7 +837,7 @@ void test_dynamic_bitset()
 	bitset[0] = true;
 	bitset[2] = true;
 	bitset[129] = true;
-break_here:
+
 	dummy_function();
 }
 
@@ -850,7 +849,7 @@ void test_duration()
     boost::posix_time::time_duration duration_neg_130 = boost::posix_time::seconds(-130);
     boost::posix_time::time_duration duration_with_ms = boost::posix_time::seconds(61) + boost::posix_time::millisec(10);
     boost::posix_time::time_duration duration_not_a_time(boost::posix_time::not_a_date_time);
-break_here:
+
     dummy_function();
 }
 
@@ -961,7 +960,6 @@ void test_multi_index()
 	hf_over_two_same_value.insert(3);
 	hf_over_two_same_value.insert(4);
 
- break_here:
 	dummy_function();
 }
 
@@ -991,8 +989,6 @@ void test_wave()
     context_type::iterator_type tok_it = ctx.begin();
     for (int i = 0; i < 15; ++i)
         tok = *tok_it++;
-
-break_here:
 
     dummy_function();
 

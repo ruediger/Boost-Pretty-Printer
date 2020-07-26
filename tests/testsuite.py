@@ -27,14 +27,19 @@ def execute_cpp_function(function_name):
     :param function_name: C++ function name (str)
     :return: None
     """
-    breakpoint_location = '{}:break_here'.format(function_name)
-    bp = gdb.Breakpoint(breakpoint_location, internal=True)
+    bp = gdb.Breakpoint(function=function_name, internal=True)
     bp.silent = True
-    bp.commands = 'advance dummy_function'
     gdb.execute('run')
     assert bp.hit_count == 1
     bp.delete()
-    gdb.execute('finish')   # exit dummy_function, return to test function
+
+    bp = gdb.Breakpoint(function='dummy_function', internal=True, temporary=True)
+    bp.silent = True
+    gdb.execute('continue')
+
+    bp = gdb.FinishBreakpoint(internal=True)
+    bp.silent = True
+    gdb.execute('continue')
 
 
 def to_python_value(value):
