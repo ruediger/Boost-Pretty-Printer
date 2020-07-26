@@ -6,6 +6,8 @@
 
 # Authors: Jeff Trull and Mikhail Balabin
 
+import itertools
+import sys
 from .utils import *
 
 @add_printer
@@ -25,7 +27,14 @@ class BoostWaveFlexString:
     def to_string(self):
         storage_type = self.val.type.template_argument(3)
         storage = self.val.cast(storage_type)
-        return storage
+        printer = gdb.default_visualizer(storage)
+        if printer is None:
+            return storage
+        # This will fail for wide strings
+        b = bytearray(int(ch) for _, ch in printer.children())
+        s = b.decode(encoding=sys.getdefaultencoding(), errors='replace')
+        return s
+
 
 @add_printer
 class BoostWaveFilePosition:
@@ -41,6 +50,7 @@ class BoostWaveFilePosition:
     def to_string(self):
         return "({} {}:{})".format(
             self.val["file"], self.val["line"], self.val["column"])
+
 
 @add_printer
 class BoostWaveToken:
@@ -62,6 +72,29 @@ class BoostWaveToken:
 #
 
 @add_printer
+class BoostWaveAllocatorStringStorage:
+    printer_name = 'boost::wave::util::AllocatorStringStorage'
+    min_supported_version = (1, 71, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = 'boost::wave::util::AllocatorStringStorage'
+
+    def __init__(self, val):
+        self.val = val
+
+    def display_hint(self):
+        return 'array'
+        
+    def children(self):
+        data = self.val['pData_'].dereference()
+
+        str_begin = cast_array_to_pointer(data['buffer_'])
+        str_end = data['pEnd_']
+        str_length = str_end - str_begin
+        for idx in range(str_length):
+            yield '[{}]'.format(idx), (str_begin + idx).dereference()
+
+
+@add_printer
 class BoostWaveCowString:
     printer_name = 'boost::wave::util::CowString'
     min_supported_version = (1, 71, 0)
@@ -72,19 +105,18 @@ class BoostWaveCowString:
         self.val = val
 
     def display_hint(self):
-        return 'string'
+        return 'array'
 
-    def to_string(self):
-        # following c_str() implementation
-        # cast internal buffer to first template argument
+    def children(self):
         storage_type = self.val.type.template_argument(0)
-        buf = cast_array_to_pointer(self.val['buf_'])
-        storage_ptr = buf.cast(storage_type.pointer())
-        # emulate Data().c_str() + 1
-        (rstart, rend) = get_char_range(storage_ptr.dereference())
-        if rstart == rend:
-            return '<Invalid String>'
-        return (rstart + 1).string(length = (rend - rstart - 1))
+        storage = reinterpret_cast(self.val['buf_'], storage_type)
+        printer = gdb.default_visualizer(storage)       
+        if printer is None:
+            # Unknown underlying storage
+            return
+        chars = itertools.islice(printer.children(), 1, None)
+        for idx, (_, ch) in enumerate(chars):
+            yield '[{}]'.format(idx), ch
 
 #
 # utility functions
@@ -96,15 +128,3 @@ def cast_array_to_pointer(val):
     element_type = val.type.target()
     return val.address.cast(element_type.pointer())
 
-# AllocatorStringStorage::c_str() is more of a "get memory data"
-# method than a string extractor - # plus it has side effects.
-# This returns a range as a pair of pointers, instead.
-def get_char_range(val):
-    """Extract byte array from storage type"""
-    assert template_name(val.type) in [
-        'boost::wave::util::AllocatorStringStorage'
-    ]
-    data = val['pData_'].dereference()
-    str_begin = cast_array_to_pointer(data['buffer_'])
-    str_end = data['pEnd_']
-    return (str_begin, str_end)
