@@ -117,11 +117,20 @@ void test_intrusive_ptr()
 	struct S: public boost::intrusive_ref_counter<S>
 	{
 		int i;
+		virtual ~S() = default;
+	};
+
+	struct T: public S
+	{
+		int j;
 	};
 
 	boost::intrusive_ptr<S> intrusive_empty;
-	boost::intrusive_ptr<S> intrusive(new S);
-	intrusive->i = 42;
+	boost::intrusive_ptr<S> intrusive_base(new S);
+	boost::intrusive_ptr<S> intrusive_derived(new T);
+	intrusive_base->i = 42;
+	intrusive_derived->i = 6;
+	static_cast<T*>(intrusive_derived.get())->j = 9;
 #endif
 
 	dummy_function();

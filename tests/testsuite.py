@@ -254,12 +254,20 @@ class IntrusivePtrTest(PrettyPrinterTest):
         self.assertEqual(children, [])
         self.assertIsNone(display_hint)
 
-    def test_intrusive(self):
-        string, children, display_hint = self.get_printer_result('intrusive')
+    def test_intrusive_base(self):
+        string, children, display_hint = self.get_printer_result('intrusive_base')
         self.assertNotEqual(string, 'uninitialized')
         children_as_struct = as_struct(children)
         self.assertEqual(set(children_as_struct), {'value'})
         self.assertEqual(children_as_struct['value']['i'], 42)
+        self.assertIsNone(display_hint)
+
+    def test_intrusive_derived(self):
+        string, children, display_hint = self.get_printer_result('intrusive_derived')
+        self.assertNotEqual(string, 'uninitialized')
+        children_as_struct = as_struct(children)
+        self.assertEqual(set(children_as_struct), {'value'})
+        self.assertEqual(children_as_struct['value']['j'], 9)
         self.assertIsNone(display_hint)
 
 
