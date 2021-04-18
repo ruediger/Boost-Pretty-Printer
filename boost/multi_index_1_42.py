@@ -411,3 +411,55 @@ class Boost_Multi_Index:
         if self.empty_cont():
             return 'empty %s' % self.type_name
         return '%s' % self.type_name
+
+
+@add_printer
+class Boost_Property_Tree:
+    "Printer for boost::property_tree::basic_ptree"
+    printer_name = 'boost::property_tree'
+    min_supported_version = (1, 42, 0)
+    max_supported_version = last_supported_boost_version
+    template_name = 'boost::property_tree::basic_ptree'
+
+    def __init__(self, v):
+        self._value = v
+        subs_type = get_inner_type(self._value.type, "subs");
+        container_type = get_inner_type(subs_type, "base_container");
+        self._container_value_type = get_inner_type(container_type, "value_type");
+
+        container = v['m_children'].cast(container_type.pointer()).dereference()
+        self._node_count = container['node_count']
+        #message('node count: ' + str(self._node_count))
+
+        ptr_size = gdb.lookup_type('void').pointer().sizeof
+        elem_size = self._container_value_type.sizeof + (self._container_value_type.sizeof % ptr_size)
+        #message('elem_size: ' + str(elem_size))
+
+        header_holder_subtype = container_type.fields()[1].type
+        assert str(header_holder_subtype).strip().startswith('boost::multi_index::detail::header_holder')
+        head_node = container.cast(header_holder_subtype)['member'].dereference()
+        #message('head_node.type.sizeof: ' + str(head_node.type.sizeof))
+
+        self._index_offset = head_node.type.sizeof - 2 * ptr_size
+        #message('index_offset: ' +  str(self._index_offset))
+        self._head_index_ptr = intptr(head_node.address) + self._index_offset
+        #message('head_index_ptr: ' + hex(self._head_index_ptr))
+
+    def children(self):
+        if not self._node_count:
+            return Boost_Multi_Index.empty_iterator()
+
+        get_next_ptr = Boost_Multi_Index.sequenced_iterator.get_next_ptr
+        node = get_next_ptr(self._head_index_ptr)
+        while node != self._head_index_ptr:
+            val_ptr = Boost_Multi_Index.get_val_ptr(node, self._index_offset)
+            val = parse_and_eval('*(' + str(self._container_value_type) + '*)' + str(val_ptr))
+            yield ('key', val["first"])
+            yield ('val', val["second"])
+            node = get_next_ptr(node)
+
+    def display_hint(self):
+        return 'map'
+
+    def to_string(self):
+        return self._value["m_data"]
