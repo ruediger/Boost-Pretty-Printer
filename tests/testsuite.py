@@ -1180,6 +1180,33 @@ class WaveTest(PrettyPrinterTest):
         self.assertIsNone(children)
         self.assertIsNone(display_hint)
 
+class PropertyTreeTest(PrettyPrinterTest):
+    @classmethod
+    def setUpClass(cls):
+        execute_cpp_function('test_property_tree')
+
+    def test_empty(self):
+        string, children, display_hint = self.get_printer_result('empty')
+        self.assertEqual(string,'""')
+        self.assertEqual(children, [])
+
+    def test_pt(self):
+        string, children, display_hint = self.get_printer_result('pt')
+        self.assertEqual(string,'"val"')
+        def _to_str(val):
+            # FIXME: remove this dependency on the std::string pretty-printer
+            return gdb.default_visualizer(val).to_string().value().string('utf-8')
+        def _to_str_subtree(val):
+            # returns a tuple of (value, children)
+            v=gdb.default_visualizer(val)
+            return (_to_str(v.to_string()), as_map(list(v.children()), _to_str, _to_str_subtree))
+        self.assertEqual(as_map(children, _to_str, _to_str_subtree),
+                         [("node_a", ("val_a", [
+                             ( "sub_1", ( "val_a1", [] )),
+                             ( "sub_2", ( "val_a2", [] ))
+                         ]))])
+        self.assertEqual(display_hint, 'map')
+
 
 # TODO: More intrusive tests:
 # 1. Non-raw pointers

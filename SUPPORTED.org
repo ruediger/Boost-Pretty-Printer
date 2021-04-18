@@ -26,6 +26,7 @@
 | =boost::wave::util::flex_string=        | 1.71    | =wave_1_71=        | yes    | Jeff Trull                      |                                |
 | =boost::wave::util::file_position=      | "       | "                  | yes    | "                               |                                |
 | =boost::wave::cpplexer::lex_token=      | "       | "                  | yes    | "                               |                                |
+| =boost::property_tree::ptree=           | 1.42    | =multi_index_1_42= | yes    | Alastair Rankine (randomphrase) |                                |
 
 ***** Notes
 

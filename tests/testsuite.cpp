@@ -40,6 +40,7 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/logic/tribool.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
@@ -994,6 +995,18 @@ void test_wave()
 
 }
 
+void test_property_tree()
+{
+  boost::property_tree::ptree empty;
+  boost::property_tree::ptree pt;
+  pt.put_value("val");
+  pt.put("node_a", "val_a");
+  pt.put("node_a.sub_1", "val_a1");
+  pt.put("node_a.sub_2", "val_a2");
+
+  dummy_function();
+}
+
 int main()
 {
 	test_iterator_range();
@@ -1036,6 +1049,8 @@ int main()
 	test_multi_index();
 
         test_wave();
+
+  test_property_tree();
 
 	return EXIT_SUCCESS;
 }
