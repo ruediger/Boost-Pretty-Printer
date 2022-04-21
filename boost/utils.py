@@ -518,7 +518,7 @@ class GDB_Value_Wrapper(gdb.Value):
         # In Python 2 we add a __dict__ attribute explicitly.
         if have_python_2:
             self.__dict__ = {}
-        gdb.Value.__init__(value)
+        super().__init__(value)
         self.qualifiers = get_type_qualifiers(value.type)
         self.basic_type = get_basic_type(value.type)
         self.type_name = str(self.basic_type)
