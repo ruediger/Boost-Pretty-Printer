@@ -518,7 +518,13 @@ class GDB_Value_Wrapper(gdb.Value):
         # In Python 2 we add a __dict__ attribute explicitly.
         if have_python_2:
             self.__dict__ = {}
-        gdb.Value.__init__(value)
+        if '__init__' in gdb.Value.__dict__:
+            # GDB is v12 or newer.
+            # See https://github.com/bminor/binutils-gdb/commit/2988a36005f2821cee6744473ad8a3ba7638c212
+            gdb.Value.__init__(self, value)
+        else:
+            # GDB is older than v12.  Don't need to do anything.
+            pass
         self.qualifiers = get_type_qualifiers(value.type)
         self.basic_type = get_basic_type(value.type)
         self.type_name = str(self.basic_type)
