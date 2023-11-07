@@ -13,7 +13,7 @@ GDB version 7 or better is required. Currently, most printers work with either P
 
 To install, check out the git repository:
 #+BEGIN_EXAMPLE
-git clone git://github.com/ruediger/Boost-Pretty-Printer.git
+git clone https://github.com/ruediger/Boost-Pretty-Printer.git
 #+END_EXAMPLE
 
 Then, add the following lines to your =~/.gdbinit=:
