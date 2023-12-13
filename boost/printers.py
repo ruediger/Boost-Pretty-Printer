@@ -286,6 +286,8 @@ class BoostCircular:
         def __next__(self):
             if self.count == self.size:
                 raise StopIteration
+            if self.capa == 0:
+                raise StopIteration
             count = self.count
             crt = self.buff + (count + self.item - self.buff) % self.capa
             elem = crt.dereference()
