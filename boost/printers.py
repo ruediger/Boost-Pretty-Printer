@@ -183,7 +183,7 @@ class BoostScopedPtr:
 
     def children(self):
         if self.value['px'] != 0:
-            yield 'value', self.value['px'].dereference()
+            yield 'value', self.value['px'].cast(self.value['px'].dynamic_type).dereference()
 
 
 @add_printer
